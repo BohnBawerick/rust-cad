@@ -1,0 +1,382 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -36,6 +36,8 @@
+ //!   chart regions and assigning each hole to its immediate containing boundary.
+ //! - Failed intersection fits can retain exact rational sections of certified
+ //!   translational supports, including oblique cuts by planar supports.
++//! - A final divider lifts periodic trims to continuous charts and aligns holes
++//!   by whole periods, retaining the original spatial edges and surfaces.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -751,6 +753,131 @@
+ enum FaceDivision {
+     Classic,
+     Nested,
++    Charts,
++}
++
++/// Translate a parameter point to the nearest copy of a periodic chart.
++fn chart_translation(point: Point2, reference: Point2, periods: [Option<f64>; 2]) -> Vector2 {
++    let shift = |axis: usize| {
++        periods[axis]
++            .filter(|period| period.is_finite() && *period > 0.0)
++            .map_or(0.0, |period| {
++                ((reference[axis] - point[axis]) / period).round() * period
++            })
++    };
++    Vector2::new(shift(0), shift(1))
++}
++
++/// Bound a chart polygon in parameter space, including every sampled segment.
++fn chart_bounds(points: &[Point2]) -> Option<(Point2, Point2)> {
++    let first = *points.first()?;
++    Some(
++        points
++            .iter()
++            .fold((first, first), |(minimum, maximum), point| {
++                (
++                    Point2::new(minimum.x.min(point.x), minimum.y.min(point.y)),
++                    Point2::new(maximum.x.max(point.x), maximum.y.max(point.y)),
++                )
++            }),
++    )
++}
++
++/// Lift a contractible trim loop without changing its spatial boundary.
++///
++/// Native parameter boundaries already select their chart branch. Otherwise,
++/// continuation selects the nearest periodic copy of each inverse query.
++/// Individual edges and their shared endpoints must agree in the lifted chart;
++/// a noncontractible loop is not closed by inventing a seam or a pole edge.
++fn chart_boundary<C, S>(
++    wire: &Wire<Point3, C>,
++    surface: &S,
++    tol: f64,
++    samples: &mut HashMap<EdgeId<C>, Vec<Point3>>,
++    projections: &mut usize,
++    native_boundary: fn(&C, &S, f64) -> Option<Vec<Point2>>,
++) -> Option<Vec<Point2>>
++where
++    C: BoundedCurve<Point = Point3> + ParameterDivision1D<Point = Point3> + Clone,
++    S: ShapeOpsSurface,
++{
++    let periods = [surface.period_u(), surface.period_v()];
++    wire.iter()
++        .try_fold(Vec::<Point2>::new(), |mut points, edge| {
++            let curve = edge.curve();
++            let mut parameters = if let Some(mut native) = native_boundary(&curve, surface, tol) {
++                *projections = projections.checked_sub(native.len())?;
++                if !edge.orientation() {
++                    native.reverse();
++                }
++                native
++            } else {
++                let poly = samples
++                    .entry(edge.id())
++                    .or_insert_with(|| curve.parameter_division(curve.range_tuple(), tol).1);
++                *projections = projections.checked_sub(poly.len())?;
++                let mut hint = points.last().copied();
++                (0..poly.len())
++                    .map(|index| {
++                        let index = if edge.orientation() {
++                            index
++                        } else {
++                            poly.len() - 1 - index
++                        };
++                        let uv = surface
++                            .search_parameter(
++                                poly[index],
++                                hint.map(|point| (point.x, point.y)),
++                                100,
++                            )
++                            .or_else(|| surface.search_parameter(poly[index], None, 100))?;
++                        let mut point = Point2::from(uv);
++                        if let Some(previous) = hint {
++                            point += chart_translation(point, previous, periods);
++                            // Half-period steps do not determine a unique lift.
++                            if periods.iter().enumerate().any(|(axis, period)| {
++                                period.is_some_and(|period| {
++                                    (point[axis] - previous[axis]).abs() >= period / 2.0
++                                })
++                            }) {
++                                return None;
++                            }
++                        }
++                        if !surface.evaluate(point.x, point.y).near(&poly[index]) {
++                            return None;
++                        }
++                        hint = Some(point);
++                        Some(point)
++                    })
++                    .collect::<Option<Vec<_>>>()?
++            };
++            if parameters.len() < 2
++                || parameters
++                    .iter()
++                    .any(|point| !point.x.is_finite() || !point.y.is_finite())
++            {
++                return None;
++            }
++            if let Some(previous) = points.last().copied() {
++                let shift = chart_translation(parameters[0], previous, periods);
++                parameters.iter_mut().for_each(|point| *point += shift);
++                if !parameters[0].near(&previous) {
++                    return None;
++                }
++            }
++            let front = parameters.first()?;
++            let back = parameters.last()?;
++            if !surface
++                .evaluate(front.x, front.y)
++                .near(&edge.front().point())
++                || !surface.evaluate(back.x, back.y).near(&edge.back().point())
++            {
++                return None;
++            }
++            let skip = usize::from(!points.is_empty());
++            points.extend(parameters.into_iter().skip(skip));
++            Some(points)
++        })
+ }
+ 
+ /// Locate a point in a polygon without counting a boundary point as interior.
+@@ -792,6 +919,8 @@
+     shell: &Shell<Point3, C, S>,
+     store: &LoopsStore<Point3, C>,
+     tol: f64,
++    division: FaceDivision,
++    native_boundary: fn(&C, &S, f64) -> Option<Vec<Point2>>,
+ ) -> Option<FacesClassification<Point3, C, S>>
+ where
+     C: BoundedCurve<Point = Point3> + ParameterDivision1D<Point = Point3> + Clone,
+@@ -803,11 +932,30 @@
+     let mut result = FacesClassification::default();
+     let mut work = 262_144_usize;
+     let mut projections = 16_384_usize;
++    let charts = matches!(division, FaceDivision::Charts);
+     shell.iter().zip(store).try_for_each(|(face, loops)| {
+         if loops.is_empty() {
+             return None;
+         }
+         let surface = face.surface();
++        if charts
++            && loops.len() == face.absolute_boundaries().len()
++            && loops
++                .iter()
++                .zip(face.absolute_boundaries())
++                .all(|(wire, original)| {
++                    wire.status() == ShapesOpStatus::Unknown
++                        && wire.len() == original.len()
++                        && wire.iter().zip(original).all(|(edge, other)| {
++                            edge.id() == other.id() && edge.orientation() == other.orientation()
++                        })
++                })
++        {
++            // An untouched face already has a valid trim domain, even when
++            // its boundary cannot be represented by one contractible chart.
++            result.push(face.clone(), ShapesOpStatus::Unknown);
++            return Some(());
++        }
+         let mut samples = HashMap::default();
+         let polygons = loops
+             .iter()
+@@ -815,36 +963,65 @@
+                 if !wire.is_closed() || !wire.is_simple() {
+                     return None;
+                 }
+-                projections = projections.checked_sub(1)?;
+-                let front = wire.front_vertex()?.point();
+-                let first = surface.search_parameter(front, None, 100)?;
+-                let mut hint = first;
+-                let mut points = vec![Point2::from(first)];
+-                wire.iter().try_for_each(|edge| {
+-                    let poly = samples.entry(edge.id()).or_insert_with(|| {
+-                        let curve = edge.curve();
+-                        curve.parameter_division(curve.range_tuple(), tol).1
+-                    });
+-                    projections = projections.checked_sub(poly.len())?;
+-                    (1..poly.len()).try_for_each(|index| {
+-                        let index = if edge.orientation() {
+-                            index
+-                        } else {
+-                            poly.len() - 1 - index
+-                        };
+-                        hint = surface.search_parameter(poly[index], Some(hint), 100)?;
+-                        if !hint.0.is_finite() || !hint.1.is_finite() {
+-                            return None;
+-                        }
+-                        points.push(Point2::from(hint));
+-                        Some(())
+-                    })
+-                })?;
++                let mut points = if charts {
++                    chart_boundary(
++                        wire,
++                        &surface,
++                        tol,
++                        &mut samples,
++                        &mut projections,
++                        native_boundary,
++                    )?
++                } else {
++                    projections = projections.checked_sub(1)?;
++                    let front = wire.front_vertex()?.point();
++                    let first = surface.search_parameter(front, None, 100)?;
++                    let mut hint = first;
++                    let mut points = vec![Point2::from(first)];
++                    wire.iter().try_for_each(|edge| {
++                        let poly = samples.entry(edge.id()).or_insert_with(|| {
++                            let curve = edge.curve();
++                            curve.parameter_division(curve.range_tuple(), tol).1
++                        });
++                        projections = projections.checked_sub(poly.len())?;
++                        (1..poly.len()).try_for_each(|index| {
++                            let index = if edge.orientation() {
++                                index
++                            } else {
++                                poly.len() - 1 - index
++                            };
++                            hint = surface.search_parameter(poly[index], Some(hint), 100)?;
++                            if !hint.0.is_finite() || !hint.1.is_finite() {
++                                return None;
++                            }
++                            points.push(Point2::from(hint));
++                            Some(())
++                        })
++                    })?;
++                    points
++                };
+                 if points.len() < 4 || !points.last()?.near(&points[0]) {
+                     return None;
+                 }
+                 // Close only the inverse-query roundoff at the shared vertex.
+                 points.pop();
++                if charts {
++                    let (minimum, maximum) = chart_bounds(&points)?;
++                    if [surface.period_u(), surface.period_v()]
++                        .iter()
++                        .enumerate()
++                        .any(|(axis, period)| {
++                            period.is_some_and(|period| {
++                                !period.is_finite()
++                                    || period <= 0.0
++                                    || maximum[axis] - minimum[axis]
++                                        > period * (1.0 + 64.0 * f64::EPSILON)
++                            })
++                        })
++                    {
++                        return None;
++                    }
++                }
+                 let origin = points[0];
+                 let area = points
+                     .iter()
+@@ -894,9 +1071,22 @@
+                             return Some(());
+                         }
+                         work = work.checked_sub(points.len().checked_mul(boundary.len())?)?;
++                        let shift = if charts {
++                            let (lower, upper) = chart_bounds(points)?;
++                            let (outer_lower, outer_upper) = chart_bounds(boundary)?;
++                            // Containment of two intervals shorter than one
++                            // period uniquely determines their relative lift.
++                            chart_translation(
++                                lower + (upper - lower) / 2.0,
++                                outer_lower + (outer_upper - outer_lower) / 2.0,
++                                [surface.period_u(), surface.period_v()],
++                            )
++                        } else {
++                            Vector2::zero()
++                        };
+                         let contained = points
+                             .iter()
+-                            .all(|point| loop_domain(boundary, *point) == 1);
++                            .all(|point| loop_domain(boundary, *point + shift) == 1);
+                         // Vertices inside a concave contour are insufficient:
+                         // a segment may leave the domain and enter it again.
+                         let crossing = contained
+@@ -914,8 +1104,13 @@
+                                             let opposite = |a: f64, b: f64| {
+                                                 (a < 0.0 && b > 0.0) || (a > 0.0 && b < 0.0)
+                                             };
+-                                            opposite(side(*a, *b, *c), side(*a, *b, *d))
+-                                                && opposite(side(*c, *d, *a), side(*c, *d, *b))
++                                            opposite(
++                                                side(*a + shift, *b + shift, *c),
++                                                side(*a + shift, *b + shift, *d),
++                                            ) && opposite(
++                                                side(*c, *d, *a + shift),
++                                                side(*c, *d, *b + shift),
++                                            )
+                                         },
+                                     )
+                                 });
+@@ -965,6 +1160,7 @@
+     store: &LoopsStore<Point3, C>,
+     tol: f64,
+     division: FaceDivision,
++    native_boundary: fn(&C, &S, f64) -> Option<Vec<Point2>>,
+ ) -> Option<FacesClassification<Point3, C, S>>
+ where
+     C: BoundedCurve<Point = Point3> + ParameterDivision1D<Point = Point3> + Clone,
+@@ -972,7 +1168,9 @@
+ {
+     match division {
+         FaceDivision::Classic => divide_face::divide_faces(shell, store, tol),
+-        FaceDivision::Nested => nested_division(shell, store, tol),
++        FaceDivision::Nested | FaceDivision::Charts => {
++            nested_division(shell, store, tol, division, native_boundary)
++        }
+     }
+ }
+ 
+@@ -1006,7 +1204,12 @@
+         (stores.geom_loops_store0, stores.geom_loops_store1)
+     };
+     Some(move |division| {
+-        let mut cls0 = divide_boundary_faces(&altshell0, &loops_store0, tol, division)?;
++        let native_boundary = |curve: &AltCurve<C, S>, surface: &S, tolerance| match curve {
++            Alternative::FirstType(curve) => curve.parameter_boundary_2d(surface, tolerance),
++            Alternative::SecondType(_) => None,
++        };
++        let mut cls0 =
++            divide_boundary_faces(&altshell0, &loops_store0, tol, division, native_boundary)?;
+         if cls0.and_or_unknown()[2]
+             .connected_components()
+             .iter()
+@@ -1014,7 +1217,8 @@
+         {
+             cls0.integrate_by_component();
+         }
+-        let mut cls1 = divide_boundary_faces(&altshell1, &loops_store1, tol, division)?;
++        let mut cls1 =
++            divide_boundary_faces(&altshell1, &loops_store1, tol, division, native_boundary)?;
+         if cls1.and_or_unknown()[2]
+             .connected_components()
+             .iter()
+@@ -2620,8 +2824,14 @@
+         let mut store: loops_store::LoopsStore<_, _> = iter::once(cap).collect();
+         store[0] = wires;
+         let cap_shell = iter::once(cap.clone()).collect();
+-        let [mut divided, _, _] =
+-            divide_boundary_faces(&cap_shell, &store, tol, division)?.and_or_unknown();
++        let [mut divided, _, _] = divide_boundary_faces(
++            &cap_shell,
++            &store,
++            tol,
++            division,
++            |curve, surface, tolerance| curve.parameter_boundary_2d(surface, tolerance),
++        )?
++        .and_or_unknown();
+         shell.append(&mut divided);
+         Some(())
+     })?;
+@@ -2700,6 +2910,7 @@
+             .or_else(|error| {
+                 sweep_boolean(solid0, solid1, operation, tol, FaceDivision::Nested).ok_or(error)
+             })
++            .or_else(|error| assemble(FaceDivision::Charts).or(Err(error)))
+     }
+ }
+ 

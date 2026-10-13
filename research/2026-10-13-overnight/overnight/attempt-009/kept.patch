@@ -1,0 +1,54 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -18,8 +18,8 @@
+ //!   the current error enum has no single `Internal` variant.
+ //! - Classification sums oriented shell windings and tracks the exterior
+ //!   winding explicitly when intersecting with a complement for subtraction.
+-//! - Failed assemblies can use a support-plane arrangement for certified
+-//!   planar solids with convex faces, retaining the exact input surfaces.
++//! - Certified planar solids with convex faces use a support-plane arrangement
++//!   before marching, retaining the exact input surfaces.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -867,9 +867,11 @@
+ 
+ /// Assemble one common arrangement of the exact input support planes.
+ ///
+-/// This fallback runs only after the marching pipeline fails. It retains the
+-/// input surfaces and constructs exact straight trims. No tessellation enters
+-/// classification or output geometry. A bounded work counter limits refinement.
++/// Certification covers the complete surfaces and every trim before any result
++/// is accepted. This allows planar arrangements to precede marching, including
++/// contacts and thin cells that marching cannot reliably resolve. Input surfaces
++/// and exact straight trims are retained. No tessellation enters classification
++/// or output geometry. A bounded work counter limits refinement.
+ fn planar_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+@@ -1126,13 +1128,18 @@
+     tol: f64,
+     operation: Operation,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+-    boolean_classic(solid0, solid1, tol, operation).or_else(|error| {
+-        if tol.is_finite() && tol > 0.0 {
+-            planar_boolean(solid0, solid1, operation).ok_or(error)
+-        } else {
+-            Err(error)
+-        }
+-    })
++    if !tol.is_finite() || tol <= 0.0 {
++        Err(ShapeOpsError::InvalidTolerance)
++    } else if solid0.is_empty() || solid1.is_empty() {
++        boolean_classic(solid0, solid1, tol, operation)
++    } else if let Some(solid) = planar_boolean(solid0, solid1, operation) {
++        // A certified arrangement establishes membership on each open cell.
++        // Its empty boundary is therefore a valid empty result, while failure
++        // to certify or assemble an arrangement still requires marching.
++        Ok(solid)
++    } else {
++        boolean_classic(solid0, solid1, tol, operation)
++    }
+ }
+ 
+ /// AND operation between two solids (classic backend).

@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate certifies separation from complete support enclosures and containment within convex planar shells. It assembles boundaries using signed shell windings, preserving cavities and reversing retained second-operand shells for subtraction. Exact B-rep geometry is retained.
+
+Expected scope includes rotated disjoint solids and certified nesting across multiple oriented shells. Touching boundaries, curved containers, and transverse intersections remain unresolved by this fallback.
+
+Formatted and checked patch whitespace. No builds, tests, or commits. No improvement is claimed; findings are in `/work/scratch/partial.txt`.

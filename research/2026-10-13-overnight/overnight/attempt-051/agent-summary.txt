@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate pairs coincident edge incidences around occupied material sectors, then separates disconnected vertex fans. This should let edge-touching solids retain closed, distinct shells while preserving exact geometry and cavity orientation.
+
+The algorithm applies to certified planar arrangements, including nonconvex solids and multiple oriented shells. Curved tangencies and earlier classification failures remain unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits performed. Findings saved to `/work/scratch/partial.txt`.

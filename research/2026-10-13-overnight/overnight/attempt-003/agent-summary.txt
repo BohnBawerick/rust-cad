@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate sums winding across all oriented shells and adds winding one at infinity for complemented B. This targets disjoint subtraction, containment, cavity orientation, and multiple-shell solids. Valid empty results remain distinct from operation failures.
+
+It also adds face-interior classification and coincident-patch ownership. Intersection conversion retains valid leaders and bounds refinement to two subdivision levels and 128 projections per output shell, returning an error if conversion fails. Supporting B-rep surfaces remain intact.
+
+Unresolved risks: partial coplanar overlaps, contact-edge assembly, classification near curved boundaries, and valid intersections exceeding the refinement budget.
+
+Formatted and checked patch whitespace. No builds, tests, or commits.

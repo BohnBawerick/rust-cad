@@ -1,0 +1,308 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -28,6 +28,8 @@
+ //!   only new transverse generators require intersection-curve assembly.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
++//! - Failed assembly retries classification of complete face partitions instead
++//!   of propagating the sign of one intersection tangent across a component.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -36,6 +38,7 @@
+ 
+ use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
+ use crate::alternative::Alternative;
++use loops_store::LoopsStore;
+ use monstertruck_geometry::prelude::*;
+ use monstertruck_meshing::prelude::*;
+ use monstertruck_topology::*;
+@@ -693,6 +696,280 @@
+     and0.append(&mut and1);
+     or0.append(&mut or1);
+     Some(([and0, or0], contact_arrangement))
++}
++
++/// Recover every cell of a face arrangement without inheriting marching labels.
++///
++/// Division must retain every loop edge occurrence on each source face. This
++/// rejects dropped small loops and incomplete partitions before any membership
++/// query can mistake missing geometry for an empty Boolean result. The entire
++/// partition must still form the closed, oriented boundary of the operand.
++fn complete_partition<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: &AltCurveShell<C, S>,
++    store: &LoopsStore<Point3, AltCurve<C, S>>,
++    tol: f64,
++) -> Option<AltCurveShell<C, S>> {
++    if shell.len() != store.len() {
++        return None;
++    }
++    let mut work = 65_536_usize;
++    let partition = shell.iter().zip(store.iter()).try_fold(
++        AltCurveShell::default(),
++        |mut partition, (face, loops)| {
++            let source: AltCurveShell<C, S> = iter::once(face.clone()).collect();
++            let mut local: LoopsStore<_, _> = iter::once(face).collect();
++            local[0] = loops.clone();
++            let cells: AltCurveShell<C, S> = divide_face::divide_faces(&source, &local, tol)?
++                .and_or_unknown()
++                .into_iter()
++                .flatten()
++                .collect();
++            if cells.is_empty() || partition.len() + cells.len() > 512 {
++                return None;
++            }
++            let mut occurrences = HashMap::default();
++            loops.iter().try_for_each(|wire| {
++                wire.edge_iter().try_for_each(|edge| {
++                    work = work.checked_sub(1)?;
++                    *occurrences.entry(edge.id()).or_insert(0_isize) += 1;
++                    Some(())
++                })
++            })?;
++            cells.edge_iter().try_for_each(|edge| {
++                work = work.checked_sub(1)?;
++                *occurrences.get_mut(&edge.id())? -= 1;
++                Some(())
++            })?;
++            if occurrences.values().any(|count| *count != 0) {
++                return None;
++            }
++            partition.extend(cells);
++            Some(partition)
++        },
++    )?;
++    Solid::try_new(partition.connected_components()).ok()?;
++    Some(partition)
++}
++
++/// Require a binary oriented winding and agreement between independent rays.
++///
++/// All shells participate in each query, including inward cavity shells. The
++/// exterior winding is one for a complement and zero for a bounded operand.
++/// A nonbinary or inconsistent count is an unresolved classification.
++fn agreed_inside(point: Point3, shell: &PolyShell, at_infinity: isize) -> Option<bool> {
++    let mut membership = None;
++    [
++        Vector3::zero(),
++        Vector3::new(1.0, 2.0, 3.0),
++        Vector3::new(3.0, 1.0, 2.0),
++    ]
++    .into_iter()
++    .try_for_each(|offset| {
++        let direction = hash::take_one_unit(point + offset);
++        let winding = shell.iter().try_fold(at_infinity, |winding, face| {
++            let crossings = face.surface()?.signed_crossing_faces(point, direction);
++            Some(
++                winding
++                    + if face.orientation() {
++                        crossings
++                    } else {
++                        -crossings
++                    },
++            )
++        })?;
++        if !(0..=1).contains(&winding)
++            || membership.is_some_and(|previous| previous != (winding == 1))
++        {
++            return None;
++        }
++        membership = Some(winding == 1);
++        Some(())
++    })?;
++    membership
++}
++
++/// The location of an oriented open cell relative to the other operand.
++#[derive(Clone, Copy, PartialEq, Eq)]
++enum CellRelation {
++    Inside,
++    Outside,
++    Cooriented,
++    Opposed,
++}
++
++/// Require consistent classifications at distinct interior surface witnesses.
++///
++/// Triangles only locate witnesses in the trimmed parameter domain. Each
++/// witness is evaluated on the original support; no mesh face enters the
++/// output. Disagreement leaves the operation unresolved.
++fn cell_relation<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    face: &Face<Point3, AltCurve<C, S>, S>,
++    other: &Shell<Point3, C, S>,
++    polygons: &PolyShell,
++    exterior: isize,
++    tol: f64,
++) -> Option<CellRelation> {
++    let shell: AltCurveShell<C, S> = iter::once(face.clone()).collect();
++    let meshed = shell.triangulation(tol);
++    let mesh = meshed.first()?.surface()?;
++    let triangle = mesh
++        .face_iter()
++        .flat_map(|polygon| {
++            (2..polygon.len()).map(move |i| [polygon[0], polygon[i - 1], polygon[i]])
++        })
++        .max_by(|lhs, rhs| {
++            let area = |vertices: &[StandardVertex; 3]| {
++                let [a, b, c] = vertices.map(|v| mesh.positions()[v.pos]);
++                (b - a).cross(c - a).magnitude2()
++            };
++            area(lhs).total_cmp(&area(rhs))
++        })?;
++    let surface = face.surface();
++    [
++        [1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0],
++        [0.5, 0.25, 0.25],
++        [0.25, 0.5, 0.25],
++    ]
++    .into_iter()
++    .try_fold(None, |previous, weights| {
++        let (u, v) = match triangle.map(|vertex| vertex.uv.map(|i| mesh.uv_coords()[i])) {
++            [Some(a), Some(b), Some(c)] => {
++                let uv = a * weights[0] + b * weights[1] + c * weights[2];
++                (uv.x, uv.y)
++            }
++            _ => {
++                let [a, b, c] = triangle.map(|vertex| mesh.positions()[vertex.pos]);
++                surface.search_nearest_parameter(
++                    a + (b - a) * weights[1] + (c - a) * weights[2],
++                    None,
++                    100,
++                )?
++            }
++        };
++        let point = surface.evaluate(u, v);
++        let normal = surface.normal(u, v).normalize();
++        if !point.to_vec().magnitude2().is_finite() || !normal.magnitude2().is_finite() {
++            return None;
++        }
++        let normal = if face.orientation() { normal } else { -normal };
++        let relation = match coincident_boundary(face, point, normal, other, polygons) {
++            Some(true) => CellRelation::Cooriented,
++            Some(false) => CellRelation::Opposed,
++            None => {
++                if agreed_inside(point, polygons, exterior)? {
++                    CellRelation::Inside
++                } else {
++                    CellRelation::Outside
++                }
++            }
++        };
++        if previous.is_some_and(|previous| previous != relation) {
++            None
++        } else {
++            Some(Some(relation))
++        }
++    })?
++}
++
++/// Retry failed assembly by classifying cells independently of intersection signs.
++///
++/// A marching tangent supplies a local crossing sign, not a global membership
++/// certificate. Once the boundary arrangement is complete, membership is
++/// constant on each open cell. Query those cells against the complete oriented
++/// other operand and retain their original surfaces, curves, and orientations.
++fn reclassified_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++    tol: f64,
++) -> Option<Solid<Point3, C, S>> {
++    if solid0.face_iter().count() + solid1.face_iter().count() > 128 {
++        return None;
++    }
++    let shell0: Shell<Point3, C, S> = solid0.face_iter().cloned().collect();
++    let mut shell1: Shell<Point3, C, S> = solid1.face_iter().cloned().collect();
++    let at_infinity = if matches!(operation, Operation::Difference) {
++        shell1.iter_mut().for_each(|face| {
++            face.invert();
++        });
++        1
++    } else {
++        0
++    };
++    let polygons0 = shell0.triangulation(tol);
++    let polygons1 = shell1.triangulation(tol);
++    let alternate0: AltCurveShell<C, S> = shell0.mapped(
++        |point| *point,
++        |curve| Alternative::FirstType(curve.clone()),
++        Clone::clone,
++    );
++    let alternate1: AltCurveShell<C, S> = shell1.mapped(
++        |point| *point,
++        |curve| Alternative::FirstType(curve.clone()),
++        Clone::clone,
++    );
++    let (store0, store1) =
++        if conforming_contacts(&shell0, &shell1, &polygons0, &polygons1, tol).is_some() {
++            (
++                alternate0.face_iter().collect(),
++                alternate1.face_iter().collect(),
++            )
++        } else {
++            let stores =
++                loops_store::create_loops_stores(&alternate0, &polygons0, &alternate1, &polygons1)?;
++            (stores.geom_loops_store0, stores.geom_loops_store1)
++        };
++    let partition0 = complete_partition(&alternate0, &store0, tol)?;
++    let partition1 = complete_partition(&alternate1, &store1, tol)?;
++    let union = matches!(operation, Operation::Union);
++    let selected = [
++        (partition0, &shell1, &polygons1, at_infinity, true),
++        (partition1, &shell0, &polygons0, 0, false),
++    ]
++    .into_iter()
++    .try_fold(
++        AltCurveShell::default(),
++        |mut selected, (partition, other, polygons, exterior, owner)| {
++            partition.into_iter().try_for_each(|face| {
++                let keep = match cell_relation(&face, other, polygons, exterior, tol)? {
++                    // Shared co-oriented patches have one owner. Opposed patches
++                    // are internal to the union and absent from the intersection.
++                    CellRelation::Cooriented => owner,
++                    CellRelation::Opposed => false,
++                    CellRelation::Inside => !union,
++                    CellRelation::Outside => union,
++                };
++                if keep {
++                    selected.push(face);
++                }
++                Some(())
++            })?;
++            Some(selected)
++        },
++    )?;
++    if union && selected.is_empty() {
++        return None;
++    }
++    let shell = sew_contacts(altshell_to_shell(&selected)?, tol)?;
++    // Distinct closed components can still share a geometric seam. Such a
++    // seam has more than two incident faces after geometric identification;
++    // topological closure alone does not make it a manifold solid boundary.
++    let mut seen = HashMap::default();
++    let edges = shell
++        .edge_iter()
++        .filter(|edge| seen.insert(edge.id(), ()).is_none())
++        .collect::<Vec<_>>();
++    if edges.len() > 1024
++        || edges.iter().enumerate().any(|(index, edge)| {
++            edges
++                .iter()
++                .skip(index + 1)
++                .any(|other| matching_edges(edge, other, tol))
++        })
++    {
++        return None;
++    }
++    Solid::try_new(shell.connected_components()).ok()
+ }
+ 
+ /// A certified convex planar face, with its material-side orientation.
+@@ -2077,6 +2354,7 @@
+         boolean_classic(solid0, solid1, tol, operation)
+             .or_else(|error| planar_boolean(solid0, solid1, operation, true).ok_or(error))
+             .or_else(|error| sweep_boolean(solid0, solid1, operation, tol).ok_or(error))
++            .or_else(|error| reclassified_boolean(solid0, solid1, operation, tol).ok_or(error))
+     }
+ }
+ 

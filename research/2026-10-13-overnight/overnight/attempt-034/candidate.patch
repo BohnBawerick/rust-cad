@@ -1,0 +1,270 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -28,6 +28,8 @@
+ //!   only new transverse generators require intersection-curve assembly.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
++//! - Failed planar arrangements decompose concave and multiply trimmed faces
++//!   by support planes and retain cells by the signed winding of all trim wires.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -804,6 +806,208 @@
+         .then_some(cells)
+ }
+ 
++/// Enclose straight planar wires with an oriented convex hull of their vertices.
++///
++/// This is used only after every trim is certified as the intersection of two
++/// nonparallel planes. Original vertices are retained without reprojecting them.
++fn planar_trim_hull(
++    wires: &[Vec<Point3>],
++    normal: Vector3,
++    work: &mut usize,
++) -> Option<Vec<Point3>> {
++    let axis = (0..3).max_by(|&a, &b| normal[a].abs().total_cmp(&normal[b].abs()))?;
++    let x = (axis + 1) % 3;
++    let y = (axis + 2) % 3;
++    let mut points = wires.iter().flatten().copied().collect::<Vec<_>>();
++    *work = work.checked_sub(points.len().checked_mul(points.len())?)?;
++    points.sort_by(|a, b| a[x].total_cmp(&b[x]).then_with(|| a[y].total_cmp(&b[y])));
++    points.dedup();
++    if points.len() < 3 {
++        return None;
++    }
++    let mut chain = |reverse| {
++        (0..points.len()).try_fold(Vec::<Point3>::new(), |mut hull, index| {
++            let point = points[if reverse {
++                points.len() - 1 - index
++            } else {
++                index
++            }];
++            while hull.len() >= 2 {
++                *work = work.checked_sub(1)?;
++                let a = hull[hull.len() - 2];
++                let b = hull[hull.len() - 1];
++                let (turn, error) = plane_distance(point, a, normal.cross(b - a));
++                if turn > error {
++                    break;
++                }
++                hull.pop();
++            }
++            hull.push(point);
++            Some(hull)
++        })
++    };
++    let lower = chain(false)?;
++    let upper = chain(true)?;
++    let hull = lower[..lower.len() - 1]
++        .iter()
++        .chain(&upper[..upper.len() - 1])
++        .copied()
++        .collect::<Vec<_>>();
++    (hull.len() >= 3
++        && points
++            .iter()
++            .all(|point| planar_domain(&hull, normal, *point) >= 0))
++    .then_some(hull)
++}
++
++/// Classify an open planar cell against every oriented trim wire.
++///
++/// Half-open ray crossings count a wire vertex once. Oppositely oriented hole
++/// wires cancel the outer winding. A point on a trim remains unresolved.
++fn planar_trim_inside(wires: &[Vec<Point3>], normal: Vector3, point: Point3) -> Option<bool> {
++    let axis = (0..3).max_by(|&a, &b| normal[a].abs().total_cmp(&normal[b].abs()))?;
++    let x = (axis + 1) % 3;
++    let y = (axis + 2) % 3;
++    let winding = wires.iter().try_fold(0_isize, |winding, wire| {
++        wire.iter()
++            .zip(wire.iter().cycle().skip(1))
++            .try_fold(winding, |winding, (a, b)| {
++                let (distance, error) = plane_distance(point, *a, normal.cross(*b - *a));
++                let turn = distance * normal[axis].signum();
++                let upward = a[y] <= point[y] && b[y] > point[y];
++                let downward = b[y] <= point[y] && a[y] > point[y];
++                if distance.abs() <= error
++                    && (upward
++                        || downward
++                        || (point[x] >= a[x].min(b[x])
++                            && point[x] <= a[x].max(b[x])
++                            && point[y] >= a[y].min(b[y])
++                            && point[y] <= a[y].max(b[y])))
++                {
++                    None
++                } else if upward && turn > error {
++                    Some(winding + 1)
++                } else if downward && turn < -error {
++                    Some(winding - 1)
++                } else {
++                    Some(winding)
++                }
++            })
++    })?;
++    match winding {
++        0 => Some(false),
++        -1 | 1 => Some(true),
++        _ => None,
++    }
++}
++
++/// Decompose general straight-trimmed planar faces into exact convex cells.
++///
++/// Every boundary line belongs to an adjacent support plane. Splitting the
++/// convex hull by all those planes therefore makes trim membership constant
++/// on each open cell, even for concave faces and faces with holes. The cells
++/// keep the original supporting surfaces and material-side orientations.
++fn planar_trim_cells<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++    work: &mut usize,
++) -> Option<Vec<PlanarCell<S>>> {
++    let mut incidence: HashMap<EdgeId<C>, (Vector3, usize)> = HashMap::default();
++    let domains = solid
++        .face_iter()
++        .map(|face| {
++            *work = work.checked_sub(1)?;
++            let surface = face.surface();
++            let plane = certified_plane(&surface)?;
++            let wires = face
++                .boundary_iters()
++                .into_iter()
++                .map(|wire| {
++                    let points = wire
++                        .map(|edge| {
++                            *work = work.checked_sub(1)?;
++                            let entry = incidence.entry(edge.id()).or_insert((plane.normal(), 0));
++                            if entry.1 > 1
++                                || (entry.1 == 1 && entry.0.cross(plane.normal()).so_small())
++                            {
++                                return None;
++                            }
++                            entry.1 += 1;
++                            let point = edge.front().point();
++                            let (distance, error) =
++                                plane_distance(point, plane.origin(), plane.normal());
++                            (distance.is_finite() && error.is_finite() && distance.abs() <= error)
++                                .then_some(point)
++                        })
++                        .collect::<Option<Vec<_>>>()?;
++                    (points.len() >= 3).then_some(points)
++                })
++                .collect::<Option<Vec<_>>>()?;
++            let area = wires.iter().fold(Vector3::zero(), |area, wire| {
++                wire[1..].windows(2).fold(area, |area, pair| {
++                    area + (pair[0] - wire[0]).cross(pair[1] - wire[0])
++                })
++            });
++            let signed_area = area.dot(plane.normal());
++            if !signed_area.is_finite() || signed_area == 0.0 {
++                return None;
++            }
++            let normal = plane.normal() * signed_area.signum();
++            let hull = planar_trim_hull(&wires, normal, work)?;
++            Some((
++                PlanarCell {
++                    surface,
++                    orientation: face.orientation(),
++                    normal,
++                    points: hull,
++                },
++                wires,
++            ))
++        })
++        .collect::<Option<Vec<_>>>()?;
++    if domains.is_empty() || !incidence.values().all(|(_, count)| *count == 2) {
++        return None;
++    }
++    domains
++        .iter()
++        .try_fold(Vec::new(), |mut cells, (source, wires)| {
++            let previous_count = cells.len();
++            let pieces =
++                domains
++                    .iter()
++                    .try_fold(vec![source.points.clone()], |pieces, (plane, _)| {
++                        pieces
++                            .into_iter()
++                            .try_fold(Vec::new(), |mut divided, points| {
++                                *work = work.checked_sub(points.len())?;
++                                divided.extend(split_planar_cell(
++                                    points,
++                                    plane.points[0],
++                                    plane.normal,
++                                ));
++                                Some(divided)
++                            })
++                    })?;
++            pieces.into_iter().try_for_each(|points| {
++                if points.len() < 3 {
++                    return None;
++                }
++                let point = points[0]
++                    + points.iter().map(|p| *p - points[0]).sum::<Vector3>() / points.len() as f64;
++                *work = work.checked_sub(wires.iter().map(Vec::len).sum())?;
++                if planar_trim_inside(wires, source.normal, point)? {
++                    cells.push(PlanarCell {
++                        surface: source.surface.clone(),
++                        orientation: source.orientation,
++                        normal: source.normal,
++                        points,
++                    });
++                }
++                Some(())
++            })?;
++            (cells.len() > previous_count).then_some(cells)
++        })
++}
++
+ /// Reuse a well-conditioned plane only when it contains the entire other support.
+ ///
+ /// Normalizing the cross product of short chart axes amplifies coordinate
+@@ -951,12 +1155,27 @@
+     solid1: &Solid<Point3, C, S>,
+     operation: Operation,
+     reconcile_supports: bool,
++    decompose_trims: bool,
+ ) -> Option<Solid<Point3, C, S>> {
+     let mut work = 262_144_usize;
+     let mut projections = 2048_usize;
+-    let mut cells = planar_cells(solid0, &mut work)?;
++    let mut decomposed = false;
++    let mut cells_for = |solid: &Solid<Point3, C, S>| {
++        planar_cells(solid, &mut work).or_else(|| {
++            if decompose_trims {
++                decomposed = true;
++                planar_trim_cells(solid, &mut work)
++            } else {
++                None
++            }
++        })
++    };
++    let mut cells = cells_for(solid0)?;
+     let first_len = cells.len();
+-    cells.extend(planar_cells(solid1, &mut work)?);
++    cells.extend(cells_for(solid1)?);
++    if decompose_trims && !decomposed {
++        return None;
++    }
+     if reconcile_supports {
+         reconcile_planar_supports(&mut cells, &mut work)?;
+     }
+@@ -2066,7 +2285,7 @@
+         Err(ShapeOpsError::InvalidTolerance)
+     } else if solid0.is_empty() || solid1.is_empty() {
+         boolean_classic(solid0, solid1, tol, operation)
+-    } else if let Some(solid) = planar_boolean(solid0, solid1, operation, false) {
++    } else if let Some(solid) = planar_boolean(solid0, solid1, operation, false, false) {
+         // A certified arrangement establishes membership on each open cell.
+         // Its empty boundary is therefore a valid empty result, while failure
+         // to certify or assemble an arrangement still requires marching.
+@@ -2075,8 +2294,9 @@
+         Ok(solid)
+     } else {
+         boolean_classic(solid0, solid1, tol, operation)
+-            .or_else(|error| planar_boolean(solid0, solid1, operation, true).ok_or(error))
++            .or_else(|error| planar_boolean(solid0, solid1, operation, true, false).ok_or(error))
+             .or_else(|error| sweep_boolean(solid0, solid1, operation, tol).ok_or(error))
++            .or_else(|error| planar_boolean(solid0, solid1, operation, true, true).ok_or(error))
+     }
+ }
+ 

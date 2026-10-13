@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added a fallback for failed operations on certified planar solids. It splits convex faces along support planes, producing cells with constant Boolean membership. Classification sums oriented shell crossings; assembly preserves cavity orientation and constructs exact trims on original surfaces.
+
+Expected scope: thin overlaps, partial coplanar contacts, containment, and nonconvex polyhedra with multiple shells. Nonmanifold edge incidence is independently rejected.
+
+Remaining risks: floating-point predicates, narrow-face meshing, and refinement limits. Curved surfaces and nonconvex individual faces retain the existing pipeline.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

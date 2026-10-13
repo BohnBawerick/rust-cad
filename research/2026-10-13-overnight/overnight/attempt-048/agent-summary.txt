@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added a final fallback that reclassifies reconstructed cells against all oriented operand shells. Membership should remain constant within a correctly divided cell; witness and ray disagreements reject the fallback. Complement winding preserves subtraction and cavity orientation.
+
+Expected scope: assembly failures caused by inconsistent local intersection labels. Existing successful paths retain precedence.
+
+Risks remain around missed intersections, curved-boundary classification, periodic trims, and contact mesh closure.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

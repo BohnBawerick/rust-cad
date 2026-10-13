@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The fallback certifies boundary separation using complete control nets and exact spline subdivision, then classifies whole oriented shells. Subtraction reverses retained inner shells, preserving cavity orientation and original geometry.
+
+Expected scope: disjoint and nested solids with certifiable spline or planar boundaries, including multiple shells. Touching boundaries and unsupported analytic surfaces remain unresolved. Existing successful paths retain precedence.
+
+Formatting and whitespace checks completed. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

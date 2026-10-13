@@ -1,0 +1,161 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -30,6 +30,8 @@
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
+ //! - Failed intersection fits can retain exact rational sections of certified
+ //!   translational supports, including oblique cuts by planar supports.
++//! - A failed fit may also use an exact isoparametric rational section when its
++//!   complete control hull lies in the cutting plane and follows the marched arc.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -274,12 +276,134 @@
+         })
+ }
+ 
++/// Recover a plane section that is an isoparametric curve of a rational support.
++///
++/// Fixing one tensor-product parameter evaluates the transverse control curves
++/// and retains the other knot vector. The resulting rational curve lies on the
++/// original support exactly, even if conversion changed its parameterization.
++/// A plane contains the whole curve when it contains every positive-weight
++/// control point. This certificate does not depend on the marching tolerance.
++fn isoparametric_intersection_leader<S: ShapeOpsSurface>(
++    intersection: &IntersectionCurve<PolylineCurve<Point3>, S, S>,
++    projections: &mut usize,
++) -> Option<NurbsCurve<Vector4>> {
++    let (first, last) = intersection.leader().range_tuple();
++    let front = intersection.leader().front();
++    let back = intersection.leader().back();
++    [
++        (intersection.surface0(), intersection.surface1()),
++        (intersection.surface1(), intersection.surface0()),
++    ]
++    .into_iter()
++    .find_map(|(support, planar)| {
++        let plane = certified_plane(planar)?;
++        let rational = NurbsSurface::new(support.try_into_homogeneous_bspline_surface()?);
++        let spline = rational.non_rationalized();
++        let controls = spline.control_points();
++        if controls.iter().map(Vec::len).sum::<usize>() > 4096
++            || !spline.knot_vector_u().is_clamped(spline.udegree())
++            || !spline.knot_vector_v().is_clamped(spline.vdegree())
++            || !controls.iter().flatten().all(|control| {
++                control.w.is_finite()
++                    && control.w > 0.0
++                    && control.to_point().to_vec().magnitude2().is_finite()
++            })
++        {
++            return None;
++        }
++        *projections = projections.checked_sub(2)?;
++        let point = intersection.search_triple((first + last) / 2.0, 100)?.0;
++        let (u, v) = rational.search_nearest_parameter(point, None, 100)?;
++        let normal = plane.normal();
++        let origin = plane.origin();
++        let functional =
++            |control: Vector4| normal.dot(control.truncate() - origin.to_vec() * control.w);
++        [true, false].into_iter().find_map(|fixed_u| {
++            let (transverse, knots, seed) = if fixed_u {
++                (
++                    (0..controls.first()?.len())
++                        .map(|index| spline.curve_u(index))
++                        .collect::<Vec<_>>(),
++                    spline.knot_vector_v().clone(),
++                    u,
++                )
++            } else {
++                (
++                    (0..controls.len())
++                        .map(|index| spline.curve_v(index))
++                        .collect::<Vec<_>>(),
++                    spline.knot_vector_u().clone(),
++                    v,
++                )
++            };
++            let (lower, upper) = transverse.first()?.range_tuple();
++            if !seed.is_finite() || seed < lower || seed > upper {
++                return None;
++            }
++            // Inverse projection only seeds the root. Refine the homogeneous
++            // plane equation to arithmetic precision before certifying the hull.
++            let parameter = (0..12).try_fold(seed, |parameter, _| {
++                let (value, derivative) = transverse
++                    .iter()
++                    .map(|curve| {
++                        (
++                            functional(curve.evaluate(parameter)),
++                            functional(curve.derivative(parameter)),
++                        )
++                    })
++                    .max_by(|lhs, rhs| lhs.1.abs().total_cmp(&rhs.1.abs()))?;
++                let next = if derivative == 0.0 {
++                    parameter
++                } else {
++                    parameter - value / derivative
++                };
++                (next.is_finite() && next >= lower && next <= upper).then_some(next)
++            })?;
++            let section_controls = transverse
++                .iter()
++                .map(|curve| {
++                    let control = curve.evaluate(parameter);
++                    let (distance, error) = plane_distance(control.to_point(), origin, normal);
++                    (control.w.is_finite()
++                        && control.w > 0.0
++                        && distance.is_finite()
++                        && error.is_finite()
++                        && distance.abs() <= error)
++                        .then_some(control)
++                })
++                .collect::<Option<Vec<_>>>()?;
++            let section = NurbsCurve::new(BsplineCurve::try_new(knots, section_controls).ok()?);
++            let start = sweep_parameter(&section, front)?;
++            let end = sweep_parameter(&section, back)?;
++            let mut section = section_trim(&section, start.min(end), start.max(end))?;
++            if start > end {
++                section.invert();
++            }
++            let (start, end) = section.range_tuple();
++            let samples = intersection.leader().as_slice().len().clamp(3, 16);
++            (1..samples).try_fold(start, |previous, index| {
++                *projections = projections.checked_sub(1)?;
++                let point = intersection
++                    .search_triple(first + (last - first) * index as f64 / samples as f64, 100)?
++                    .0;
++                let parameter = section.search_parameter(point, Some(previous), 100)?;
++                (parameter >= previous
++                    && parameter <= end
++                    && section.evaluate(parameter).near(&point))
++                .then_some(parameter)
++            })?;
++            (section.front().near(&front) && section.back().near(&back)).then_some(section)
++        })
++    })
++}
++
+ /// Convert alternative curves while retaining their exact supporting surfaces.
+ fn altshell_to_shell<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     altshell: &AltCurveShell<C, S>,
+ ) -> Option<Shell<Point3, C, S>> {
+     let mut projections = 128;
+     let mut rational_projections = 128;
++    let mut isoparametric_projections = 128;
+     let shell: Shell<Point3, C, S> = altshell.try_mapped(
+         |p| Some(*p),
+         |c| match c {
+@@ -307,7 +431,13 @@
+                         .into(),
+                     )
+                 } else {
+-                    let rational = rational_intersection_leader(&curve, &mut rational_projections)?;
++                    let rational = rational_intersection_leader(&curve, &mut rational_projections)
++                        .or_else(|| {
++                            isoparametric_intersection_leader(
++                                &curve,
++                                &mut isoparametric_projections,
++                            )
++                        })?;
+                     Some(
+                         SurfaceCurve::with_boundaries(
+                             surface0, surface1, rational, boundary0, boundary1,

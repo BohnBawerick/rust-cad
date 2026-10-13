@@ -1,0 +1,7 @@
+   Compiling monstertruck-solid v0.4.1 (/work/kernel/source/monstertruck-solid)
+   Compiling kernel-probe v0.1.0 (/work/probe)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.07s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`
+     Running `/target/debug/kernel-probe /missing-input.json`
+{"error":"No such file or directory (os error 2)","status":"error"}

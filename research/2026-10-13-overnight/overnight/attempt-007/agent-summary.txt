@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The repair evaluates the exact trim curve before surface projection. A trim lying in the surface is already a solution; the previous Newton step could divide zero by zero. Singular steps and out-of-range parameters now fail explicitly.
+
+Expected scope: curved rim/cap contacts across supported curve and surface types. Exact B-rep geometry and existing oriented-shell classification remain intact.
+
+Unresolved risks include coplanar subdivision, intersection tracing, and leader-conversion limits.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

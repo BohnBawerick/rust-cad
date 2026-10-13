@@ -1,0 +1,1 @@
+{"a": {"kind": "box", "origin": [1, -1, 0], "size": [2, 2, 3]}, "boolean_tol": 0.05, "group": "step", "id": "public-313", "mesh_tol": 0.002, "op": "step_roundtrip"}

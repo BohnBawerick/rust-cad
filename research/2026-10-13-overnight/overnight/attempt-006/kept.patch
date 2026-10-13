@@ -1,0 +1,411 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -18,6 +18,8 @@
+ //!   the current error enum has no single `Internal` variant.
+ //! - Classification sums oriented shell windings and tracks the exterior
+ //!   winding explicitly when intersecting with a complement for subtraction.
++//! - Failed assemblies can use a support-plane arrangement for certified
++//!   planar solids with convex faces, retaining the exact input surfaces.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -684,6 +686,368 @@
+     Some(([and0, or0], contact_arrangement))
+ }
+ 
++/// A certified convex planar face, with its material-side orientation.
++struct PlanarCell<S> {
++    surface: S,
++    orientation: bool,
++    normal: Vector3,
++    points: Vec<Point3>,
++}
++
++/// Bound arithmetic roundoff in a plane predicate, independently of meshing tolerance.
++fn plane_distance(point: Point3, origin: Point3, normal: Vector3) -> (f64, f64) {
++    let scale = (point.x.abs() + origin.x.abs()) * normal.x.abs()
++        + (point.y.abs() + origin.y.abs()) * normal.y.abs()
++        + (point.z.abs() + origin.z.abs()) * normal.z.abs();
++    ((point - origin).dot(normal), 32.0 * f64::EPSILON * scale)
++}
++
++/// Test a convex planar domain: negative outside, zero on its boundary, positive inside.
++fn planar_domain(points: &[Point3], normal: Vector3, point: Point3) -> i8 {
++    points
++        .iter()
++        .zip(points.iter().cycle().skip(1))
++        .fold(1, |state, (a, b)| {
++            let (distance, error) = plane_distance(point, *a, normal.cross(*b - *a));
++            state.min(if distance < -error {
++                -1
++            } else if distance > error {
++                1
++            } else {
++                0
++            })
++        })
++}
++
++/// Certify entire supports and straight trims, not just a vertex bounding box.
++///
++/// The control net proves planarity. Each trim belongs to two nonparallel
++/// planes and therefore is a line segment for a valid simple input boundary.
++/// Convex faces suffice; the solid may be nonconvex and have oriented cavities.
++fn planar_cells<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++    work: &mut usize,
++) -> Option<Vec<PlanarCell<S>>> {
++    let mut incidence: HashMap<EdgeId<C>, (Vector3, usize)> = HashMap::default();
++    let cells = solid
++        .face_iter()
++        .map(|face| {
++            if face.absolute_boundaries().len() != 1 {
++                return None;
++            }
++            let edge_count = face.edge_iter().count();
++            *work = work.checked_sub(edge_count.checked_mul(edge_count)?)?;
++            let surface = face.surface();
++            let AnalyticSurfaceKind::Plane(plane) = surface.try_into_analytic_surface_kind()?
++            else {
++                return None;
++            };
++            let spline = surface.try_into_homogeneous_bspline_surface()?;
++            *work = work.checked_sub(spline.control_points().iter().map(Vec::len).sum())?;
++            if !spline.control_points().iter().flatten().all(|control| {
++                if !control.w.is_finite() || control.w == 0.0 {
++                    return false;
++                }
++                let (distance, error) =
++                    plane_distance(control.to_point(), plane.origin(), plane.normal());
++                distance.is_finite() && error.is_finite() && distance.abs() <= error
++            }) {
++                return None;
++            }
++            let points = face
++                .edge_iter()
++                .map(|edge| {
++                    let entry = incidence.entry(edge.id()).or_insert((plane.normal(), 0));
++                    if entry.1 > 1 || (entry.1 == 1 && entry.0.cross(plane.normal()).so_small()) {
++                        return None;
++                    }
++                    entry.1 += 1;
++                    Some(edge.front().point())
++                })
++                .collect::<Option<Vec<_>>>()?;
++            if points.len() < 3 {
++                return None;
++            }
++            let area = points[1..].windows(2).fold(Vector3::zero(), |sum, pair| {
++                sum + (pair[0] - points[0]).cross(pair[1] - points[0])
++            });
++            let normal = plane.normal() * area.dot(plane.normal()).signum();
++            if !area.magnitude2().is_finite()
++                || area.magnitude2() == 0.0
++                || !points.iter().all(|point| {
++                    let (distance, error) = plane_distance(*point, plane.origin(), normal);
++                    distance.abs() <= error && planar_domain(&points, normal, *point) >= 0
++                })
++            {
++                return None;
++            }
++            Some(PlanarCell {
++                surface,
++                orientation: face.orientation(),
++                normal,
++                points,
++            })
++        })
++        .collect::<Option<Vec<_>>>()?;
++    incidence
++        .values()
++        .all(|(_, count)| *count == 2)
++        .then_some(cells)
++}
++
++/// Subdivide an exact convex planar domain without discarding small-area cells.
++fn split_planar_cell(points: Vec<Point3>, origin: Point3, normal: Vector3) -> Vec<Vec<Point3>> {
++    let distances: Vec<_> = points
++        .iter()
++        .map(|point| {
++            let (distance, error) = plane_distance(*point, origin, normal);
++            if distance.abs() <= error {
++                0.0
++            } else {
++                distance
++            }
++        })
++        .collect();
++    if !distances.iter().any(|d| *d < 0.0) || !distances.iter().any(|d| *d > 0.0) {
++        vec![points]
++    } else {
++        [-1.0, 1.0]
++            .into_iter()
++            .map(|side| {
++                (0..points.len())
++                    .flat_map(|i| {
++                        let j = (i + 1) % points.len();
++                        let crossing = distances[i] * distances[j] < 0.0;
++                        let point = (distances[i] * side >= 0.0).then_some(points[i]);
++                        let cut = crossing.then(|| {
++                            points[i]
++                                + (points[j] - points[i])
++                                    * (distances[i] / (distances[i] - distances[j]))
++                        });
++                        point.into_iter().chain(cut)
++                    })
++                    .collect()
++            })
++            .collect()
++    }
++}
++
++/// Sum exact planar ray crossings over all oriented shells.
++fn planar_inside<S>(point: Point3, cells: &[PlanarCell<S>]) -> Option<bool> {
++    [
++        Vector3::new(1.0, 0.371, 0.529),
++        Vector3::new(0.239, 1.0, 0.713),
++        Vector3::new(0.617, 0.419, 1.0),
++    ]
++    .into_iter()
++    .find_map(|direction| {
++        let winding = cells.iter().try_fold(0_isize, |winding, cell| {
++            let denominator = cell.normal.dot(direction);
++            if denominator.abs() <= 32.0 * f64::EPSILON {
++                return None;
++            }
++            let parameter = (cell.points[0] - point).dot(cell.normal) / denominator;
++            if parameter <= 0.0 {
++                Some(winding)
++            } else {
++                match planar_domain(&cell.points, cell.normal, point + direction * parameter) {
++                    -1 => Some(winding),
++                    0 => None,
++                    _ => Some(winding + if denominator > 0.0 { 1 } else { -1 }),
++                }
++            }
++        })?;
++        match winding {
++            0 => Some(false),
++            1 => Some(true),
++            _ => None,
++        }
++    })
++}
++
++/// Assemble one common arrangement of the exact input support planes.
++///
++/// This fallback runs only after the marching pipeline fails. It retains the
++/// input surfaces and constructs exact straight trims. No tessellation enters
++/// classification or output geometry. A bounded work counter limits refinement.
++fn planar_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
++    let mut work = 262_144_usize;
++    let mut projections = 2048_usize;
++    let mut cells = planar_cells(solid0, &mut work)?;
++    let first_len = cells.len();
++    cells.extend(planar_cells(solid1, &mut work)?);
++    let mut retained = Vec::new();
++    cells.iter().enumerate().try_for_each(|(index, source)| {
++        let pieces = cells
++            .iter()
++            .try_fold(vec![source.points.clone()], |pieces, plane| {
++                pieces
++                    .into_iter()
++                    .try_fold(Vec::new(), |mut divided, points| {
++                        work = work.checked_sub(points.len())?;
++                        divided.extend(split_planar_cell(points, plane.points[0], plane.normal));
++                        Some(divided)
++                    })
++            })?;
++        let first = index < first_len;
++        let other = if first {
++            &cells[first_len..]
++        } else {
++            &cells[..first_len]
++        };
++        pieces.into_iter().try_for_each(|mut points| {
++            if points.len() < 3 {
++                return None;
++            }
++            let point = points[0]
++                + points.iter().map(|p| *p - points[0]).sum::<Vector3>() / points.len() as f64;
++            work = work.checked_sub(other.iter().map(|cell| cell.points.len()).sum())?;
++            let shared = other.iter().find(|cell| {
++                let (distance, error) = plane_distance(point, cell.points[0], cell.normal);
++                distance.abs() <= error && planar_domain(&cell.points, cell.normal, point) >= 0
++            });
++            let keep = if let Some(shared) = shared {
++                // Arrangement cells must lie in the relative interior of a shared patch.
++                if planar_domain(&shared.points, shared.normal, point) != 1
++                    || source.normal.cross(shared.normal).magnitude() > 32.0 * f64::EPSILON
++                {
++                    return None;
++                }
++                let same = source.normal.dot(shared.normal) > 0.0;
++                first
++                    && match operation {
++                        Operation::Union | Operation::Intersection => same,
++                        Operation::Difference => !same,
++                    }
++            } else {
++                let inside = planar_inside(point, other)?;
++                match operation {
++                    Operation::Union => !inside,
++                    Operation::Intersection => inside,
++                    Operation::Difference => inside != first,
++                }
++            };
++            if keep {
++                let invert = !first && matches!(operation, Operation::Difference);
++                if invert {
++                    points.reverse();
++                }
++                retained.push((index, source.orientation != invert, points));
++            }
++            Some(())
++        })
++    })?;
++
++    // Share geometric vertices before constructing any edges. The threshold
++    // accounts for arithmetic roundoff only, never the Boolean tolerance.
++    let scale = cells
++        .iter()
++        .flat_map(|cell| &cell.points)
++        .fold(1.0_f64, |scale, p| {
++            scale.max(p.x.abs()).max(p.y.abs()).max(p.z.abs())
++        });
++    let roundoff = 128.0 * f64::EPSILON * scale;
++    let mut vertices: Vec<Vertex<Point3>> = Vec::new();
++    let indexed = retained
++        .into_iter()
++        .map(|(source, orientation, points)| {
++            let indices = points
++                .into_iter()
++                .map(|point| {
++                    work = work.checked_sub(vertices.len())?;
++                    let index = vertices
++                        .iter()
++                        .position(|vertex| vertex.point().distance2(point) <= roundoff * roundoff);
++                    Some(index.unwrap_or_else(|| {
++                        vertices.push(Vertex::new(point));
++                        vertices.len() - 1
++                    }))
++                })
++                .collect::<Option<Vec<_>>>()?;
++            Some((source, orientation, indices))
++        })
++        .collect::<Option<Vec<_>>>()?;
++    let mut edges: HashMap<(usize, usize), (Edge<Point3, C>, usize, usize)> = HashMap::default();
++    let shell = indexed
++        .into_iter()
++        .map(|(source, orientation, indices)| {
++            let cell = &cells[source];
++            let wire = indices
++                .iter()
++                .zip(indices.iter().cycle().skip(1))
++                .map(|(&a, &b)| {
++                    if a == b {
++                        return None;
++                    }
++                    let key = (a.min(b), a.max(b));
++                    if let Some((edge, start, count)) = edges.get_mut(&key) {
++                        // More than two incident faces, or equal directions, is
++                        // independently detected nonmanifold output geometry.
++                        if *count != 1 || *start == a {
++                            return None;
++                        }
++                        *count = 2;
++                        Some(edge.inverse())
++                    } else {
++                        let front = vertices[a].point();
++                        let back = vertices[b].point();
++                        work = work.checked_sub(cells.len())?;
++                        let support = cells.iter().find_map(|other| {
++                            if cell.normal.cross(other.normal).so_small() {
++                                return None;
++                            }
++                            [front, front.midpoint(back), back]
++                                .into_iter()
++                                .try_for_each(|p| {
++                                    let (distance, error) =
++                                        plane_distance(p, other.points[0], other.normal);
++                                    if distance.abs() > error {
++                                        return None;
++                                    }
++                                    projections = projections.checked_sub(1)?;
++                                    other.surface.search_parameter(p, None, 100).map(|_| ())
++                                })?;
++                            Some(other)
++                        })?;
++                        let leader = BsplineCurve::from(Line(front, back));
++                        let boundary0: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
++                        let boundary1: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
++                        let curve = SurfaceCurve::with_boundaries(
++                            cell.surface.clone(),
++                            support.surface.clone(),
++                            leader,
++                            boundary0,
++                            boundary1,
++                        )
++                        .into();
++                        let edge = Edge::try_new(&vertices[a], &vertices[b], curve).ok()?;
++                        if !edge.is_geometric_consistent() {
++                            return None;
++                        }
++                        edges.insert(key, (edge.clone(), a, 1));
++                        Some(edge)
++                    }
++                })
++                .collect::<Option<Wire<_, _>>>()?;
++            let wire = if orientation { wire } else { wire.inverse() };
++            let mut face = Face::try_new(vec![wire], cell.surface.clone()).ok()?;
++            if !orientation {
++                face.invert();
++            }
++            Some(face)
++        })
++        .collect::<Option<Shell<_, _, _>>>()?;
++    if edges.values().any(|(_, _, count)| *count != 2) {
++        None
++    } else {
++        Solid::try_new(shell.connected_components()).ok()
++    }
++}
++
+ fn finalize<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     operation: &'static str,
+     shell: Shell<Point3, C, S>,
+@@ -701,7 +1065,7 @@
+     Difference,
+ }
+ 
+-fn boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++fn boolean_classic<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+@@ -756,6 +1120,21 @@
+     finalize(name, shell)
+ }
+ 
++fn boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    tol: f64,
++    operation: Operation,
++) -> ClassicResult<Solid<Point3, C, S>> {
++    boolean_classic(solid0, solid1, tol, operation).or_else(|error| {
++        if tol.is_finite() && tol > 0.0 {
++            planar_boolean(solid0, solid1, operation).ok_or(error)
++        } else {
++            Err(error)
++        }
++    })
++}
++
+ /// AND operation between two solids (classic backend).
+ pub(crate) fn and<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid0: &Solid<Point3, C, S>,

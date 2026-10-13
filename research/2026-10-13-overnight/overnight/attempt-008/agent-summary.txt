@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate adds a bounded retry that reuses existing trim chains instead of inserting duplicate cuts. Coincident supports are classified after subdivision using oriented winding and shared-patch ownership. Existing successful paths take precedence.
+
+Expected scope: curved boundaries meeting coplanar faces, retaining original B-rep curves, surfaces, and cavity orientation.
+
+Risks remain in numerical trim matching, tessellation-based classification, closed contact loops, and tangencies.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

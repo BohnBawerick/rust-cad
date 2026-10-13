@@ -1,0 +1,40 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -696,6 +696,27 @@
+     points: Vec<Point3>,
+ }
+ 
++/// Certify a common support on a complete convex arrangement patch.
++///
++/// Unit normals computed from short edges amplify coordinate cancellation.
++/// Comparing their angle therefore needlessly rejects thin coplanar faces.
++/// Three noncollinear points determine a plane. Testing the whole patch in both
++/// supports uses subdivision's coordinate error bounds without extrapolating a
++/// short edge's normal across an unrelated, much larger face.
++fn coplanar_patch<S>(points: &[Point3], first: &PlanarCell<S>, second: &PlanarCell<S>) -> bool {
++    let area = points[1..].windows(2).fold(Vector3::zero(), |sum, pair| {
++        sum + (pair[0] - points[0]).cross(pair[1] - points[0])
++    });
++    area.magnitude2().is_finite()
++        && area.magnitude2() > 0.0
++        && [first, second].into_iter().all(|plane| {
++            points.iter().all(|point| {
++                let (distance, error) = plane_distance(*point, plane.points[0], plane.normal);
++                distance.is_finite() && error.is_finite() && distance.abs() <= error
++            })
++        })
++}
++
+ /// Bound arithmetic roundoff in a plane predicate, independently of meshing tolerance.
+ fn plane_distance(point: Point3, origin: Point3, normal: Vector3) -> (f64, f64) {
+     let scale = (point.x.abs() + origin.x.abs()) * normal.x.abs()
+@@ -917,7 +938,8 @@
+             let keep = if let Some(shared) = shared {
+                 // Arrangement cells must lie in the relative interior of a shared patch.
+                 if planar_domain(&shared.points, shared.normal, point) != 1
+-                    || source.normal.cross(shared.normal).magnitude() > 32.0 * f64::EPSILON
++                    || (source.normal.cross(shared.normal).magnitude() > 32.0 * f64::EPSILON
++                        && !coplanar_patch(&points, source, shared))
+                 {
+                     return None;
+                 }

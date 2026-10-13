@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate certifies planar boundary-only contacts using complete surface control nets and edges shared by nonparallel planes. Certified arrangements preserve intact B-rep faces, avoiding degenerate intersection loops and unnecessary face division. Existing oriented winding handles subtraction, containment, cavities, and multiple shells.
+
+Expected gains: edge/vertex contacts and small intact planar faces. Partial coplanar overlaps, curved contacts, and classification near boundaries remain unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

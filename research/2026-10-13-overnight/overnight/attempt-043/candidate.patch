@@ -1,0 +1,167 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -28,6 +28,8 @@
+ //!   only new transverse generators require intersection-curve assembly.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
++//! - Failed intersection fits can retain exact rational sections of certified
++//!   translational supports, including oblique cuts by planar supports.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -160,11 +162,124 @@
+     }
+ }
+ 
++/// Recover a rational plane section from a certified translational control net.
++///
++/// If a support is `P(t) + h * D`, its intersection with a transverse plane is
++/// `P(t) + D * (O - P(t)).dot(N) / D.dot(N)`. This affine map acts directly on
++/// homogeneous control points and preserves the knots and rational weights.
++/// Positive weights also bound the required translation over the entire trim.
++/// No polygonal approximation is used to construct the resulting curve.
++fn rational_intersection_leader<S: ShapeOpsSurface>(
++    intersection: &IntersectionCurve<PolylineCurve<Point3>, S, S>,
++    projections: &mut usize,
++) -> Option<NurbsCurve<Vector4>> {
++    let surface0 = intersection.surface0();
++    let surface1 = intersection.surface1();
++    [(surface0, surface1), (surface1, surface0)]
++        .into_iter()
++        .find_map(|(support, planar)| {
++            let plane = certified_plane(planar)?;
++            if !support.supports_exact_patch_domains() {
++                return None;
++            }
++            let spline = support.try_into_homogeneous_bspline_surface()?;
++            let controls = spline.control_points();
++            if controls.iter().map(Vec::len).sum::<usize>() > 4096
++                || !spline.knot_vector_u().is_clamped(spline.udegree())
++                || !spline.knot_vector_v().is_clamped(spline.vdegree())
++            {
++                return None;
++            }
++            let (base, top) = if spline.udegree() == 1 && controls.len() == 2 {
++                (spline.curve_v(0), spline.curve_v(1))
++            } else if spline.vdegree() == 1 && controls.iter().all(|row| row.len() == 2) {
++                (spline.curve_u(0), spline.curve_u(1))
++            } else {
++                return None;
++            };
++            let translation = top.control_point(0).to_point() - base.control_point(0).to_point();
++            let normal = plane.normal();
++            let denominator = translation.dot(normal);
++            if !denominator.is_finite()
++                || denominator.abs()
++                    <= 32.0 * f64::EPSILON * translation.magnitude() * normal.magnitude()
++                || !base
++                    .control_points()
++                    .iter()
++                    .zip(top.control_points())
++                    .all(|(a, b)| {
++                        let scale = a.to_point().to_vec().magnitude()
++                            + b.to_point().to_vec().magnitude()
++                            + translation.magnitude();
++                        a.w.is_finite()
++                            && a.w > 0.0
++                            && a.w == b.w
++                            && (b.to_point() - a.to_point() - translation).magnitude()
++                                <= 32.0 * f64::EPSILON * scale
++                    })
++            {
++                return None;
++            }
++            let projected = base
++                .control_points()
++                .iter()
++                .map(|control| {
++                    let height = (plane.origin() - control.to_point()).dot(normal) / denominator;
++                    let point = control.to_point() + translation * height;
++                    (height.is_finite() && point.to_vec().magnitude2().is_finite())
++                        .then_some(point.to_homogeneous() * control.w)
++                })
++                .collect::<Option<Vec<_>>>()?;
++            let section =
++                NurbsCurve::new(BsplineCurve::try_new(base.knot_vector().clone(), projected).ok()?);
++            let front = intersection.leader().front();
++            let back = intersection.leader().back();
++            let start = sweep_parameter(&section, front)?;
++            let end = sweep_parameter(&section, back)?;
++            let lower = start.min(end);
++            let upper = start.max(end);
++            let source = section_trim(&NurbsCurve::new(base), lower, upper)?;
++            // The signed height is affine in Euclidean space. Its extrema are
++            // bounded by the positive-weight control hull of the trimmed source.
++            if !source.control_points().iter().all(|control| {
++                let (distance, error) = plane_distance(control.to_point(), plane.origin(), normal);
++                let height = -distance / denominator;
++                let roundoff = error / denominator.abs();
++                height.is_finite() && height >= -roundoff && height <= 1.0 + roundoff
++            }) {
++                return None;
++            }
++            let mut section = section_trim(&section, lower, upper)?;
++            if start > end {
++                section.invert();
++            }
++            // Endpoint agreement selects the bounded arc. Continuation checks
++            // reject a different intersection branch with the same endpoints.
++            let (first, last) = intersection.leader().range_tuple();
++            let (start, end) = section.range_tuple();
++            let samples = intersection.leader().as_slice().len().clamp(3, 16);
++            (1..samples).try_fold(start, |previous, index| {
++                *projections = projections.checked_sub(1)?;
++                let fraction = index as f64 / samples as f64;
++                let point = intersection
++                    .search_triple(first + (last - first) * fraction, 100)?
++                    .0;
++                let parameter = section.search_parameter(point, Some(previous), 100)?;
++                (parameter >= previous
++                    && parameter <= end
++                    && section.evaluate(parameter).near(&point))
++                .then_some(parameter)
++            })?;
++            (section.front().near(&front) && section.back().near(&back)).then_some(section)
++        })
++}
++
+ /// Convert alternative curves while retaining their exact supporting surfaces.
+ fn altshell_to_shell<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     altshell: &AltCurveShell<C, S>,
+ ) -> Option<Shell<Point3, C, S>> {
+     let mut projections = 128;
++    let mut rational_projections = 128;
+     let shell: Shell<Point3, C, S> = altshell.try_mapped(
+         |p| Some(*p),
+         |c| match c {
+@@ -182,15 +297,24 @@
+                     surface1.clone(),
+                     PolylineCurve(points),
+                 );
+-                let bspline = intersection_leader(&curve, &mut projections)?;
+                 let boundary0: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
+                 let boundary1: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
+-                Some(
+-                    SurfaceCurve::with_boundaries(
+-                        surface0, surface1, bspline, boundary0, boundary1,
++                if let Some(bspline) = intersection_leader(&curve, &mut projections) {
++                    Some(
++                        SurfaceCurve::with_boundaries(
++                            surface0, surface1, bspline, boundary0, boundary1,
++                        )
++                        .into(),
+                     )
+-                    .into(),
+-                )
++                } else {
++                    let rational = rational_intersection_leader(&curve, &mut rational_projections)?;
++                    Some(
++                        SurfaceCurve::with_boundaries(
++                            surface0, surface1, rational, boundary0, boundary1,
++                        )
++                        .into(),
++                    )
++                }
+             }
+         },
+         |s| Some(s.clone()),

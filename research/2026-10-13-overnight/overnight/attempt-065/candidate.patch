@@ -1,0 +1,318 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -34,6 +34,8 @@
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
+ //! - Failed assembly can reconstruct all nested trim loops, retaining small
+ //!   chart regions and assigning each hole to its immediate containing boundary.
++//! - Failed assembly can classify disjoint shell boundaries by support hulls
++//!   and oriented degree, retaining exact faces and every cavity orientation.
+ //! - Failed intersection fits can retain exact rational sections of certified
+ //!   translational supports, including oblique cuts by planar supports.
+ 
+@@ -47,7 +49,7 @@
+ use monstertruck_topology::*;
+ use rustc_hash::FxHashMap as HashMap;
+ use smallvec::SmallVec;
+-use std::iter;
++use std::{f64::consts::PI, iter};
+ 
+ use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
+ use crate::alternative::Alternative;
+@@ -2631,6 +2633,274 @@
+     Solid::try_new(shell.connected_components()).ok()
+ }
+ 
++/// A convex enclosure of an entire trimmed face, including its curved wires.
++#[derive(Clone, Copy)]
++struct BoundaryHull {
++    minimum: Point3,
++    maximum: Point3,
++}
++
++impl BoundaryHull {
++    fn from_points(points: impl IntoIterator<Item = Point3>) -> Option<Self> {
++        let mut points = points.into_iter();
++        let first = points.next()?;
++        if !first.to_vec().magnitude2().is_finite() {
++            return None;
++        }
++        points.try_fold(
++            Self {
++                minimum: first,
++                maximum: first,
++            },
++            |mut hull, point| {
++                if !point.to_vec().magnitude2().is_finite() {
++                    return None;
++                }
++                (0..3).for_each(|axis| {
++                    hull.minimum[axis] = hull.minimum[axis].min(point[axis]);
++                    hull.maximum[axis] = hull.maximum[axis].max(point[axis]);
++                });
++                Some(hull)
++            },
++        )
++    }
++
++    fn separated(self, other: Self) -> bool {
++        (0..3).any(|axis| {
++            let scale = self.minimum[axis].abs()
++                + self.maximum[axis].abs()
++                + other.minimum[axis].abs()
++                + other.maximum[axis].abs();
++            let error = 256.0 * f64::EPSILON * scale;
++            error.is_finite()
++                && (other.minimum[axis] - self.maximum[axis] > error
++                    || self.minimum[axis] - other.maximum[axis] > error)
++        })
++    }
++}
++
++/// Enclose each face independently, rather than enclosing the solid's interior.
++///
++/// Positive spline weights enclose a bounded support. On a plane, every curved
++/// trim is enclosed by the projected control hull of its neighboring support.
++/// A trim between two nonparallel planes is straight. Coplanar seams and
++/// unbounded curved carriers require another method and decline this proof.
++fn boundary_hulls<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++) -> Option<Vec<BoundaryHull>> {
++    let faces = solid.face_iter().collect::<Vec<_>>();
++    let mut work = 65_536_usize;
++    let supports = faces
++        .iter()
++        .map(|face| {
++            let surface = face.surface();
++            if surface.supports_exact_patch_domains() {
++                let spline = surface.try_into_homogeneous_bspline_surface()?;
++                if !spline.is_clamped() {
++                    return None;
++                }
++                let points = spline
++                    .control_points()
++                    .iter()
++                    .flatten()
++                    .map(|control| {
++                        work = work.checked_sub(1)?;
++                        let point = control.to_point();
++                        (control.w.is_finite()
++                            && control.w > 0.0
++                            && point.to_vec().magnitude2().is_finite())
++                        .then_some(point)
++                    })
++                    .collect::<Option<Vec<_>>>()?;
++                Some((None, points))
++            } else {
++                Some((Some(certified_plane(&surface)?), Vec::new()))
++            }
++        })
++        .collect::<Option<Vec<_>>>()?;
++    let mut incidence: HashMap<EdgeId<C>, SmallVec<[usize; 2]>> = HashMap::default();
++    faces.iter().enumerate().try_for_each(|(index, face)| {
++        face.edge_iter().try_for_each(|edge| {
++            work = work.checked_sub(1)?;
++            let adjacent = incidence.entry(edge.id()).or_default();
++            if adjacent.len() == 2 {
++                return None;
++            }
++            adjacent.push(index);
++            Some(())
++        })
++    })?;
++    if incidence.values().any(|adjacent| adjacent.len() != 2) {
++        return None;
++    }
++    faces
++        .iter()
++        .enumerate()
++        .map(|(index, face)| {
++            let (plane, controls) = &supports[index];
++            if let Some(plane) = plane {
++                let normal = plane.normal();
++                let squared = normal.magnitude2();
++                if !squared.is_finite() || squared == 0.0 {
++                    return None;
++                }
++                let points = face.edge_iter().try_fold(Vec::new(), |mut points, edge| {
++                    work = work.checked_sub(2)?;
++                    points.extend([edge.front().point(), edge.back().point()]);
++                    let adjacent = incidence.get(&edge.id())?;
++                    let neighbor = adjacent.iter().copied().find(|other| *other != index)?;
++                    let (other_plane, controls) = &supports[neighbor];
++                    if let Some(other) = other_plane {
++                        if normal.cross(other.normal()).so_small() {
++                            return None;
++                        }
++                    } else {
++                        work = work.checked_sub(controls.len())?;
++                        points.extend(controls.iter().map(|point| {
++                            *point - normal * ((*point - plane.origin()).dot(normal) / squared)
++                        }));
++                    }
++                    Some(points)
++                })?;
++                BoundaryHull::from_points(points)
++            } else {
++                BoundaryHull::from_points(controls.iter().copied())
++            }
++        })
++        .collect()
++}
++
++/// Compute degree using a boundary chain homologous to the exact solid.
++///
++/// The query must avoid every complete face hull. Inside each convex hull a
++/// face can then deform to fans over its boundary chords without crossing the
++/// query. Shared edges use identical chords, so those homotopies cancel. Holes
++/// and inward shells retain their signs. These triangles are used only for
++/// degree; they never replace any output geometry.
++fn boundary_degree<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    point: Point3,
++    solid: &Solid<Point3, C, S>,
++    hulls: &[BoundaryHull],
++    work: &mut usize,
++) -> Option<bool> {
++    let query = BoundaryHull {
++        minimum: point,
++        maximum: point,
++    };
++    if !hulls.iter().all(|hull| hull.separated(query)) {
++        return None;
++    }
++    let mut sum = 0.0_f64;
++    let mut correction = 0.0_f64;
++    let mut count = 0_usize;
++    solid.face_iter().try_for_each(|face| {
++        let sign = if face.orientation() { 1.0 } else { -1.0 };
++        face.absolute_boundaries().iter().try_for_each(|wire| {
++            let mut vertices = wire.iter().map(|edge| edge.front().point());
++            let origin = vertices.next()?;
++            let mut previous = vertices.next()?;
++            vertices.try_for_each(|next| {
++                *work = work.checked_sub(1)?;
++                let vectors = [origin, previous, next].map(|vertex| vertex - point);
++                let lengths = vectors.map(|vector| vector.magnitude());
++                if lengths
++                    .iter()
++                    .any(|length| !length.is_finite() || *length == 0.0)
++                {
++                    return None;
++                }
++                let [a, b, c] = [
++                    vectors[0] / lengths[0],
++                    vectors[1] / lengths[1],
++                    vectors[2] / lengths[2],
++                ];
++                let numerator = a.dot(b.cross(c));
++                let denominator = 1.0 + a.dot(b) + b.dot(c) + c.dot(a);
++                // Nearly antipodal directions make a fan angle ill-conditioned.
++                if !numerator.is_finite()
++                    || !denominator.is_finite()
++                    || numerator.abs() + denominator.abs() <= 256.0 * f64::EPSILON
++                {
++                    return None;
++                }
++                let angle = sign * 2.0 * numerator.atan2(denominator);
++                let increment = angle - correction;
++                let updated = sum + increment;
++                correction = (updated - sum) - increment;
++                sum = updated;
++                count += 1;
++                previous = next;
++                Some(())
++            })
++        })
++    })?;
++    let winding = sum / (4.0 * PI);
++    let integer = winding.round();
++    let error = 4096.0 * f64::EPSILON * count.max(1) as f64;
++    (winding.is_finite()
++        && (winding - integer).abs() <= error
++        && (integer == 0.0 || integer == 1.0))
++        .then_some(integer == 1.0)
++}
++
++/// Assemble whole shell components only after proving boundary disjointness.
++///
++/// Material membership is constant on each connected boundary component.
++/// Degree sums all shells of the other operand, so a cavity is not confused
++/// with material containment. Subtraction reverses each retained cutter shell.
++fn nested_shell_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
++    let hulls0 = boundary_hulls(solid0)?;
++    let hulls1 = boundary_hulls(solid1)?;
++    let mut work = 262_144_usize;
++    hulls0.iter().try_for_each(|a| {
++        hulls1.iter().try_for_each(|b| {
++            work = work.checked_sub(1)?;
++            a.separated(*b).then_some(())
++        })
++    })?;
++    let mut boundaries = Vec::new();
++    [
++        (solid0, solid1, &hulls1, false),
++        (solid1, solid0, &hulls0, true),
++    ]
++    .into_iter()
++    .try_for_each(|(source, other, hulls, second)| {
++        source.boundaries().iter().try_for_each(|shell| {
++            shell
++                .connected_components()
++                .into_iter()
++                .try_for_each(|mut component| {
++                    let point = component
++                        .first()?
++                        .absolute_boundaries()
++                        .first()?
++                        .front_vertex()?
++                        .point();
++                    let inside = boundary_degree(point, other, hulls, &mut work)?;
++                    let keep = match operation {
++                        Operation::Intersection => inside,
++                        Operation::Union => !inside,
++                        Operation::Difference => inside == second,
++                    };
++                    if keep {
++                        if second && matches!(operation, Operation::Difference) {
++                            component.iter_mut().for_each(|face| {
++                                face.invert();
++                            });
++                        }
++                        boundaries.push(component);
++                    }
++                    Some(())
++                })
++        })
++    })?;
++    Solid::try_new(boundaries).ok()
++}
++
+ fn boolean_classic<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+@@ -2721,13 +2991,15 @@
+     } else if let Some(solid) = separated_boolean(solid0, solid1, operation) {
+         Ok(solid)
+     } else {
+-        boolean_classic(solid0, solid1, tol, operation).or_else(|error| {
+-            if matches!(operation, Operation::Union) {
+-                lower_dimensional_union(solid0, solid1).ok_or(error)
+-            } else {
+-                Err(error)
+-            }
+-        })
++        boolean_classic(solid0, solid1, tol, operation)
++            .or_else(|error| {
++                if matches!(operation, Operation::Union) {
++                    lower_dimensional_union(solid0, solid1).ok_or(error)
++                } else {
++                    Err(error)
++                }
++            })
++            .or_else(|error| nested_shell_boolean(solid0, solid1, operation).ok_or(error))
+     }
+ }
+ 

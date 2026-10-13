@@ -1,0 +1,349 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -26,6 +26,8 @@
+ //!   nets, avoiding ill-conditioned comparisons between independently derived normals.
+ //! - Failed certified sweeps retain the input trim curves and smooth seam curves;
+ //!   only new transverse generators require intersection-curve assembly.
++//! - Failed operations can certify separated boundaries by subdividing complete
++//!   support hulls, then assemble whole oriented shells using certified witnesses.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
+ 
+@@ -1275,6 +1277,327 @@
+             }
+         }
+     }
++}
++
++/// A complete face enclosure, with a spline available for exact subdivision.
++struct BoundaryHull {
++    points: Vec<Point3>,
++    spline: Option<BsplineSurface<Vector4>>,
++    normal: Option<Vector3>,
++}
++
++/// Project a positive-weight control net without dropping any of its controls.
++fn control_hull(spline: &BsplineSurface<Vector4>) -> Option<Vec<Point3>> {
++    spline
++        .control_points()
++        .iter()
++        .flatten()
++        .map(|control| {
++            let point = control.to_point();
++            (control.w.is_finite()
++                && control.w > 0.0
++                && point.x.is_finite()
++                && point.y.is_finite()
++                && point.z.is_finite())
++            .then_some(point)
++        })
++        .collect()
++}
++
++/// Enclose each whole face, including planar caps with curved or multiple wires.
++///
++/// A planar trim lies in the projection of its adjacent bounded support's
++/// control hull. A trim between nonparallel planes is straight. The convex
++/// hull of all these enclosures contains the planar face, including its holes.
++/// Unbounded nonplanar supports and uncertified coplanar seams decline the path.
++fn boundary_hulls<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++) -> Option<Vec<BoundaryHull>> {
++    let faces = solid.face_iter().collect::<Vec<_>>();
++    if faces.len() > 128 {
++        return None;
++    }
++    let mut work = 65_536_usize;
++    let supports = faces
++        .iter()
++        .map(|face| {
++            work = work.checked_sub(face.edge_iter().count())?;
++            let surface = face.surface();
++            if surface.supports_exact_patch_domains() {
++                let spline = surface.try_into_homogeneous_bspline_surface()?;
++                work = work.checked_sub(spline.control_points().iter().map(Vec::len).sum())?;
++                if !spline.knot_vector_u().is_clamped(spline.udegree())
++                    || !spline.knot_vector_v().is_clamped(spline.vdegree())
++                {
++                    return None;
++                }
++                let points = control_hull(&spline)?;
++                Some(BoundaryHull {
++                    points,
++                    spline: Some(spline),
++                    normal: certified_plane(&surface).map(|plane| plane.normal().normalize()),
++                })
++            } else {
++                let plane = certified_plane(&surface)?;
++                Some(BoundaryHull {
++                    points: Vec::new(),
++                    spline: None,
++                    normal: Some(plane.normal().normalize()),
++                })
++            }
++        })
++        .collect::<Option<Vec<_>>>()?;
++    let mut incidence: HashMap<EdgeId<C>, SmallVec<[usize; 2]>> = HashMap::default();
++    faces.iter().enumerate().for_each(|(index, face)| {
++        face.edge_iter().for_each(|edge| {
++            incidence.entry(edge.id()).or_default().push(index);
++        });
++    });
++    if incidence.values().any(|indices| indices.len() != 2) {
++        return None;
++    }
++    supports
++        .iter()
++        .enumerate()
++        .map(|(index, hull)| {
++            if hull.spline.is_some() {
++                return Some(BoundaryHull {
++                    points: hull.points.clone(),
++                    spline: hull.spline.clone(),
++                    normal: hull.normal,
++                });
++            }
++            let normal = hull.normal?;
++            let origin = faces[index].edge_iter().next()?.front().point();
++            let points = faces[index]
++                .edge_iter()
++                .map(|edge| {
++                    let adjacent = incidence.get(&edge.id())?;
++                    let other = adjacent.iter().copied().find(|other| *other != index)?;
++                    let neighbor = &supports[other];
++                    if neighbor.spline.is_some() {
++                        work = work.checked_sub(neighbor.points.len())?;
++                        Some(
++                            neighbor
++                                .points
++                                .iter()
++                                .map(|point| *point - normal * (*point - origin).dot(normal))
++                                .collect::<Vec<_>>(),
++                        )
++                    } else if !normal.cross(neighbor.normal?).so_small() {
++                        Some(vec![edge.front().point(), edge.back().point()])
++                    } else {
++                        None
++                    }
++                })
++                .collect::<Option<Vec<_>>>()?
++                .into_iter()
++                .flatten()
++                .collect();
++            Some(BoundaryHull {
++                points,
++                spline: None,
++                normal: Some(normal),
++            })
++        })
++        .collect()
++}
++
++/// Prove a strict separating plane between complete convex enclosures.
++fn hull_gap(a: &BoundaryHull, b: &BoundaryHull) -> bool {
++    let axes = [Vector3::unit_x(), Vector3::unit_y(), Vector3::unit_z()];
++    axes.into_iter()
++        .chain(a.normal)
++        .chain(b.normal)
++        .any(|axis| {
++            let interval = |points: &[Point3]| {
++                points.iter().fold(
++                    (f64::INFINITY, f64::NEG_INFINITY),
++                    |(minimum, maximum), point| {
++                        let (value, error) = plane_distance(*point, Point3::origin(), axis);
++                        (minimum.min(value - error), maximum.max(value + error))
++                    },
++                )
++            };
++            let (min0, max0) = interval(&a.points);
++            let (min1, max1) = interval(&b.points);
++            !a.points.is_empty() && !b.points.is_empty() && (max0 < min1 || max1 < min0)
++        })
++}
++
++/// Separate whole support patches by exact homogeneous knot subdivision.
++///
++/// No tessellation chord or vertex box is used to certify curved separation.
++/// Subdivision exhaustion and touching hulls are unresolved, never empty space.
++fn separate_hulls(
++    a: &BoundaryHull,
++    b: &BoundaryHull,
++    depth: usize,
++    work: &mut usize,
++) -> Option<()> {
++    *work = work.checked_sub(a.points.len() + b.points.len())?;
++    if hull_gap(a, b) {
++        return Some(());
++    }
++    if depth == 0 {
++        return None;
++    }
++    let split_a = a.spline.is_some() && (b.spline.is_none() || depth % 2 == 0);
++    let (source, other) = if split_a { (a, b) } else { (b, a) };
++    let mut left = source.spline.clone()?;
++    let split_u = (depth / 2) % 2 == 0;
++    let knots = if split_u {
++        left.knot_vector_u()
++    } else {
++        left.knot_vector_v()
++    };
++    let start = *knots.first()?;
++    let end = *knots.last()?;
++    let middle = start + (end - start) / 2.0;
++    if !middle.is_finite() || middle <= start || middle >= end {
++        return None;
++    }
++    let right = if split_u {
++        left.cut_u(middle)
++    } else {
++        left.cut_v(middle)
++    };
++    [left, right].into_iter().try_for_each(|spline| {
++        let child = BoundaryHull {
++            points: control_hull(&spline)?,
++            spline: Some(spline),
++            normal: source.normal,
++        };
++        separate_hulls(&child, other, depth - 1, work)
++    })
++}
++
++/// Read winding only where the complete face hulls exclude the witness.
++///
++/// Straight homotopy from each exact face to its tessellation stays inside its
++/// convex enclosure. Excluding the witness from every enclosure therefore
++/// preserves the degree of the closed oriented boundary under tessellation.
++fn enclosed_membership(
++    point: Point3,
++    hulls: &[BoundaryHull],
++    polygons: &PolyShell,
++    work: &mut usize,
++) -> Option<bool> {
++    *work = work.checked_sub(hulls.iter().map(|hull| hull.points.len()).sum())?;
++    let witness = BoundaryHull {
++        points: vec![point],
++        spline: None,
++        normal: None,
++    };
++    if !hulls.iter().all(|hull| hull_gap(hull, &witness)) {
++        return None;
++    }
++    let mut answer = None;
++    [
++        Vector3::zero(),
++        Vector3::new(1.0, 2.0, 3.0),
++        Vector3::new(3.0, 1.0, 2.0),
++    ]
++    .into_iter()
++    .try_for_each(|offset| {
++        let direction = hash::take_one_unit(point + offset);
++        let winding = polygons.iter().try_fold(0_isize, |sum, face| {
++            let mesh = face.surface()?;
++            let crossing = mesh.signed_crossing_faces(point, direction);
++            Some(
++                sum + if face.orientation() {
++                    crossing
++                } else {
++                    -crossing
++                },
++            )
++        })?;
++        if !(0..=1).contains(&winding) {
++            return None;
++        }
++        let inside = winding == 1;
++        if answer.is_some_and(|previous| previous != inside) {
++            None
++        } else {
++            answer = Some(inside);
++            Some(())
++        }
++    })?;
++    answer
++}
++
++/// Assemble separated boundaries by whole connected shells and oriented winding.
++///
++/// Disjoint boundaries make membership constant on each connected shell. This
++/// includes nested cavities and disconnected material components. Reversing only
++/// retained second-operand shells implements subtraction without losing cavities.
++fn separated_boundaries_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++    tol: f64,
++) -> Option<Solid<Point3, C, S>> {
++    let hulls0 = boundary_hulls(solid0)?;
++    let hulls1 = boundary_hulls(solid1)?;
++    let mut work = 262_144_usize;
++    hulls0.iter().try_for_each(|a| {
++        hulls1
++            .iter()
++            .try_for_each(|b| separate_hulls(a, b, 16, &mut work))
++    })?;
++    let shell0: Shell<Point3, C, S> = solid0.face_iter().cloned().collect();
++    let shell1: Shell<Point3, C, S> = solid1.face_iter().cloned().collect();
++    let polygons0 = shell0.triangulation(tol);
++    let polygons1 = shell1.triangulation(tol);
++    if polygons0.iter().chain(&polygons1).any(|face| {
++        face.surface()
++            .is_none_or(|mesh| mesh.face_iter().next().is_none())
++    }) {
++        return None;
++    }
++    let mut result = Vec::new();
++    [
++        (&shell0, &hulls1, &polygons1, true),
++        (&shell1, &hulls0, &polygons0, false),
++    ]
++    .into_iter()
++    .try_for_each(|(shell, hulls, polygons, first)| {
++        shell
++            .connected_components()
++            .into_iter()
++            .try_for_each(|mut component| {
++                // Topological identifiers need not have a stable allocation order.
++                let mut witnesses = component
++                    .vertex_iter()
++                    .map(|vertex| vertex.point())
++                    .collect::<Vec<_>>();
++                witnesses.sort_by(|a, b| {
++                    a.x.total_cmp(&b.x)
++                        .then_with(|| a.y.total_cmp(&b.y))
++                        .then_with(|| a.z.total_cmp(&b.z))
++                });
++                witnesses.dedup();
++                let inside = witnesses
++                    .into_iter()
++                    .take(64)
++                    .find_map(|point| enclosed_membership(point, hulls, polygons, &mut work))?;
++                let keep = match operation {
++                    Operation::Intersection => inside,
++                    Operation::Union => !inside,
++                    Operation::Difference => inside != first,
++                };
++                if keep {
++                    if !first && matches!(operation, Operation::Difference) {
++                        component.iter_mut().for_each(|face| {
++                            face.invert();
++                        });
++                    }
++                    result.push(component);
++                }
++                Some(())
++            })
++    })?;
++    Solid::try_new(result).ok()
+ }
+ 
+ /// One exact section arc of a translational side patch.
+@@ -2077,6 +2400,9 @@
+         boolean_classic(solid0, solid1, tol, operation)
+             .or_else(|error| planar_boolean(solid0, solid1, operation, true).ok_or(error))
+             .or_else(|error| sweep_boolean(solid0, solid1, operation, tol).ok_or(error))
++            .or_else(|error| {
++                separated_boundaries_boolean(solid0, solid1, operation, tol).ok_or(error)
++            })
+     }
+ }
+ 

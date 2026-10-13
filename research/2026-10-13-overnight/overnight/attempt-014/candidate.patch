@@ -1,0 +1,147 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,8 @@
+ //!   before marching, retaining the exact input surfaces.
+ //! - Complete positive-weight spline control nets certify separation, including
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
++//! - Failed unions at certified point or curve contacts retain separate shells
++//!   when positive spline bases exclude shared open boundary patches.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -1201,6 +1203,120 @@
+     }
+ }
+ 
++/// Prove that a certified supporting plane contains no open boundary patch.
++///
++/// On an open knot rectangle every active B-spline basis function is positive.
++/// With positive rational weights, one strictly interior control point therefore
++/// puts the whole open rectangle strictly inside the supporting half-space.
++/// Contacts can remain on knot lines, but cannot have positive surface area.
++/// The caller must first certify the complete solid enclosure.
++fn no_support_patch<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++    axis: usize,
++    coordinate: f64,
++    upper: bool,
++    work: &mut usize,
++) -> Option<()> {
++    solid.face_iter().try_for_each(|face| {
++        *work = work.checked_sub(1)?;
++        let surface = face.surface();
++        if surface.supports_exact_patch_domains() {
++            let spline = surface.try_into_homogeneous_bspline_surface()?;
++            let controls = spline.control_points();
++            let (udegree, vdegree) = spline.degrees();
++            let (uknots, vknots) = spline.knot_vectors();
++            let rows = controls.len();
++            let columns = controls.first()?.len();
++            if !spline.is_clamped() || rows <= udegree || columns <= vdegree {
++                return None;
++            }
++            *work = work.checked_sub(rows.checked_mul(columns)?)?;
++            let distance = |control: &Vector4| {
++                let value = control.to_point()[axis];
++                if upper {
++                    coordinate - value
++                } else {
++                    value - coordinate
++                }
++            };
++            if !controls.iter().flatten().all(|control| {
++                let distance = distance(control);
++                control.w.is_finite() && control.w > 0.0 && distance.is_finite() && distance >= 0.0
++            }) {
++                return None;
++            }
++            (udegree..rows)
++                .filter(|&u| uknots[u] < uknots[u + 1])
++                .try_for_each(|u| {
++                    (vdegree..columns)
++                        .filter(|&v| vknots[v] < vknots[v + 1])
++                        .try_for_each(|v| {
++                            *work = work.checked_sub((udegree + 1).checked_mul(vdegree + 1)?)?;
++                            controls[u - udegree..=u]
++                                .iter()
++                                .flat_map(|row| &row[v - vdegree..=v])
++                                .any(|control| distance(control) > 0.0)
++                                .then_some(())
++                        })
++                })
++        } else if let Some(AnalyticSurfaceKind::Plane(plane)) =
++            surface.try_into_analytic_surface_kind()
++        {
++            // An unbounded plane needs no trim enclosure for this test: distinct
++            // planes intersect in at most a line, even when their trims overlap.
++            let mut normal = Vector3::zero();
++            normal[axis] = 1.0;
++            let origin = Point3::origin() + normal * coordinate;
++            let (distance, error) = plane_distance(plane.origin(), origin, normal);
++            (!plane.normal().cross(normal).so_small()
++                || (distance.is_finite() && error.is_finite() && distance.abs() > error))
++                .then_some(())
++        } else {
++            None
++        }
++    })
++}
++
++/// Assemble a union whose certified contact has no two-dimensional patch.
++///
++/// Weakly separated interiors have additive oriented boundaries unless a shared
++/// face becomes internal to their union. Ruling out such a face on either operand
++/// makes their original closed shells the regularized union boundary, including
++/// all cavities. Point and curve contacts retain separate topological shells.
++fn touching_union<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++) -> Option<Solid<Point3, C, S>> {
++    let (min0, max0) = solid_enclosure(solid0)?;
++    let (min1, max1) = solid_enclosure(solid1)?;
++    let mut work = 65_536_usize;
++    let certified = (0..3).any(|axis| {
++        [
++            (solid0, max0[axis], solid1, min1[axis]),
++            (solid1, max1[axis], solid0, min0[axis]),
++        ]
++        .into_iter()
++        .any(|(left, upper, right, lower)| {
++            upper <= lower
++                && (no_support_patch(left, axis, upper, true, &mut work).is_some()
++                    || no_support_patch(right, axis, lower, false, &mut work).is_some())
++        })
++    });
++    if certified {
++        Solid::try_new(
++            solid0
++                .boundaries()
++                .iter()
++                .chain(solid1.boundaries())
++                .cloned()
++                .collect(),
++        )
++        .ok()
++    } else {
++        None
++    }
++}
++
+ fn boolean_classic<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+@@ -1274,7 +1390,13 @@
+     } else if let Some(solid) = separated_boolean(solid0, solid1, operation) {
+         Ok(solid)
+     } else {
+-        boolean_classic(solid0, solid1, tol, operation)
++        boolean_classic(solid0, solid1, tol, operation).or_else(|error| {
++            if matches!(operation, Operation::Union) {
++                touching_union(solid0, solid1).ok_or(error)
++            } else {
++                Err(error)
++            }
++        })
+     }
+ }
+ 

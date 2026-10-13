@@ -1,0 +1,7117 @@
+{
+  "score": 51.22418091168091,
+  "passed": 127,
+  "total": 351,
+  "groups": {
+    "boxes": {
+      "passed": 63,
+      "total": 192
+    },
+    "cylinders": {
+      "passed": 22,
+      "total": 78
+    },
+    "extrude": {
+      "passed": 13,
+      "total": 13
+    },
+    "revolve": {
+      "passed": 0,
+      "total": 13
+    },
+    "fillet": {
+      "passed": 0,
+      "total": 13
+    },
+    "chamfer": {
+      "passed": 13,
+      "total": 13
+    },
+    "holes": {
+      "passed": 0,
+      "total": 13
+    },
+    "patterns": {
+      "passed": 13,
+      "total": 13
+    },
+    "step": {
+      "passed": 3,
+      "total": 3
+    }
+  },
+  "rows": [
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-000",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0352,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 5.574203791598883,
+        "area": 23.968238861346826,
+        "centroid": [
+          3.973022765822304,
+          -3.201109974330795,
+          1.6315028425174478
+        ]
+      },
+      "actual": {
+        "volume": 5.574203791598881,
+        "area": 23.968238861346812,
+        "centroid": [
+          3.973022765822304,
+          -3.2011099743307945,
+          1.631502842517448
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-001",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0355,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-002",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0328,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-003",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-004",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-005",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0327,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-006",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0328,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-007",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0328,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-008",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0331,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-009",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-010",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0331,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-011",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0329,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-012",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0327,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-013",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-014",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0328,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-015",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0327,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-016",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.033,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-017",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-018",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0334,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-019",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.033,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-020",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-021",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0336,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-022",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0329,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-023",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0328,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-024",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0341,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.0010657362722615,
+        "area": 7.5874241227826875,
+        "centroid": [
+          -1.7629093494803836,
+          -4.298814641645614,
+          2.161226819507836
+        ]
+      },
+      "actual": {
+        "volume": 1.0010657362722617,
+        "area": 7.587424122782689,
+        "centroid": [
+          -1.7629093494803838,
+          -4.298814641645614,
+          2.161226819507836
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-025",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0661,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-026",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0338,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-027",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0353,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-028",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0333,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-029",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0648,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 608.8170183497408,
+        "area": 434.13625934545666,
+        "centroid": [
+          4.086703651181802,
+          8.840922812773071,
+          6.287859309723295
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-030",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1217.6340366994816,
+        "area": 868.2725186909132,
+        "centroid": [
+          11.683315111940914,
+          1.006685845655369,
+          6.287859309723295
+        ]
+      },
+      "actual": {
+        "volume": 1217.6340366994814,
+        "area": 868.272518690913,
+        "centroid": [
+          11.683315111940917,
+          1.0066858456553676,
+          6.287859309723294
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-031",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0329,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-032",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 163.22831287791954,
+        "area": 238.0577573957424,
+        "centroid": [
+          4.153090853377085,
+          2.9110883980164544,
+          3.1907066689505634
+        ]
+      },
+      "actual": {
+        "volume": 163.22831287791948,
+        "area": 238.05775739574236,
+        "centroid": [
+          4.153090853377086,
+          2.9110883980164557,
+          3.190706668950564
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 22,
+        "triangles": 40
+      },
+      "id": "sealed-033",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0339,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 409.0540852844248,
+        "area": 359.14507474211706,
+        "centroid": [
+          6.215535786308181,
+          1.0067417922447963,
+          4.34463437750496
+        ]
+      },
+      "actual": {
+        "volume": 409.05408528442484,
+        "area": 359.145074742117,
+        "centroid": [
+          6.215535786308179,
+          1.0067417922447968,
+          4.344634377504961
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 28,
+        "triangles": 52
+      },
+      "id": "sealed-034",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0335,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 82.59745952858577,
+        "area": 116.9704400493678,
+        "centroid": [
+          6.2155357863081795,
+          1.0067417922447963,
+          4.344634377504961
+        ]
+      },
+      "actual": {
+        "volume": 82.59745952858574,
+        "area": 116.97044004936781,
+        "centroid": [
+          6.21553578630818,
+          1.0067417922447968,
+          4.34463437750496
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 28
+      },
+      "id": "sealed-035",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0331,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-036",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-037",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.034,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-038",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 2.5810170666758268,
+        "area": 11.407109467865329,
+        "centroid": [
+          3.2138059106402856,
+          5.352447629950998,
+          3.8975490940999733
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-039",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 5.1620341333516535,
+        "area": 22.81421893573065,
+        "centroid": [
+          4.473056384924584,
+          5.352447629950998,
+          3.8975490940999733
+        ]
+      },
+      "actual": {
+        "volume": 5.1620341333516535,
+        "area": 22.814218935730654,
+        "centroid": [
+          4.473056384924584,
+          5.352447629950998,
+          3.8975490940999737
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-040",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0328,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-041",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0327,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-042",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.033,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-043",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0329,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-044",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0329,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-045",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.033,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-046",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-047",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.033,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 23.19567728713185,
+        "area": 49.40956483736293,
+        "centroid": [
+          -5.034102168029591,
+          4.356957093041458,
+          -2.2062906528605946
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-048",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 46.3913545742637,
+        "area": 98.81912967472586,
+        "centroid": [
+          -6.36141415886816,
+          5.583829826349021,
+          -0.4257801551170668
+        ]
+      },
+      "actual": {
+        "volume": 46.391354574263694,
+        "area": 98.81912967472586,
+        "centroid": [
+          -6.361414158868159,
+          5.583829826349021,
+          -0.4257801551170668
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 15,
+        "triangles": 24
+      },
+      "id": "sealed-049",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.033,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-050",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-051",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-052",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-053",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-054",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-055",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-056",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-057",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0322,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-058",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-059",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0322,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-060",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-061",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-062",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.3969979245831592,
+        "area": 3.3266063486139332,
+        "centroid": [
+          3.3259756289005393,
+          -1.7287217113513647,
+          3.486684902191234
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-063",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0322,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.7939958491663184,
+        "area": 6.6532126972278665,
+        "centroid": [
+          1.7287217113513649,
+          3.7329634043443236,
+          3.486684902191234
+        ]
+      },
+      "actual": {
+        "volume": 0.7939958491663186,
+        "area": 6.6532126972278665,
+        "centroid": [
+          1.7287217113513649,
+          3.732963404344324,
+          3.4866849021912336
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-064",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0326,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-065",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0322,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-066",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0322,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-067",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0322,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-068",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.3527264365529774,
+        "area": 3.0414975902250876,
+        "centroid": [
+          2.876990513920447,
+          1.8374560847480343,
+          2.7710082995018563
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-069",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.7054528731059548,
+        "area": 6.082995180450174,
+        "centroid": [
+          -0.7678188091574614,
+          2.876990513920447,
+          2.7710082995018563
+        ]
+      },
+      "actual": {
+        "volume": 0.705452873105955,
+        "area": 6.082995180450178,
+        "centroid": [
+          -0.7678188091574617,
+          2.876990513920447,
+          2.7710082995018563
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-070",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0328,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-071",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0328,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.20899557296112276,
+        "area": 2.820191075670413,
+        "centroid": [
+          -4.35460310515,
+          -2.6711751091762923,
+          -2.8702373486552104
+        ]
+      },
+      "actual": {
+        "volume": 0.20899557296112273,
+        "area": 2.820191075670413,
+        "centroid": [
+          -4.354603105150001,
+          -2.671175109176292,
+          -2.8702373486552104
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 22,
+        "triangles": 40
+      },
+      "id": "sealed-072",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0331,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.5237479418784762,
+        "area": 4.243861832859271,
+        "centroid": [
+          -4.216558234521097,
+          -2.49447785638603,
+          -2.7380055356169177
+        ]
+      },
+      "actual": {
+        "volume": 0.5237479418784763,
+        "area": 4.24386183285927,
+        "centroid": [
+          -4.216558234521097,
+          -2.4944778563860295,
+          -2.738005535616917
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 28,
+        "triangles": 52
+      },
+      "id": "sealed-073",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0355,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.10575679595623091,
+        "area": 1.3965203184815531,
+        "centroid": [
+          -1.2906182077926316,
+          -4.726107040982255,
+          -2.7380055356169173
+        ]
+      },
+      "actual": {
+        "volume": 0.10575679595623101,
+        "area": 1.396520318481554,
+        "centroid": [
+          -1.2906182077926316,
+          -4.726107040982255,
+          -2.738005535616917
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 17,
+        "triangles": 30
+      },
+      "id": "sealed-074",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0355,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-075",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0329,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-076",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-077",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 51.90953148537379,
+        "area": 83.5893194483744,
+        "centroid": [
+          -0.9792032374839351,
+          2.7785596586963863,
+          6.568276548994923
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-078",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 103.81906297074758,
+        "area": 167.17863889674877,
+        "centroid": [
+          2.712639446270292,
+          2.9448300433346137,
+          6.568276548994923
+        ]
+      },
+      "actual": {
+        "volume": 103.81906297074761,
+        "area": 167.17863889674874,
+        "centroid": [
+          2.7126394462702903,
+          2.9448300433346124,
+          6.568276548994923
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-079",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0327,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-080",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0325,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-081",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0322,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-082",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0322,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-083",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-084",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-085",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-086",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0322,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.5086660271562349,
+        "area": 3.889530649946076,
+        "centroid": [
+          4.094703490841993,
+          -3.5458848365263393,
+          -4.469241430407662
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-087",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.01733205431247,
+        "area": 7.779061299892153,
+        "centroid": [
+          4.4055422980276,
+          -3.066763341303421,
+          -4.042306334880837
+        ]
+      },
+      "actual": {
+        "volume": 1.0173320543124686,
+        "area": 7.779061299892151,
+        "centroid": [
+          4.4055422980276,
+          -3.066763341303421,
+          -4.042306334880837
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 15,
+        "triangles": 24
+      },
+      "id": "sealed-088",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0329,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-089",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0322,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-090",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-091",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0331,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-092",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0322,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-093",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-094",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-095",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-096",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-097",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-098",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0327,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-099",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-100",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-101",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.4410368965248353,
+        "area": 3.5093879386404403,
+        "centroid": [
+          1.1479149017944827,
+          4.543786039039058,
+          1.2774240426255066
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-102",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.8820737930496706,
+        "area": 7.0187758772808815,
+        "centroid": [
+          2.9425417711670443,
+          3.9770186246603974,
+          1.2774240426255066
+        ]
+      },
+      "actual": {
+        "volume": 0.8820737930496703,
+        "area": 7.018775877280877,
+        "centroid": [
+          2.942541771167044,
+          3.9770186246603965,
+          1.2774240426255066
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-103",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0328,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-104",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0324,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-105",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-106",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-107",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.7170430237271165,
+        "area": 4.822767655751003,
+        "centroid": [
+          4.185533941617953,
+          2.1220447158778373,
+          1.956629432244266
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-108",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.4340860474542332,
+        "area": 9.645535311502007,
+        "centroid": [
+          5.457564983307915,
+          -2.579957623285018,
+          1.9566294322442663
+        ]
+      },
+      "actual": {
+        "volume": 1.4340860474542334,
+        "area": 9.645535311502009,
+        "centroid": [
+          5.457564983307915,
+          -2.5799576232850185,
+          1.956629432244266
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-109",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0326,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-110",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0325,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.18182487351058957,
+        "area": 2.5443172482025473,
+        "centroid": [
+          -1.0816734992253905,
+          -0.7158271252448302,
+          -0.9932308165224022
+        ]
+      },
+      "actual": {
+        "volume": 0.1818248735105895,
+        "area": 2.5443172482025465,
+        "centroid": [
+          -1.0816734992253905,
+          -0.71582712524483,
+          -0.993230816522402
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 22,
+        "triangles": 40
+      },
+      "id": "sealed-111",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.033,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.4556575143397907,
+        "area": 3.8623970101755436,
+        "centroid": [
+          -1.1147032347322388,
+          0.44663558240307055,
+          -0.9088093814613099
+        ]
+      },
+      "actual": {
+        "volume": 0.45565751433979085,
+        "area": 3.8623970101755423,
+        "centroid": [
+          -1.1147032347322385,
+          0.44663558240307055,
+          -0.9088093814613099
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 28,
+        "triangles": 52
+      },
+      "id": "sealed-112",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.034,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.09200776731861156,
+        "area": 1.2262374862295515,
+        "centroid": [
+          -1.197819352650709,
+          0.08529620980138852,
+          -0.9088093814613097
+        ]
+      },
+      "actual": {
+        "volume": 0.09200776731861163,
+        "area": 1.2262374862295513,
+        "centroid": [
+          -1.1978193526507088,
+          0.08529620980138858,
+          -0.9088093814613099
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 28
+      },
+      "id": "sealed-113",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0329,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-114",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-115",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-116",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.45943699423516476,
+        "area": 3.6178883575013385,
+        "centroid": [
+          3.660180421104341,
+          -0.5211502049436013,
+          -1.8661371560482305
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-117",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.9188739884703295,
+        "area": 7.235776715002677,
+        "centroid": [
+          3.660180421104341,
+          0.20501826318687225,
+          -1.8661371560482305
+        ]
+      },
+      "actual": {
+        "volume": 0.9188739884703299,
+        "area": 7.235776715002678,
+        "centroid": [
+          3.6601804211043407,
+          0.20501826318687266,
+          -1.8661371560482303
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-118",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0331,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-119",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0323,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-120",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-121",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-122",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0327,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-123",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-124",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-125",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0335,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 21.099882704291396,
+        "area": 46.01763875090466,
+        "centroid": [
+          1.9427891218171864,
+          -2.5745958745143973,
+          2.6002839503950907
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-126",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 42.19976540858279,
+        "area": 92.03527750180932,
+        "centroid": [
+          0.8137644953410197,
+          -1.7277983795714258,
+          4.078538257870703
+        ]
+      },
+      "actual": {
+        "volume": 42.19976540858279,
+        "area": 92.03527750180933,
+        "centroid": [
+          0.8137644953410197,
+          -1.7277983795714258,
+          4.078538257870703
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 15,
+        "triangles": 24
+      },
+      "id": "sealed-127",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0328,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-128",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0327,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-129",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-130",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0322,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-131",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-132",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-133",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-134",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-135",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-136",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-137",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-138",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-139",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-140",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 4.2060611574648386,
+        "area": 15.638332304784502,
+        "centroid": [
+          -1.6280467876530997,
+          5.241059745253278,
+          -2.63437747090381
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-141",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0329,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 8.412122314929677,
+        "area": 31.276664609569,
+        "centroid": [
+          -1.6280467876530995,
+          6.04256111866293,
+          -2.63437747090381
+        ]
+      },
+      "actual": {
+        "volume": 8.412122314929679,
+        "area": 31.276664609568996,
+        "centroid": [
+          -1.6280467876530995,
+          6.04256111866293,
+          -2.6343774709038104
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-142",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0327,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-143",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0322,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-144",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-145",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-146",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 488.34699033298887,
+        "area": 379.1229300277872,
+        "centroid": [
+          -3.443944904640983,
+          3.6621392070710055,
+          6.250813733445296
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-147",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 976.6939806659777,
+        "area": 758.2458600555743,
+        "centroid": [
+          4.874106800821865,
+          -4.91610498798246,
+          6.250813733445296
+        ]
+      },
+      "actual": {
+        "volume": 976.6939806659775,
+        "area": 758.2458600555743,
+        "centroid": [
+          4.874106800821864,
+          -4.916104987982459,
+          6.250813733445295
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-148",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0327,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-149",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0326,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 208.04571166678102,
+        "area": 285.01703340136424,
+        "centroid": [
+          8.193154522113705,
+          4.856940460206678,
+          3.554011201444766
+        ]
+      },
+      "actual": {
+        "volume": 208.04571166678107,
+        "area": 285.01703340136436,
+        "centroid": [
+          8.193154522113701,
+          4.856940460206676,
+          3.554011201444766
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 22,
+        "triangles": 40
+      },
+      "id": "sealed-150",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0338,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 521.3675665866318,
+        "area": 431.7850194761415,
+        "centroid": [
+          10.36660249680646,
+          6.662652243419973,
+          4.372118042917434
+        ]
+      },
+      "actual": {
+        "volume": 521.367566586632,
+        "area": 431.7850194761416,
+        "centroid": [
+          10.366602496806454,
+          6.662652243419972,
+          4.3721180429174336
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 28,
+        "triangles": 52
+      },
+      "id": "sealed-151",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0346,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 105.27614325306996,
+        "area": 138.24904732658703,
+        "centroid": [
+          10.366602496806458,
+          6.662652243419973,
+          4.372118042917434
+        ]
+      },
+      "actual": {
+        "volume": 105.27614325306995,
+        "area": 138.24904732658706,
+        "centroid": [
+          10.366602496806458,
+          6.6626522434199735,
+          4.372118042917435
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 28
+      },
+      "id": "sealed-152",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.033,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-153",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-154",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-155",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-156",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.4655,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-157",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.4659,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-158",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.5655,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 2.947766738796137,
+        "area": 11.390736436606826,
+        "centroid": [
+          -1.7105105096061441,
+          -0.6240227755610692,
+          -1.1492374720622929
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-159",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.1145,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 5.895533477592274,
+        "area": 22.78147287321365,
+        "centroid": [
+          -0.5788933290392579,
+          -0.6240227755610692,
+          -1.1492374720622929
+        ]
+      },
+      "actual": {
+        "volume": 5.8930017877765675,
+        "area": 22.768265449664007,
+        "centroid": [
+          -0.5788933290392647,
+          -0.6240227755610693,
+          -1.1492374720622944
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 7944,
+        "triangles": 15880
+      },
+      "id": "sealed-160",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 1.3512,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-161",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.1146,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-162",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.0643,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-163",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.0645,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-164",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.1144,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 1.8773553771808549,
+        "area": 8.694354769071667,
+        "centroid": [
+          -0.3191449270659552,
+          -0.09222971442258565,
+          1.7220807732768852
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-165",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.0644,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 3.7547107543617098,
+        "area": 17.388709538143335,
+        "centroid": [
+          0.5151697137047013,
+          -0.09222971442258565,
+          1.7220807732768852
+        ]
+      },
+      "actual": {
+        "volume": 3.753098387471862,
+        "area": 17.38096146002309,
+        "centroid": [
+          0.5151697137046853,
+          -0.09222971442258587,
+          1.7220807732768662
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 7944,
+        "triangles": 15880
+      },
+      "id": "sealed-166",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 1.3348,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-167",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0645,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-168",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.0645,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-169",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.0644,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-170",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0646,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 3.4334432642248935,
+        "area": 12.803683475363322,
+        "centroid": [
+          1.976611005069278,
+          -1.6120061952291493,
+          1.773375746625044
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-171",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.1147,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 6.866886528449787,
+        "area": 25.607366950726643,
+        "centroid": [
+          2.9031728708372233,
+          -1.6120061952291493,
+          1.773375746625044
+        ]
+      },
+      "actual": {
+        "volume": 6.863937715292124,
+        "area": 25.588496902487915,
+        "centroid": [
+          2.9031728708372144,
+          -1.6120061952291493,
+          1.773375746625053
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 7944,
+        "triangles": 15880
+      },
+      "id": "sealed-172",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 1.2959,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-173",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0645,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 2.3632260021197378,
+        "area": 9.893034472961746,
+        "centroid": [
+          -1.6029369318308895,
+          0.9153955744035804,
+          0.6212564703916489
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-174",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.0644,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 4.7264520042394755,
+        "area": 19.786068945923493,
+        "centroid": [
+          -0.4252862355081311,
+          0.9153955744035804,
+          0.6212564703916489
+        ]
+      },
+      "actual": {
+        "volume": 4.724422347305485,
+        "area": 19.77233929455993,
+        "centroid": [
+          -0.4252862355081523,
+          0.9153955744035803,
+          0.6212564703916201
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 7944,
+        "triangles": 15880
+      },
+      "id": "sealed-175",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 1.3068,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-176",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0646,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-177",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.2651,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-178",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.2874,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-179",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.2667,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 1.666764715708996,
+        "area": 7.946697344657678,
+        "centroid": [
+          -1.0169461149312085,
+          -1.507069521628503,
+          -0.40140405962467146
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-180",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.0645,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 3.333529431417992,
+        "area": 15.893394689315356,
+        "centroid": [
+          -0.1863631193657831,
+          -1.507069521628503,
+          -0.40140405962467146
+        ]
+      },
+      "actual": {
+        "volume": 3.3320979303428424,
+        "area": 15.885866808799873,
+        "centroid": [
+          -0.1863631193657881,
+          -1.5070695216285033,
+          -0.40140405962467585
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 7944,
+        "triangles": 15880
+      },
+      "id": "sealed-181",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 1.33,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-182",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0644,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.5915539395808916,
+        "area": 3.91365874268946,
+        "centroid": [
+          -1.940335593521929,
+          -1.786086135104456,
+          0.2040695126107267
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-183",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.0645,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.1831078791617833,
+        "area": 7.82731748537892,
+        "centroid": [
+          -1.2183692975920564,
+          -1.786086135104456,
+          0.2040695126107267
+        ]
+      },
+      "actual": {
+        "volume": 1.1825998229901156,
+        "area": 7.822110620052438,
+        "centroid": [
+          -1.218369297592052,
+          -1.7860861351044557,
+          0.2040695126107278
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 7944,
+        "triangles": 15880
+      },
+      "id": "sealed-184",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 1.2925,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-185",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0646,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-186",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.2249,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-187",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.1666,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-188",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.1648,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-189",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.065,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-190",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.0648,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-191",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0647,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-192",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.215,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-193",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.2147,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-194",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.2649,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-195",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.1646,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-196",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.1647,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-197",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.1647,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.4894052585095957,
+        "area": 3.4604348684698794,
+        "centroid": [
+          0.8732429491155838,
+          0.046046177188780124,
+          -0.2724437835980036
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-198",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.0646,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.9788105170191914,
+        "area": 6.920869736939759,
+        "centroid": [
+          1.5670841312254804,
+          0.046046177188780124,
+          -0.2724437835980036
+        ]
+      },
+      "actual": {
+        "volume": 0.9783863148097678,
+        "area": 6.9157022053883574,
+        "centroid": [
+          1.567083945731907,
+          0.046046872572442825,
+          -0.27244350053627425
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 7939,
+        "triangles": 15870
+      },
+      "id": "sealed-199",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 1.3225,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-200",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0644,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-201",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.5153,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-202",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.629,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-203",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.5714,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.23770667062988296,
+        "area": 2.153385685136625,
+        "centroid": [
+          -0.2231126472689593,
+          -0.7940834135196102,
+          -0.21952179926024995
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-204",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.0646,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.4754133412597659,
+        "area": 4.30677137027325,
+        "centroid": [
+          0.22382500017302295,
+          -0.7940834135196102,
+          -0.21952179926024995
+        ]
+      },
+      "actual": {
+        "volume": 0.4751228646475528,
+        "area": 4.299220098143365,
+        "centroid": [
+          0.223825000173021,
+          -0.7940834135196103,
+          -0.21952179926025428
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 7320,
+        "triangles": 14632
+      },
+      "id": "sealed-205",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.9053,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-206",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0645,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.23390821236850737,
+        "area": 2.2972349002684576,
+        "centroid": [
+          -1.1702531492611488,
+          -1.244769936247101,
+          -0.054283971724289774
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-207",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.0644,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.46781642473701474,
+        "area": 4.594469800536915,
+        "centroid": [
+          -0.8060756523171823,
+          -1.244769936247101,
+          -0.054283971724289774
+        ]
+      },
+      "actual": {
+        "volume": 0.4674104671765639,
+        "area": 4.5888818950209505,
+        "centroid": [
+          -0.806075652007746,
+          -1.244769930833403,
+          -0.05428395498889149
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 5832,
+        "triangles": 11656
+      },
+      "id": "sealed-208",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.8247,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-209",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0646,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 1.2239603884266639,
+        "area": 6.5531800963613565,
+        "centroid": [
+          0.5501461709022566,
+          -0.2854017856017048,
+          0.6532121588552596
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-210",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.0646,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 2.4479207768533278,
+        "area": 13.106360192722713,
+        "centroid": [
+          1.2682989099438922,
+          -0.2854017856017048,
+          0.6532121588552596
+        ]
+      },
+      "actual": {
+        "volume": 2.446869578327629,
+        "area": 13.100594416995078,
+        "centroid": [
+          1.2682989099438915,
+          -0.2854017856017048,
+          0.6532121588552302
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 7944,
+        "triangles": 15880
+      },
+      "id": "sealed-211",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 1.33,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-212",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0646,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-213",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.1144,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-214",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.0645,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-215",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0644,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-216",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.4149,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-217",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.3942,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-218",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.4653,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-219",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.165,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-220",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.1652,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-221",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.1651,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-222",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.1649,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-223",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.1653,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-224",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.1648,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-225",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.115,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-226",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.1146,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-227",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.1147,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-228",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.3151,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-229",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.3149,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-230",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.2648,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-231",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.4652,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "sealed-232",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.4151,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "sealed-233",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.415,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 18.503237775505692,
+        "area": 42.52690814419682,
+        "centroid": [
+          -0.6408505834534803,
+          -0.7538316738488826,
+          4.462707767425868
+        ]
+      },
+      "actual": {
+        "volume": 18.503237775505692,
+        "area": 42.526908144196824,
+        "centroid": [
+          -0.6408505834534803,
+          -0.7538316738488826,
+          4.462707767425868
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-234",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0325,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "mesh_closure",
+        "volume"
+      ],
+      "expected": {
+        "volume": 2.191325084735122,
+        "area": 9.355074649603287,
+        "centroid": [
+          -1.98109070638848,
+          -1.8321489708244283,
+          3.5112018373965963
+        ]
+      },
+      "actual": {
+        "volume": 1.9475363630070375,
+        "area": 9.088626000584437,
+        "centroid": [
+          -1.951393203968089,
+          -1.8514518872561132,
+          3.551659145975632
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 4183,
+        "triangles": 8309
+      },
+      "id": "sealed-235",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.3922,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 18.471289669225527,
+        "area": 42.21066815262198,
+        "centroid": [
+          -0.638615811502531,
+          -0.7520499259385285,
+          4.462707767425868
+        ]
+      },
+      "actual": {
+        "volume": 18.471181709558156,
+        "area": 42.20994508004315,
+        "centroid": [
+          -0.6386084162470254,
+          -0.7520440642075207,
+          4.462707767425942
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 1347,
+        "triangles": 2690
+      },
+      "id": "sealed-236",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.4479,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 18.428802004624256,
+        "area": 42.07603160338303,
+        "centroid": [
+          -0.6357275818926883,
+          -0.7497666047275863,
+          4.462707767425868
+        ]
+      },
+      "actual": {
+        "volume": 18.42880200462426,
+        "area": 42.07603160338303,
+        "centroid": [
+          -0.6357275818926882,
+          -0.7497666047275863,
+          4.462707767425868
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-237",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.265,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 17.450926856161356,
+        "area": 48.375261182905334,
+        "centroid": [
+          -0.6408505834534802,
+          -0.7538316738488825,
+          4.462707767425868
+        ]
+      },
+      "actual": {
+        "volume": 17.451606574270087,
+        "area": 48.38071042091832,
+        "centroid": [
+          -0.6408505834534794,
+          -0.7538316738488808,
+          4.462707767425869
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 3952,
+        "triangles": 7904
+      },
+      "id": "sealed-238",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 1.3761,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 74.01295110202277,
+        "area": 170.10763257678727,
+        "centroid": [
+          4.129869785351518,
+          -0.7538316738488826,
+          4.462707767425868
+        ]
+      },
+      "actual": {
+        "volume": 74.01295110202275,
+        "area": 170.1076325767873,
+        "centroid": [
+          4.12986978535152,
+          -0.7538316738488826,
+          4.462707767425868
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 32,
+        "triangles": 48
+      },
+      "id": "sealed-239",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.033,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 8.135845467677647,
+        "area": 24.615216889352755,
+        "centroid": [
+          1.7940677571909278,
+          -1.6654858902881944,
+          3.028178237654809
+        ]
+      },
+      "actual": {
+        "volume": 8.135845467677647,
+        "area": 24.61521688935276,
+        "centroid": [
+          1.7940677571909278,
+          -1.6654858902881946,
+          3.028178237654809
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-240",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0164,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 0.736935666176544,
+        "area": 4.629357250811842,
+        "centroid": [
+          0.6872251446929201,
+          -2.4626371761163113,
+          2.5523603256017973
+        ]
+      },
+      "actual": {
+        "volume": 0.7365889657231084,
+        "area": 4.625442680942763,
+        "centroid": [
+          0.68722385585567,
+          -2.4626368555999574,
+          2.552361577107337
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 3949,
+        "triangles": 7902
+      },
+      "id": "sealed-241",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.4004,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 8.123270959558708,
+        "area": 24.44656432983443,
+        "centroid": [
+          1.795725981203278,
+          -1.6643070564280336,
+          3.0281782376548096
+        ]
+      },
+      "actual": {
+        "volume": 8.12319427324929,
+        "area": 24.446064555017216,
+        "centroid": [
+          1.795735907028424,
+          -1.6643000587425858,
+          3.0281782376548554
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 969,
+        "triangles": 1934
+      },
+      "id": "sealed-242",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.5512,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 8.106548169206182,
+        "area": 24.374507752540634,
+        "centroid": [
+          1.7978758564120862,
+          -1.662797024437651,
+          3.0281782376548096
+        ]
+      },
+      "actual": {
+        "volume": 8.106548169206182,
+        "area": 24.374507752540637,
+        "centroid": [
+          1.7978758564120865,
+          -1.6627970244376509,
+          3.028178237654809
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-243",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3255,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-244",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 0.6156,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 32.54338187071059,
+        "area": 98.46086755741102,
+        "centroid": [
+          5.864595594684951,
+          -1.6654858902881944,
+          3.028178237654809
+        ]
+      },
+      "actual": {
+        "volume": 32.54338187071058,
+        "area": 98.46086755741098,
+        "centroid": [
+          5.864595594684953,
+          -1.6654858902881942,
+          3.028178237654809
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 32,
+        "triangles": 48
+      },
+      "id": "sealed-245",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0332,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 12.98352148268922,
+        "area": 36.23245862735554,
+        "centroid": [
+          -0.9371087326618903,
+          2.9182126862465916,
+          3.611942949315978
+        ]
+      },
+      "actual": {
+        "volume": 12.983521482689222,
+        "area": 36.23245862735554,
+        "centroid": [
+          -0.9371087326618904,
+          2.918212686246591,
+          3.6119429493159783
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-246",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0325,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "mesh_closure",
+        "volume"
+      ],
+      "expected": {
+        "volume": 1.1649520476120037,
+        "area": 6.260493626263129,
+        "centroid": [
+          -1.609802836281878,
+          1.5943196714058248,
+          2.559122127674268
+        ]
+      },
+      "actual": {
+        "volume": 0.7771409531549958,
+        "area": 5.916435035434356,
+        "centroid": [
+          -1.5925847574710357,
+          1.6208096548729922,
+          2.7508816834841303
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 6358,
+        "triangles": 12539
+      },
+      "id": "sealed-247",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.7003,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 12.969363849189124,
+        "area": 36.01422805719315,
+        "centroid": [
+          -0.9364072104972713,
+          2.919625070996911,
+          3.611942949315978
+        ]
+      },
+      "actual": {
+        "volume": 12.96925333440345,
+        "area": 36.01363291655789,
+        "centroid": [
+          -0.9364018828534267,
+          2.9196359537538132,
+          3.6119429493159965
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 1675,
+        "triangles": 3346
+      },
+      "id": "sealed-248",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.662,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 12.950535666434728,
+        "area": 35.92711528159288,
+        "centroid": [
+          -0.9355095653617043,
+          2.9214704974966432,
+          3.6119429493159783
+        ]
+      },
+      "actual": {
+        "volume": 12.950535666434728,
+        "area": 35.92711528159288,
+        "centroid": [
+          -0.9355095653617042,
+          2.9214704974966432,
+          3.6119429493159787
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-249",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3156,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-250",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 0.9315,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 38.95056444806766,
+        "area": 108.69737588206662,
+        "centroid": [
+          0.9082794745780849,
+          2.9182126862465916,
+          3.611942949315978
+        ]
+      },
+      "actual": {
+        "volume": 38.95056444806767,
+        "area": 108.6973758820666,
+        "centroid": [
+          0.9082794745780844,
+          2.9182126862465907,
+          3.611942949315978
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 24,
+        "triangles": 36
+      },
+      "id": "sealed-251",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.033,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 24.942303485505487,
+        "area": 52.3018441343477,
+        "centroid": [
+          3.0185785488501935,
+          2.9676951697299523,
+          3.17812501716819
+        ]
+      },
+      "actual": {
+        "volume": 24.942303485505498,
+        "area": 52.301844134347704,
+        "centroid": [
+          3.0185785488501935,
+          2.967695169729952,
+          3.1781250171681905
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-252",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.033,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 1.2698449868516872,
+        "area": 6.629980589190129,
+        "centroid": [
+          1.0606309276816859,
+          1.6545825490307138,
+          2.406923727727054
+        ]
+      },
+      "actual": {
+        "volume": 1.2693012083705248,
+        "area": 6.624969956890628,
+        "centroid": [
+          1.0606309276797645,
+          1.6545825490309052,
+          2.406923727727056
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 3974,
+        "triangles": 7952
+      },
+      "id": "sealed-253",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.4727,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 24.91168709395957,
+        "area": 52.02412668928618,
+        "centroid": [
+          3.0209182806066153,
+          2.9692424011317247,
+          3.17812501716819
+        ]
+      },
+      "actual": {
+        "volume": 24.911589884807608,
+        "area": 52.023326732852496,
+        "centroid": [
+          3.020925591302083,
+          2.969247192249683,
+          3.1781250166421136
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 737,
+        "triangles": 1470
+      },
+      "id": "sealed-254",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.4361,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 24.870970471700446,
+        "area": 51.89844409332552,
+        "centroid": [
+          3.0239623113879,
+          2.9712294658770015,
+          3.1781250171681896
+        ]
+      },
+      "actual": {
+        "volume": 24.870970471700453,
+        "area": 51.89844409332554,
+        "centroid": [
+          3.023962311387901,
+          2.9712294658770015,
+          3.178125017168191
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-255",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3173,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-256",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 0.9265,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 99.76921394202195,
+        "area": 209.2073765373908,
+        "centroid": [
+          9.642421412355716,
+          2.9676951697299523,
+          3.17812501716819
+        ]
+      },
+      "actual": {
+        "volume": 99.76921394202199,
+        "area": 209.20737653739081,
+        "centroid": [
+          9.642421412355718,
+          2.9676951697299527,
+          3.1781250171681905
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 32,
+        "triangles": 48
+      },
+      "id": "sealed-257",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0337,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 9.811599149348103,
+        "area": 29.48289833343019,
+        "centroid": [
+          -0.39955153345279304,
+          -2.1113367123862927,
+          -0.14040009048507773
+        ]
+      },
+      "actual": {
+        "volume": 9.811599149348101,
+        "area": 29.48289833343019,
+        "centroid": [
+          -0.3995515334527928,
+          -2.1113367123862927,
+          -0.1404000904850773
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-258",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0333,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "mesh_closure",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.4874810320196502,
+        "area": 3.48183435531276,
+        "centroid": [
+          -1.6364357208520393,
+          -2.759557937113124,
+          -1.3356365338159806
+        ]
+      },
+      "actual": {
+        "volume": 0.43324792051558847,
+        "area": 3.3716355598595174,
+        "centroid": [
+          -1.6237539210378635,
+          -2.7400470107702373,
+          -1.314785289657945
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 4769,
+        "triangles": 9481
+      },
+      "id": "sealed-259",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.5787,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 9.80056427376468,
+        "area": 29.30545126387798,
+        "centroid": [
+          -0.39819147797424487,
+          -2.11063945778045,
+          -0.14040009048507773
+        ]
+      },
+      "actual": {
+        "volume": 9.800463855351015,
+        "area": 29.30489051683387,
+        "centroid": [
+          -0.3981792663713837,
+          -2.110633284581404,
+          -0.14040009048506197
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 780,
+        "triangles": 1556
+      },
+      "id": "sealed-260",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.4819,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 9.785889034844608,
+        "area": 29.23375279427936,
+        "centroid": [
+          -0.3964154486424198,
+          -2.1097472006180196,
+          -0.14040009048507776
+        ]
+      },
+      "actual": {
+        "volume": 9.78588903484461,
+        "area": 29.23375279427936,
+        "centroid": [
+          -0.39641544864242007,
+          -2.1097472006180196,
+          -0.14040009048507796
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-261",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3153,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-262",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 0.8261,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 19.623198298696206,
+        "area": 58.96579666686038,
+        "centroid": [
+          1.0873326539464532,
+          -2.1113367123862927,
+          -0.14040009048507773
+        ]
+      },
+      "actual": {
+        "volume": 19.6231982986962,
+        "area": 58.96579666686036,
+        "centroid": [
+          1.087332653946454,
+          -2.1113367123862927,
+          -0.1404000904850773
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-263",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0329,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 37.15277659837371,
+        "area": 66.95363326280274,
+        "centroid": [
+          0.5349811564140243,
+          0.20301790238814,
+          3.278121959769627
+        ]
+      },
+      "actual": {
+        "volume": 37.15277659837371,
+        "area": 66.95363326280274,
+        "centroid": [
+          0.5349811564140246,
+          0.20301790238814,
+          3.278121959769627
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-264",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0327,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "mesh_closure",
+        "volume"
+      ],
+      "expected": {
+        "volume": 1.9485383987969682,
+        "area": 8.723557958666143,
+        "centroid": [
+          -1.001035659362777,
+          -1.4694114713377324,
+          2.3007195086910532
+        ]
+      },
+      "actual": {
+        "volume": 1.5158162478359878,
+        "area": 8.37264910815464,
+        "centroid": [
+          -1.0109345279235178,
+          -1.4227478806762912,
+          2.4190225600515
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 5680,
+        "triangles": 11242
+      },
+      "id": "sealed-265",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.5763,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 37.079549319828004,
+        "area": 66.43639276003526,
+        "centroid": [
+          0.5378790751478477,
+          0.20618521814974033,
+          3.278121959769627
+        ]
+      },
+      "actual": {
+        "volume": 37.07939305609167,
+        "area": 66.43517148562091,
+        "centroid": [
+          0.5378850973664155,
+          0.2061918163872405,
+          3.2781219597696163
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 954,
+        "triangles": 1904
+      },
+      "id": "sealed-266",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.4837,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 36.982164641586664,
+        "area": 66.20860130796105,
+        "centroid": [
+          0.5415949385257023,
+          0.21026100443464532,
+          3.2781219597696274
+        ]
+      },
+      "actual": {
+        "volume": 36.98216464158667,
+        "area": 66.20860130796103,
+        "centroid": [
+          0.5415949385257026,
+          0.21026100443464513,
+          3.278121959769627
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-267",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3157,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 34.74080688311829,
+        "area": 76.08795754307911,
+        "centroid": [
+          0.5349811564140243,
+          0.20301790238814,
+          3.278121959769627
+        ]
+      },
+      "actual": {
+        "volume": 34.74210553272992,
+        "area": 76.10164356997603,
+        "centroid": [
+          0.5349811564140243,
+          0.20301790238813977,
+          3.278121959769627
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 7928,
+        "triangles": 15856
+      },
+      "id": "sealed-268",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 2.1434,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 148.61110639349485,
+        "area": 267.81453305121096,
+        "centroid": [
+          5.893031603744428,
+          0.20301790238814,
+          3.278121959769627
+        ]
+      },
+      "actual": {
+        "volume": 148.61110639349494,
+        "area": 267.8145330512111,
+        "centroid": [
+          5.893031603744429,
+          0.2030179023881391,
+          3.278121959769626
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 32,
+        "triangles": 48
+      },
+      "id": "sealed-269",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0339,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 34.71283768536071,
+        "area": 65.47865853815185,
+        "centroid": [
+          3.6785379661290882,
+          1.561808774995852,
+          1.7706220633747143
+        ]
+      },
+      "actual": {
+        "volume": 34.71283768536071,
+        "area": 65.47865853815186,
+        "centroid": [
+          3.6785379661290882,
+          1.561808774995852,
+          1.7706220633747145
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-270",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0327,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 0.6040551237097181,
+        "area": 3.997371987509217,
+        "centroid": [
+          1.7098817840141933,
+          -0.27848389945118956,
+          0.9474526473817202
+        ]
+      },
+      "actual": {
+        "volume": 0.6037964526272356,
+        "area": 3.9945283315867504,
+        "centroid": [
+          1.709881784014193,
+          -0.2784838994511895,
+          0.947452647381705
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 3974,
+        "triangles": 7952
+      },
+      "id": "sealed-271",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.3909,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 34.68334233928605,
+        "area": 65.2077623942349,
+        "centroid": [
+          3.680166645597012,
+          1.5633282917987426,
+          1.7706220633747143
+        ]
+      },
+      "actual": {
+        "volume": 34.6832486787831,
+        "area": 65.20698208635099,
+        "centroid": [
+          3.6801717345830047,
+          1.5633330340758684,
+          1.7706220633747276
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 737,
+        "triangles": 1470
+      },
+      "id": "sealed-272",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.4286,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 34.644116591120294,
+        "area": 65.0851668165762,
+        "centroid": [
+          3.6822846662547604,
+          1.5653008494714726,
+          1.770622063374714
+        ]
+      },
+      "actual": {
+        "volume": 34.6441165911203,
+        "area": 65.08516681657622,
+        "centroid": [
+          3.68228466625476,
+          1.5653008494714726,
+          1.770622063374714
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-273",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3153,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 32.41912228368377,
+        "area": 71.87277910433869,
+        "centroid": [
+          3.6785379661290887,
+          1.561808774995852,
+          1.7706220633747143
+        ]
+      },
+      "actual": {
+        "volume": 32.420882645017215,
+        "area": 71.90018505993433,
+        "centroid": [
+          3.678537973882987,
+          1.561808776703133,
+          1.7706220696871846
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 3936,
+        "triangles": 7872
+      },
+      "id": "sealed-274",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 1.5341,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 69.42567537072142,
+        "area": 130.9573170763037,
+        "centroid": [
+          5.897194148243983,
+          1.561808774995852,
+          1.7706220633747143
+        ]
+      },
+      "actual": {
+        "volume": 69.42567537072144,
+        "area": 130.95731707630375,
+        "centroid": [
+          5.897194148243982,
+          1.5618087749958518,
+          1.770622063374714
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-275",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0327,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 35.496600857976965,
+        "area": 65.36337179093044,
+        "centroid": [
+          0.23017219646366893,
+          -1.170765560986942,
+          -0.4717632190788301
+        ]
+      },
+      "actual": {
+        "volume": 35.49660085797697,
+        "area": 65.36337179093044,
+        "centroid": [
+          0.2301721964636687,
+          -1.1707655609869423,
+          -0.4717632190788299
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-276",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0325,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 2.5677938073602697,
+        "area": 10.5187791842976,
+        "centroid": [
+          -1.7537300847702857,
+          -2.664228716490623,
+          -1.377438648765848
+        ]
+      },
+      "actual": {
+        "volume": 2.566694215654766,
+        "area": 10.511158410583267,
+        "centroid": [
+          -1.7537300847702857,
+          -2.6642287164906233,
+          -1.3774386487658883
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 3974,
+        "triangles": 7952
+      },
+      "id": "sealed-277",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.3845,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 35.43925600579713,
+        "area": 64.94110707713816,
+        "centroid": [
+          0.2332744237987057,
+          -1.1684569213943685,
+          -0.4717632190788301
+        ]
+      },
+      "actual": {
+        "volume": 35.439127775486725,
+        "area": 64.93998124011732,
+        "centroid": [
+          0.23328122657562034,
+          -1.1684518960574461,
+          -0.47176321907879304
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 923,
+        "triangles": 1842
+      },
+      "id": "sealed-278",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.3937,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 35.36299330575913,
+        "area": 64.7501007842533,
+        "centroid": [
+          0.23729155412161976,
+          -1.1654991678259192,
+          -0.4717632190788301
+        ]
+      },
+      "actual": {
+        "volume": 35.362993305759126,
+        "area": 64.7501007842533,
+        "centroid": [
+          0.2372915541216194,
+          -1.165499167825919,
+          -0.4717632190788297
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-279",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3152,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 33.60776858767449,
+        "area": 72.53364602638075,
+        "centroid": [
+          0.23017219646366896,
+          -1.170765560986942,
+          -0.4717632190788301
+        ]
+      },
+      "actual": {
+        "volume": 33.60878417863474,
+        "area": 72.54684351537549,
+        "centroid": [
+          0.23017219646366982,
+          -1.1707655609869414,
+          -0.4717632190788288
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 7912,
+        "triangles": 15824
+      },
+      "id": "sealed-280",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 1.9148,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 141.98640343190786,
+        "area": 261.4534871637218,
+        "centroid": [
+          6.9318790401655335,
+          -1.170765560986942,
+          -0.4717632190788301
+        ]
+      },
+      "actual": {
+        "volume": 141.98640343190783,
+        "area": 261.4534871637217,
+        "centroid": [
+          6.9318790401655335,
+          -1.1707655609869416,
+          -0.471763219078829
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 32,
+        "triangles": 48
+      },
+      "id": "sealed-281",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.033,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 16.69621064642778,
+        "area": 41.84605485945414,
+        "centroid": [
+          -0.4679692669717155,
+          2.612051126719058,
+          1.7493187466564746
+        ]
+      },
+      "actual": {
+        "volume": 16.696210646427783,
+        "area": 41.84605485945414,
+        "centroid": [
+          -0.4679692669717155,
+          2.6120511267190585,
+          1.7493187466564746
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-282",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0167,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 0.4028678004720561,
+        "area": 3.0582427296297983,
+        "centroid": [
+          -1.2534146672221214,
+          0.8094398162930894,
+          0.779124977341549
+        ]
+      },
+      "actual": {
+        "volume": 0.4026445879081879,
+        "area": 3.0528699855703305,
+        "centroid": [
+          -1.2534146672221214,
+          0.8094398162930895,
+          0.7791249773416041
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 3910,
+        "triangles": 7824
+      },
+      "id": "sealed-283",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.4117,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 16.68059840499395,
+        "area": 41.6366941323837,
+        "centroid": [
+          -0.4672669689939834,
+          2.6137054432864333,
+          1.7493187466564748
+        ]
+      },
+      "actual": {
+        "volume": 16.680503192905952,
+        "area": 41.6361378193487,
+        "centroid": [
+          -0.46726280271395815,
+          2.613715420969893,
+          1.7493187466564837
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 969,
+        "triangles": 1934
+      },
+      "id": "sealed-284",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.4334,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 16.65983574470049,
+        "area": 41.550093280650785,
+        "centroid": [
+          -0.46636866299787433,
+          2.615872599529181,
+          1.7493187466564748
+        ]
+      },
+      "actual": {
+        "volume": 16.659835744700494,
+        "area": 41.5500932806508,
+        "centroid": [
+          -0.4663686629978744,
+          2.615872599529182,
+          1.7493187466564746
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-285",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3152,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-286",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 0.7941,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 50.08863193928334,
+        "area": 125.53816457836243,
+        "centroid": [
+          1.6029215335290963,
+          2.612051126719058,
+          1.7493187466564746
+        ]
+      },
+      "actual": {
+        "volume": 50.08863193928336,
+        "area": 125.53816457836245,
+        "centroid": [
+          1.6029215335290958,
+          2.6120511267190585,
+          1.7493187466564744
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 24,
+        "triangles": 36
+      },
+      "id": "sealed-287",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0329,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 33.888886594833686,
+        "area": 62.87563588696466,
+        "centroid": [
+          2.4635270576260084,
+          3.910068622446755,
+          0.30724541539988337
+        ]
+      },
+      "actual": {
+        "volume": 33.888886594833686,
+        "area": 62.875635886964645,
+        "centroid": [
+          2.4635270576260084,
+          3.9100686224467553,
+          0.30724541539988337
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-288",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0164,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 0.5022300161858783,
+        "area": 3.498426959898544,
+        "centroid": [
+          0.7694226845391254,
+          2.2951343043783616,
+          -0.8225354984534206
+        ]
+      },
+      "actual": {
+        "volume": 0.502002249732705,
+        "area": 3.4951078929418564,
+        "centroid": [
+          0.7694226845391252,
+          2.2951343043783607,
+          -0.8225354984534599
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 3958,
+        "triangles": 7920
+      },
+      "id": "sealed-289",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.4054,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 33.82515712866303,
+        "area": 62.42288357220565,
+        "centroid": [
+          2.466588570260803,
+          3.912980971980138,
+          0.30724541539988337
+        ]
+      },
+      "actual": {
+        "volume": 33.82502113283428,
+        "area": 62.42168480706308,
+        "centroid": [
+          2.466594948344508,
+          3.9129870311554846,
+          0.30724541539983297
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 954,
+        "triangles": 1904
+      },
+      "id": "sealed-290",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.3976,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 33.74040355484767,
+        "area": 62.217987958847615,
+        "centroid": [
+          2.4705281221378175,
+          3.916721279435046,
+          0.3072454153998834
+        ]
+      },
+      "actual": {
+        "volume": 33.74040355484767,
+        "area": 62.217987958847615,
+        "centroid": [
+          2.470528122137817,
+          3.9167212794350466,
+          0.30724541539988337
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-291",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3157,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 31.605368846925384,
+        "area": 70.82750859923783,
+        "centroid": [
+          2.463527057626009,
+          3.9100686224467545,
+          0.3072454153998834
+        ]
+      },
+      "actual": {
+        "volume": 31.606662521076146,
+        "area": 70.84658333199611,
+        "centroid": [
+          2.463527057626005,
+          3.9100686224467536,
+          0.3072454153998794
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 7912,
+        "triangles": 15824
+      },
+      "id": "sealed-292",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 2.3556,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 135.55554637933474,
+        "area": 251.50254354785864,
+        "centroid": [
+          8.295840176886657,
+          3.910068622446755,
+          0.30724541539988337
+        ]
+      },
+      "actual": {
+        "volume": 135.55554637933477,
+        "area": 251.50254354785864,
+        "centroid": [
+          8.295840176886657,
+          3.9100686224467545,
+          0.30724541539988315
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 32,
+        "triangles": 48
+      },
+      "id": "sealed-293",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.067,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 20.931237219408462,
+        "area": 46.19340705450964,
+        "centroid": [
+          2.4942637839599273,
+          3.707127144378504,
+          1.313995459856323
+        ]
+      },
+      "actual": {
+        "volume": 20.931237219408477,
+        "area": 46.193407054509656,
+        "centroid": [
+          2.4942637839599273,
+          3.7071271443785045,
+          1.3139954598563233
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-294",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0331,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 5.382407852202958,
+        "area": 17.00198759993575,
+        "centroid": [
+          0.7898653610080899,
+          2.3568644573164566,
+          1.1293381602236756
+        ]
+      },
+      "actual": {
+        "volume": 5.380102974368843,
+        "area": 16.991670068047572,
+        "centroid": [
+          0.7898653610080897,
+          2.3568644573164566,
+          1.1293381602236654
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 3974,
+        "triangles": 7952
+      },
+      "id": "sealed-295",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.5476,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 20.90600996489806,
+        "area": 45.94931864842572,
+        "centroid": [
+          2.496259192725151,
+          3.708695218020693,
+          1.3139954598563233
+        ]
+      },
+      "actual": {
+        "volume": 20.905924869275804,
+        "area": 45.94860301626351,
+        "centroid": [
+          2.496265806930384,
+          3.708700389009948,
+          1.3139954598563206
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 706,
+        "triangles": 1408
+      },
+      "id": "sealed-296",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.5805,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 20.872460335413006,
+        "area": 45.83885506370661,
+        "centroid": [
+          2.4988499419914745,
+          3.710716055572231,
+          1.313995459856323
+        ]
+      },
+      "actual": {
+        "volume": 20.872460335413024,
+        "area": 45.838855063706625,
+        "centroid": [
+          2.4988499419914745,
+          3.710716055572231,
+          1.3139954598563233
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-297",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3152,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 19.7591108580438,
+        "area": 50.9495587174162,
+        "centroid": [
+          2.494263783959927,
+          3.707127144378504,
+          1.313995459856323
+        ]
+      },
+      "actual": {
+        "volume": 19.75983065618012,
+        "area": 50.95766959384216,
+        "centroid": [
+          2.4942637839599273,
+          3.7071271443785045,
+          1.3139954598563235
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 3936,
+        "triangles": 7872
+      },
+      "id": "sealed-298",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 1.3129,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 41.862474438816925,
+        "area": 92.38681410901928,
+        "centroid": [
+          4.448662206911765,
+          3.707127144378504,
+          1.313995459856323
+        ]
+      },
+      "actual": {
+        "volume": 41.86247443881694,
+        "area": 92.3868141090193,
+        "centroid": [
+          4.448662206911766,
+          3.707127144378505,
+          1.3139954598563235
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-299",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0327,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 14.087300848204967,
+        "area": 38.85843044312798,
+        "centroid": [
+          4.566139067002398,
+          -1.0413595166107799,
+          1.830231609222127
+        ]
+      },
+      "actual": {
+        "volume": 14.087300848204967,
+        "area": 38.858430443127986,
+        "centroid": [
+          4.566139067002398,
+          -1.0413595166107799,
+          1.830231609222127
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-300",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0329,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 1.1181324169837439,
+        "area": 6.355405419549176,
+        "centroid": [
+          2.9451994702789515,
+          -2.7209683090509182,
+          2.1412161895302555
+        ]
+      },
+      "actual": {
+        "volume": 1.1176253324876175,
+        "area": 6.351797603332166,
+        "centroid": [
+          2.9451994702789515,
+          -2.7209683090509182,
+          2.141216189530332
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 3958,
+        "triangles": 7920
+      },
+      "id": "sealed-301",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.3962,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 14.082655567995936,
+        "area": 38.77942777299498,
+        "centroid": [
+          4.566664216255222,
+          -1.0408150148393618,
+          1.8302316092221271
+        ]
+      },
+      "actual": {
+        "volume": 14.082612626076905,
+        "area": 38.77908989932209,
+        "centroid": [
+          4.566669019272082,
+          -1.0408100328643115,
+          1.830231609222127
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 396,
+        "triangles": 788
+      },
+      "id": "sealed-302",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.4471,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 14.076477827576225,
+        "area": 38.74367466908774,
+        "centroid": [
+          4.5673522100889015,
+          -1.040101264376712,
+          1.830231609222127
+        ]
+      },
+      "actual": {
+        "volume": 14.076477827576223,
+        "area": 38.74367466908774,
+        "centroid": [
+          4.5673522100889015,
+          -1.0401012643767118,
+          1.830231609222127
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-303",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3659,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 13.126310839656506,
+        "area": 41.32504420949837,
+        "centroid": [
+          4.566139067002398,
+          -1.0413595166107799,
+          1.830231609222127
+        ]
+      },
+      "actual": {
+        "volume": 13.12696435497295,
+        "area": 41.34173548095859,
+        "centroid": [
+          4.566139067002398,
+          -1.0413595166107796,
+          1.830231609222127
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 3912,
+        "triangles": 7824
+      },
+      "id": "sealed-304",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 1.3377,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 56.34920339281987,
+        "area": 155.43372177251192,
+        "centroid": [
+          10.178957857172737,
+          -1.0413595166107799,
+          1.830231609222127
+        ]
+      },
+      "actual": {
+        "volume": 56.34920339281984,
+        "area": 155.43372177251197,
+        "centroid": [
+          10.17895785717274,
+          -1.0413595166107796,
+          1.8302316092221271
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 32,
+        "triangles": 48
+      },
+      "id": "sealed-305",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0336,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 4.366494900620521,
+        "area": 16.046688560784467,
+        "centroid": [
+          1.9579074723243073,
+          1.295551935432651,
+          -1.226491154288797
+        ]
+      },
+      "actual": {
+        "volume": 4.366494900620521,
+        "area": 16.04668856078447,
+        "centroid": [
+          1.9579074723243073,
+          1.295551935432651,
+          -1.226491154288797
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-306",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0332,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "mesh_closure",
+        "volume"
+      ],
+      "expected": {
+        "volume": 1.7462117660302523,
+        "area": 8.092628595343726,
+        "centroid": [
+          1.1867896440218644,
+          0.4773492971633275,
+          -1.545072775282272
+        ]
+      },
+      "actual": {
+        "volume": 1.5519426741142985,
+        "area": 7.8406138628737665,
+        "centroid": [
+          1.1579025778563297,
+          0.4961254425870734,
+          -1.510999014633084
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 4183,
+        "triangles": 8309
+      },
+      "id": "sealed-307",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.5649,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 4.35766356763091,
+        "area": 15.921953615397467,
+        "centroid": [
+          1.9594004217357026,
+          1.2971403079140278,
+          -1.2264911542887973
+        ]
+      },
+      "actual": {
+        "volume": 4.357608080999748,
+        "area": 15.92152854625529,
+        "centroid": [
+          1.959409556454073,
+          1.2971500433913739,
+          -1.2264911542888122
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 489,
+        "triangles": 974
+      },
+      "id": "sealed-308",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.4514,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 4.345918811595788,
+        "area": 15.866595583336286,
+        "centroid": [
+          1.961314994903564,
+          1.2991823846894623,
+          -1.226491154288797
+        ]
+      },
+      "actual": {
+        "volume": 4.345918811595789,
+        "area": 15.866595583336286,
+        "centroid": [
+          1.9613149949035638,
+          1.2991823846894626,
+          -1.2264911542887975
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "sealed-309",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3693,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 4.075607295081824,
+        "area": 18.22529386980837,
+        "centroid": [
+          1.9579074723243075,
+          1.2955519354326512,
+          -1.2264911542887973
+        ]
+      },
+      "actual": {
+        "volume": 4.075883318735851,
+        "area": 18.227242026772885,
+        "centroid": [
+          1.9579074723243073,
+          1.295551935432651,
+          -1.2264911542887975
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 2820,
+        "triangles": 5640
+      },
+      "id": "sealed-310",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 1.0308,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 17.465979602482083,
+        "area": 64.18675424313787,
+        "centroid": [
+          5.021260957231636,
+          1.295551935432651,
+          -1.226491154288797
+        ]
+      },
+      "actual": {
+        "volume": 17.465979602482086,
+        "area": 64.18675424313788,
+        "centroid": [
+          5.021260957231635,
+          1.2955519354326512,
+          -1.226491154288797
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 32,
+        "triangles": 48
+      },
+      "id": "sealed-311",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0333,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 10.646936505707457,
+        "area": 46.26635991988332,
+        "centroid": [
+          -11.86282976546353,
+          8.299207949646718,
+          4.186154873292956
+        ]
+      },
+      "actual": {
+        "volume": 10.646936505707457,
+        "area": 46.26635991988332,
+        "centroid": [
+          -11.86282976546353,
+          8.299207949646718,
+          4.186154873292957
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "roundtrip": {
+        "volume": 10.646936505707458,
+        "area": 46.26635991988332,
+        "centroid": [
+          -11.86282976546353,
+          8.299207949646718,
+          4.186154873292956
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-312",
+      "group": "step",
+      "op": "step_roundtrip",
+      "seconds": 0.0655,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 63.43852272531963,
+        "area": 105.63757894779401,
+        "centroid": [
+          2.6073951076821,
+          12.699200718606,
+          -2.269654785660472
+        ]
+      },
+      "actual": {
+        "volume": 63.43852272531963,
+        "area": 105.63757894779401,
+        "centroid": [
+          2.6073951076821,
+          12.699200718606,
+          -2.2696547856604723
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "roundtrip": {
+        "volume": 63.43852272531963,
+        "area": 105.63757894779401,
+        "centroid": [
+          2.6073951076821,
+          12.699200718606,
+          -2.2696547856604723
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-313",
+      "group": "step",
+      "op": "step_roundtrip",
+      "seconds": 0.0332,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 95.8642386174612,
+        "area": 140.99536984346844,
+        "centroid": [
+          14.631930159724558,
+          -9.046716859466981,
+          4.01972684684848
+        ]
+      },
+      "actual": {
+        "volume": 95.86423861746123,
+        "area": 140.9953698434685,
+        "centroid": [
+          14.63193015972456,
+          -9.046716859466983,
+          4.01972684684848
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "roundtrip": {
+        "volume": 95.86423861746121,
+        "area": 140.9953698434685,
+        "centroid": [
+          14.631930159724558,
+          -9.046716859466983,
+          4.019726846848481
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "sealed-314",
+      "group": "step",
+      "op": "step_roundtrip",
+      "seconds": 0.0328,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 1.0528228152827026e-05,
+        "area": 0.003681016730093291,
+        "centroid": [
+          -0.11477573132842435,
+          0.052306157189235515,
+          -0.015071862204913161
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-000",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.020302182270125417,
+        "area": 0.7453768589081737,
+        "centroid": [
+          1.1952439881852854,
+          0.08213529967278815,
+          -0.597702534548671
+        ]
+      },
+      "actual": {
+        "volume": 0.020302182270125414,
+        "area": 0.7453768589081737,
+        "centroid": [
+          1.1952439881852857,
+          0.08213529967278815,
+          -0.597702534548671
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-extra-001",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0333,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-002",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0323,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 10670517.115514733,
+        "area": 325934.5210568923,
+        "centroid": [
+          -18.297371420735914,
+          -259.6216392305747,
+          -836.9125227837941
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-003",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 9.559514095689855e-06,
+        "area": 0.005247912208169442,
+        "centroid": [
+          -0.08661210078236789,
+          0.054328215666427856,
+          -0.05191765583606572
+        ]
+      },
+      "actual": {
+        "volume": 9.559514095689853e-06,
+        "area": 0.00524791220816944,
+        "centroid": [
+          -0.08661210078236789,
+          0.054328215666427856,
+          -0.05191765583606571
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-extra-004",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0342,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-005",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.033,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 243.71233375028802,
+        "area": 250.62177319339375,
+        "centroid": [
+          36.7593251010037,
+          -20.972631418956787,
+          -41.15821853833696
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-006",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 3109016.3443193478,
+        "area": 255705.49848908535,
+        "centroid": [
+          830.8290516324498,
+          -401.52087820416995,
+          -725.3849269076101
+        ]
+      },
+      "actual": {
+        "volume": 3109016.3443193464,
+        "area": 255705.4984890854,
+        "centroid": [
+          830.8290516324499,
+          -401.52087820416995,
+          -725.3849269076098
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-extra-007",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0333,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-008",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0326,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.01938971336497908,
+        "area": 0.44610542156264127,
+        "centroid": [
+          0.9405308072646142,
+          0.5618161277938334,
+          -0.5438210949073482
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-009",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.033,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 5996.192216519725,
+        "area": 4089.114846657567,
+        "centroid": [
+          -101.91086063694264,
+          14.786768842002417,
+          40.42535495252773
+        ]
+      },
+      "actual": {
+        "volume": 5996.192216519722,
+        "area": 4089.114846657566,
+        "centroid": [
+          -101.91086063694264,
+          14.78676884200243,
+          40.42535495252773
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-extra-010",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0338,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-011",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.033,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 2.374717355416835e-05,
+        "area": 0.005107528031039317,
+        "centroid": [
+          0.018518527687106344,
+          -0.05790013418726799,
+          0.08678585947899087
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-012",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.003742787304560081,
+        "area": 0.28915754867504073,
+        "centroid": [
+          1.1418727149176522,
+          0.7763848000877587,
+          0.6983595656961837
+        ]
+      },
+      "actual": {
+        "volume": 0.0037427873045600864,
+        "area": 0.28915754867504095,
+        "centroid": [
+          1.1418727149176522,
+          0.7763848000877589,
+          0.6983595656961837
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-extra-013",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0333,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-014",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0891,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 5535677.204242541,
+        "area": 230283.17556202027,
+        "centroid": [
+          -167.11114704667278,
+          1231.0475945307476,
+          995.9057905621432
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-015",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0336,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 6.061282999834572e-06,
+        "area": 0.0029782106012663846,
+        "centroid": [
+          0.012917602547612525,
+          -0.0712581426100942,
+          0.026460950793181174
+        ]
+      },
+      "actual": {
+        "volume": 6.0612829998345694e-06,
+        "area": 0.0029782106012663846,
+        "centroid": [
+          0.012917602547612518,
+          -0.07125814261009418,
+          0.02646095079318118
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-extra-016",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.034,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-017",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0338,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 12237.736670070792,
+        "area": 3818.6972033212473,
+        "centroid": [
+          74.82593353499176,
+          -39.8517347669289,
+          99.03280860004965
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-018",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0329,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 2323947.194674841,
+        "area": 140420.28402083952,
+        "centroid": [
+          -605.7650580735602,
+          1035.8908222480886,
+          816.9107537433397
+        ]
+      },
+      "actual": {
+        "volume": 2323947.19467484,
+        "area": 140420.28402083946,
+        "centroid": [
+          -605.7650580735599,
+          1035.8908222480886,
+          816.9107537433396
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-extra-019",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0334,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-020",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0329,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 0.0011566235908405825,
+        "area": 0.06707012801624024,
+        "centroid": [
+          -0.843239613117815,
+          -0.4538573232769061,
+          -0.7755385969351324
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-021",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0341,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1017.4144997484992,
+        "area": 964.0292712427017,
+        "centroid": [
+          92.66419015223097,
+          28.559383013255978,
+          -77.2111379902739
+        ]
+      },
+      "actual": {
+        "volume": 1017.4144997484989,
+        "area": 964.0292712427016,
+        "centroid": [
+          92.66419015223097,
+          28.559383013255978,
+          -77.2111379902739
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-extra-022",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.034,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-023",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0332,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 4.699980076399482e-06,
+        "area": 0.0017115767405170652,
+        "centroid": [
+          0.09578086097288391,
+          -0.047410945628083706,
+          -0.03153543861648351
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-024",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.033,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.002416473842981013,
+        "area": 0.17454171502340585,
+        "centroid": [
+          -0.9389196318508721,
+          0.07408815516987466,
+          0.28698438396714143
+        ]
+      },
+      "actual": {
+        "volume": 0.0024164738429810163,
+        "area": 0.17454171502340585,
+        "centroid": [
+          -0.9389196318508723,
+          0.0740881551698748,
+          0.2869843839671414
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-extra-025",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0334,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-026",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0336,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 197126.1662633198,
+        "area": 21041.149647464703,
+        "centroid": [
+          -466.0702108991758,
+          -817.6346031870918,
+          -948.3750794151765
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-027",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0341,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 9.169149526670266e-06,
+        "area": 0.0038661402183039267,
+        "centroid": [
+          -0.022817737722308183,
+          0.0776027421212406,
+          0.053751088351042184
+        ]
+      },
+      "actual": {
+        "volume": 9.169149526670261e-06,
+        "area": 0.0038661402183039232,
+        "centroid": [
+          -0.022817737722308187,
+          0.0776027421212406,
+          0.053751088351042184
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-extra-028",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0329,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-029",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.033,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "area",
+        "centroid",
+        "empty_geometry",
+        "volume"
+      ],
+      "expected": {
+        "volume": 6946.1692046687185,
+        "area": 3059.795065405441,
+        "centroid": [
+          -65.38452647127323,
+          5.691289943420498,
+          39.15612278122634
+        ]
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-030",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0331,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-extra-031",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0328,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-extra-032",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: This shell is not oriented and closed.."
+      ],
+      "id": "sealed-extra-033",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1389.8408220119977,
+        "area": 993.0285733673466,
+        "centroid": [
+          -60.057694078946994,
+          -47.481161247490675,
+          -37.859374868015294
+        ]
+      },
+      "actual": {
+        "volume": 1389.8408220119977,
+        "area": 993.0285733673463,
+        "centroid": [
+          -60.05769407894699,
+          -47.481161247490675,
+          -37.859374868015294
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "sealed-extra-034",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0329,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "sealed-extra-035",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.033,
+      "pass": true
+    }
+  ]
+}

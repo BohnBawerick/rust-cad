@@ -1,0 +1,466 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,19 +22,24 @@
+ //!   before marching, retaining the exact input surfaces.
+ //! - Complete positive-weight spline control nets certify separation, including
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
++//! - Face subdivision conserves oriented trim chains before classification;
++//!   chart area cannot erase a valid cell or cancel unrelated boundaries.
+ 
+ mod divide_face;
+ mod faces_classification;
+ mod intersection_curve;
+ mod loops_store;
+ 
+-use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
+-use crate::alternative::Alternative;
+ use monstertruck_geometry::prelude::*;
+ use monstertruck_meshing::prelude::*;
+ use monstertruck_topology::*;
+ use rustc_hash::FxHashMap as HashMap;
+ use std::iter;
++
++use self::faces_classification::FacesClassification;
++use self::loops_store::{Loops, LoopsStore, ShapesOpStatus};
++use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
++use crate::alternative::Alternative;
+ 
+ type ClassicResult<T> = std::result::Result<T, ShapeOpsError>;
+ 
+@@ -606,6 +611,249 @@
+         .collect()
+ }
+ 
++/// Accumulate the oriented boundary chain of a face partition.
++fn add_wire_chain<C>(chain: &mut HashMap<EdgeId<C>, isize>, wire: &Wire<Point3, C>) {
++    wire.iter().for_each(|edge| {
++        *chain.entry(edge.id()).or_default() += if edge.orientation() { 1 } else { -1 };
++    });
++}
++
++/// A loop projected into its original support, retaining the exact trim edges.
++struct DivisionLoop<C> {
++    wire: Wire<Point3, C>,
++    status: ShapesOpStatus,
++    polygon: PolylineCurve<Point2>,
++    area: f64,
++}
++
++/// Recover a subdivision from loop orientation and nesting, without area pruning.
++///
++/// A geometric length tolerance is not a measure of area in a surface chart.
++/// The chart only determines orientation and nesting here; all output edges and
++/// surfaces remain the original geometry. Opposite copies of an internal loop
++/// bound adjacent cells and must not cancel solely because their areas agree.
++fn complete_face_division<C, S>(
++    face: &Face<Point3, C, S>,
++    loops: &Loops<Point3, C>,
++    tol: f64,
++    work: &mut usize,
++) -> Option<FacesClassification<Point3, C, S>>
++where
++    C: BoundedCurve<Point = Point3> + ParameterDivision1D<Point = Point3> + Clone,
++    S: ShapeOpsSurface,
++{
++    let surface = face.surface();
++    let mut samples: HashMap<EdgeId<C>, Vec<Point3>> = HashMap::default();
++    let projected = loops
++        .iter()
++        .map(|boundary| {
++            let wire: Wire<Point3, C> = (**boundary).clone();
++            if !wire.is_closed() || !wire.is_simple() {
++                return None;
++            }
++            let start = surface.search_parameter(wire.front_vertex()?.point(), None, 100)?;
++            let points = wire
++                .iter()
++                .try_fold(vec![Point2::from(start)], |mut points, edge| {
++                    let sampled = samples.entry(edge.id()).or_insert_with(|| {
++                        let curve = edge.curve();
++                        curve.parameter_division(curve.range_tuple(), tol).1
++                    });
++                    *work = work.checked_sub(sampled.len())?;
++                    let mut hint = *points.last()?;
++                    let mut project = |point: &Point3| {
++                        hint = surface
++                            .search_parameter(*point, Some(hint.into()), 100)?
++                            .into();
++                        Some(hint)
++                    };
++                    let next = if edge.orientation() {
++                        sampled
++                            .iter()
++                            .skip(1)
++                            .map(&mut project)
++                            .collect::<Option<Vec<_>>>()?
++                    } else {
++                        sampled
++                            .iter()
++                            .rev()
++                            .skip(1)
++                            .map(&mut project)
++                            .collect::<Option<Vec<_>>>()?
++                    };
++                    points.extend(next);
++                    Some(points)
++                })?;
++            let origin = *points.first()?;
++            // A closed spatial loop must also close in this local chart. A
++            // periodic seam requiring another chart is not repaired here.
++            if !origin.near(points.last()?) {
++                return None;
++            }
++            let (area, magnitude) =
++                points
++                    .windows(2)
++                    .fold((0.0, 0.0), |(area, magnitude), pair| {
++                        let a = pair[0] - origin;
++                        let b = pair[1] - origin;
++                        (
++                            area + a.x * b.y - a.y * b.x,
++                            magnitude + (a.x * b.y).abs() + (a.y * b.x).abs(),
++                        )
++                    });
++            // This bounds arithmetic uncertainty, not a geometric feature size.
++            if !area.is_finite() || area.abs() <= 16.0 * f64::EPSILON * magnitude {
++                return None;
++            }
++            Some(DivisionLoop {
++                wire,
++                status: boundary.status(),
++                polygon: PolylineCurve(points),
++                area,
++            })
++        })
++        .collect::<Option<Vec<_>>>()?;
++    let mut regions: Vec<_> = projected
++        .iter()
++        .enumerate()
++        .filter(|(_, boundary)| boundary.area > 0.0)
++        .map(|(index, _)| vec![index])
++        .collect();
++    projected
++        .iter()
++        .enumerate()
++        .filter(|(_, boundary)| boundary.area < 0.0)
++        .try_for_each(|(index, hole)| {
++            // Exclude the opposite copy of the same cut. Its negative copy is
++            // a hole in the enclosing cell, not a cancellation of its own cell.
++            let owner =
++                regions
++                    .iter()
++                    .enumerate()
++                    .try_fold(None, |owner, (region, indices)| {
++                        let outer = &projected[indices[0]];
++                        *work = work.checked_sub(outer.wire.len().checked_mul(hole.wire.len())?)?;
++                        let same = outer.wire.len() == hole.wire.len()
++                            && outer
++                                .wire
++                                .iter()
++                                .all(|edge| hole.wire.iter().any(|other| edge.id() == other.id()));
++                        *work = work.checked_sub(outer.polygon.len())?;
++                        let contains = !same && outer.polygon.include(hole.polygon.front());
++                        Some(
++                            if contains
++                                && owner.is_none_or(|previous: usize| {
++                                    outer.area < projected[regions[previous][0]].area
++                                })
++                            {
++                                Some(region)
++                            } else {
++                                owner
++                            },
++                        )
++                    })??;
++            regions[owner].push(index);
++            Some(())
++        })?;
++    let mut result = FacesClassification::default();
++    regions.into_iter().try_for_each(|indices| {
++        let status = indices
++            .iter()
++            .try_fold(ShapesOpStatus::Unknown, |status, &index| {
++                let next = projected[index].status;
++                if status == ShapesOpStatus::Unknown {
++                    Some(next)
++                } else if next == ShapesOpStatus::Unknown || next == status {
++                    Some(status)
++                } else {
++                    None
++                }
++            })?;
++        let wires = indices
++            .into_iter()
++            .map(|index| projected[index].wire.clone())
++            .collect();
++        let mut divided = Face::try_new(wires, surface.clone()).ok()?;
++        if !face.orientation() {
++            divided.invert();
++        }
++        result.push(divided, status);
++        Some(())
++    })?;
++    Some(result)
++}
++
++/// Require subdivision to conserve each source face's oriented boundary chain.
++///
++/// Internal cuts occur twice with opposite orientations. Their cancellation
++/// leaves exactly the source boundary, independently of chart scale and Boolean
++/// classification. Retry only a division that violates this discrete invariant.
++fn divide_complete_faces<C, S>(
++    shell: &Shell<Point3, C, S>,
++    store: &LoopsStore<Point3, C>,
++    tol: f64,
++    recovered: &mut bool,
++) -> Option<FacesClassification<Point3, C, S>>
++where
++    C: BoundedCurve<Point = Point3> + ParameterDivision1D<Point = Point3> + Clone,
++    S: ShapeOpsSurface,
++{
++    let mut result = FacesClassification::default();
++    let mut work = 65_536_usize;
++    shell.iter().zip(store).try_for_each(|(face, loops)| {
++        if loops
++            .iter()
++            .all(|wire| wire.status() == ShapesOpStatus::Unknown)
++        {
++            result.push(face.clone(), ShapesOpStatus::Unknown);
++            return Some(());
++        }
++        let mut expected = HashMap::default();
++        loops
++            .iter()
++            .for_each(|wire| add_wire_chain(&mut expected, wire));
++        expected.retain(|_, count| *count != 0);
++        let conserves_boundary = |classification: &FacesClassification<Point3, C, S>| {
++            let mut actual = HashMap::default();
++            classification
++                .and_or_unknown()
++                .iter()
++                .flatten()
++                .for_each(|face| {
++                    face.absolute_boundaries()
++                        .iter()
++                        .for_each(|wire| add_wire_chain(&mut actual, wire));
++                });
++            actual.retain(|_, count| *count != 0);
++            actual == expected
++        };
++        let one_shell = iter::once(face.clone()).collect();
++        let mut one_store: LoopsStore<_, _> = iter::once(face).collect();
++        one_store[0] = loops.clone();
++        let classification = divide_face::divide_faces(&one_shell, &one_store, tol)
++            .filter(&conserves_boundary)
++            .or_else(|| {
++                let classification = complete_face_division(face, loops, tol, &mut work)?;
++                *recovered = true;
++                Some(classification)
++            })
++            .filter(conserves_boundary)?;
++        classification
++            .and_or_unknown()
++            .into_iter()
++            .zip([
++                ShapesOpStatus::And,
++                ShapesOpStatus::Or,
++                ShapesOpStatus::Unknown,
++            ])
++            .for_each(|(shell, status)| {
++                shell.into_iter().for_each(|face| result.push(face, status));
++            });
++        Some(())
++    })?;
++    Some(result)
++}
++
+ /// Split the combined boundaries into intersection and union boundaries.
+ ///
+ /// All shells of an operand participate in the same winding query. They are
+@@ -616,7 +864,8 @@
+     shell1: &Shell<Point3, C, S>,
+     tol: f64,
+     second_at_infinity: isize,
+-) -> Option<([AltCurveShell<C, S>; 2], bool)> {
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
+     let poly_shell0 = shell0.triangulation(tol);
+     let poly_shell1 = shell1.triangulation(tol);
+     let altshell0: AltCurveShell<C, S> =
+@@ -635,57 +884,84 @@
+             loops_store::create_loops_stores(&altshell0, &poly_shell0, &altshell1, &poly_shell1)?;
+         (stores.geom_loops_store0, stores.geom_loops_store1)
+     };
+-    let mut cls0 = divide_face::divide_faces(&altshell0, &loops_store0, tol)?;
+-    if cls0.and_or_unknown()[2]
+-        .connected_components()
+-        .iter()
+-        .all(|component| !component.extract_boundaries().is_empty())
+-    {
+-        cls0.integrate_by_component();
+-    }
+-    let mut cls1 = divide_face::divide_faces(&altshell1, &loops_store1, tol)?;
+-    if cls1.and_or_unknown()[2]
+-        .connected_components()
+-        .iter()
+-        .all(|component| !component.extract_boundaries().is_empty())
+-    {
+-        cls1.integrate_by_component();
+-    }
+-    let [mut and0, mut or0, unknown0] = cls0.and_or_unknown();
+-    unknown0.into_iter().try_for_each(|face| {
+-        let (point, normal) = interior_point(&face, tol)?;
+-        if let Some(same_orientation) =
+-            coincident_boundary(&face, point, normal, shell1, &poly_shell1)
++    // Reuse the same intersection arrangement for the bounded recovery. A
++    // successful original assembly takes precedence, including valid emptiness.
++    let assemble = |complete: bool| {
++        let mut recovered = false;
++        let mut cls0 = if complete {
++            divide_complete_faces(&altshell0, &loops_store0, tol, &mut recovered)?
++        } else {
++            divide_face::divide_faces(&altshell0, &loops_store0, tol)?
++        };
++        if cls0.and_or_unknown()[2]
++            .connected_components()
++            .iter()
++            .all(|component| !component.extract_boundaries().is_empty())
+         {
+-            // A shared co-oriented patch belongs to both results, once. Opposed
+-            // patches enclose no intersection and are internal to the union.
+-            if same_orientation {
+-                and0.push(face.clone());
++            cls0.integrate_by_component();
++        }
++        let mut cls1 = if complete {
++            divide_complete_faces(&altshell1, &loops_store1, tol, &mut recovered)?
++        } else {
++            divide_face::divide_faces(&altshell1, &loops_store1, tol)?
++        };
++        if complete && !recovered {
++            return None;
++        }
++        if cls1.and_or_unknown()[2]
++            .connected_components()
++            .iter()
++            .all(|component| !component.extract_boundaries().is_empty())
++        {
++            cls1.integrate_by_component();
++        }
++        let [mut and0, mut or0, unknown0] = cls0.and_or_unknown();
++        unknown0.into_iter().try_for_each(|face| {
++            let (point, normal) = interior_point(&face, tol)?;
++            if let Some(same_orientation) =
++                coincident_boundary(&face, point, normal, shell1, &poly_shell1)
++            {
++                // A shared co-oriented patch belongs to both results, once. Opposed
++                // patches enclose no intersection and are internal to the union.
++                if same_orientation {
++                    and0.push(face.clone());
++                    or0.push(face);
++                }
++            } else if inside(point, &poly_shell1, second_at_infinity)? {
++                and0.push(face);
++            } else {
+                 or0.push(face);
+             }
+-        } else if inside(point, &poly_shell1, second_at_infinity)? {
+-            and0.push(face);
++            Some(())
++        })?;
++        let [mut and1, mut or1, unknown1] = cls1.and_or_unknown();
++        unknown1.into_iter().try_for_each(|face| {
++            let (point, normal) = interior_point(&face, tol)?;
++            // The first operand owns coincident patches.
++            if coincident_boundary(&face, point, normal, shell0, &poly_shell0).is_none() {
++                if inside(point, &poly_shell0, 0)? {
++                    and1.push(face);
++                } else {
++                    or1.push(face);
++                }
++            }
++            Some(())
++        })?;
++        and0.append(&mut and1);
++        or0.append(&mut or1);
++        let selected = match operation {
++            Operation::Union => or0,
++            Operation::Intersection | Operation::Difference => and0,
++        };
++        let converted = altshell_to_shell(&selected)?;
++        let shell = if contact_arrangement {
++            sew_contacts(converted, tol)?
+         } else {
+-            or0.push(face);
+-        }
+-        Some(())
+-    })?;
+-    let [mut and1, mut or1, unknown1] = cls1.and_or_unknown();
+-    unknown1.into_iter().try_for_each(|face| {
+-        let (point, normal) = interior_point(&face, tol)?;
+-        // The first operand owns coincident patches.
+-        if coincident_boundary(&face, point, normal, shell0, &poly_shell0).is_none() {
+-            if inside(point, &poly_shell0, 0)? {
+-                and1.push(face);
+-            } else {
+-                or1.push(face);
+-            }
+-        }
+-        Some(())
+-    })?;
+-    and0.append(&mut and1);
+-    or0.append(&mut or1);
+-    Some(([and0, or0], contact_arrangement))
++            converted
++        };
++        Solid::try_new(shell.connected_components()).ok()
++    };
++    assemble(false).or_else(|| assemble(true))
+ }
+ 
+ /// A certified convex planar face, with its material-side orientation.
+@@ -1222,9 +1498,9 @@
+             ("difference", 1)
+         }
+     };
+-    let shell = if shell0.is_empty() || shell1.is_empty() {
++    if shell0.is_empty() || shell1.is_empty() {
+         // These are set identities for valid empty operands, before any geometric operation.
+-        match operation {
++        let shell = match operation {
+             Operation::Intersection => Shell::default(),
+             Operation::Difference => shell0,
+             Operation::Union => {
+@@ -1234,26 +1510,13 @@
+                     shell0
+                 }
+             }
+-        }
++        };
++        finalize(name, shell)
+     } else {
+-        let ([and_shell, or_shell], contacts) =
+-            process_one_pair_of_shells(&shell0, &shell1, tol, at_infinity)
+-                .ok_or(ShapeOpsError::EmptyOutputShell { operation: name })?;
+-        let selected = match operation {
+-            Operation::Union => or_shell,
+-            Operation::Intersection | Operation::Difference => and_shell,
+-        };
+-        let converted = altshell_to_shell(&selected)
+-            .ok_or(ShapeOpsError::AltShellConversionFailed { operation: name })?;
+-        if contacts {
+-            sew_contacts(converted, tol)
+-                .ok_or(ShapeOpsError::AltShellConversionFailed { operation: name })?
+-        } else {
+-            converted
+-        }
+-    };
+-    // An empty boundary is a valid empty result; only pipeline failure is an error.
+-    finalize(name, shell)
++        // An empty boundary is a valid result; failed reconstruction is an error.
++        process_one_pair_of_shells(&shell0, &shell1, tol, at_infinity, operation)
++            .ok_or(ShapeOpsError::EmptyOutputShell { operation: name })
++    }
+ }
+ 
+ fn boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(

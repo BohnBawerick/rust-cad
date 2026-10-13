@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate retries failed assembly using De Morgan identities, explicit exterior windings for both operands, and reversed output orientation. It preserves cavity orientation and requires complete trim partitions and valid shell topology.
+
+Expected scope: orientation- or ownership-dependent assembly failures across generic supported solids. Intersection extraction, touching-union mesh closure, compilation, and retry runtime remain unresolved.
+
+Formatting and whitespace checks completed. No builds, tests, or commits. Findings saved in `/work/scratch/partial.txt`.

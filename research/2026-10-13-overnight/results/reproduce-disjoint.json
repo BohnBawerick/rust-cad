@@ -1,0 +1,1 @@
+{"reasons": ["area", "centroid", "empty_geometry", "volume"], "expected": {"volume": 1.0, "area": 6.0, "centroid": [0.5, 0.5, 0.5]}, "actual": {"volume": 0.0, "area": 0.0, "centroid": null, "mesh_closed": true, "mesh_vertices": 0, "triangles": 0}, "id": "public-315", "group": "boxes", "op": "difference", "seconds": 0.0333, "pass": false}

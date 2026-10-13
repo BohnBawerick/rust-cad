@@ -1,0 +1,237 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -20,6 +20,8 @@
+ //!   winding explicitly when intersecting with a complement for subtraction.
+ //! - Certified planar solids with convex faces use a support-plane arrangement
+ //!   before marching, retaining the exact input surfaces.
++//! - Planar assembly pairs edge incidences around occupied material sectors and
++//!   splits vertex fans, preserving separate sheets at edge and vertex contacts.
+ //! - Complete positive-weight spline control nets certify separation, including
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
+ //! - Failed planar arrangements reconcile support normals using complete control
+@@ -1300,6 +1302,192 @@
+     })
+ }
+ 
++/// One directed cell edge; its index also identifies its front corner.
++struct PlanarHalfEdge {
++    face: usize,
++    front: usize,
++    back: usize,
++    next: usize,
++}
++
++/// Topological incidence after separating material sectors at geometric contacts.
++struct PlanarSheetTopology {
++    vertices: Vec<Vertex<Point3>>,
++    corners: Vec<Vec<usize>>,
++    edges: Vec<Vec<usize>>,
++}
++
++/// Find a corner fan representative with path compression.
++fn planar_corner_root(parents: &mut [usize], mut corner: usize) -> usize {
++    while parents[corner] != corner {
++        parents[corner] = parents[parents[corner]];
++        corner = parents[corner];
++    }
++    corner
++}
++
++/// Pair cell boundaries across material sectors, then connect their corner fans.
++///
++/// Geometric coincidence alone does not identify a topological edge. Around a
++/// canonical edge tangent, a reversed boundary enters material and a forward
++/// boundary exits it. Adjacent entry/exit rays delimit one occupied sector, even
++/// when several disjoint sectors meet at the same geometric edge. Joining only
++/// those pairs preserves separate sheets and their oriented cavity boundaries.
++/// Coincident rays or inconsistent orientation require another assembly path.
++fn planar_sheet_topology<S>(
++    cells: &[PlanarCell<S>],
++    indexed: &[(usize, bool, Vec<usize>)],
++    vertices: &[Vertex<Point3>],
++    work: &mut usize,
++) -> Option<PlanarSheetTopology> {
++    let offsets: Vec<_> = indexed
++        .iter()
++        .scan(0, |offset, (_, _, indices)| {
++            let start = *offset;
++            *offset += indices.len();
++            Some(start)
++        })
++        .collect();
++    let half_edges: Vec<_> = indexed
++        .iter()
++        .enumerate()
++        .flat_map(|(face, (_, _, indices))| {
++            let offset = offsets[face];
++            indices.iter().enumerate().map(move |(corner, &front)| {
++                let next = (corner + 1) % indices.len();
++                PlanarHalfEdge {
++                    face,
++                    front,
++                    back: indices[next],
++                    next: offset + next,
++                }
++            })
++        })
++        .collect();
++    let mut incidence: HashMap<(usize, usize), SmallVec<[usize; 2]>> = HashMap::default();
++    half_edges
++        .iter()
++        .enumerate()
++        .try_for_each(|(index, edge)| {
++            if edge.front == edge.back {
++                return None;
++            }
++            incidence
++                .entry((edge.front.min(edge.back), edge.front.max(edge.back)))
++                .or_default()
++                .push(index);
++            Some(())
++        })?;
++    let mut partners: Vec<_> = (0..half_edges.len()).collect();
++    incidence
++        .iter()
++        .try_for_each(|(&(front, back), incident)| {
++            if incident.len() < 2 || incident.len() % 2 != 0 {
++                return None;
++            }
++            if incident.len() == 2 {
++                let a = incident[0];
++                let b = incident[1];
++                if half_edges[a].front != half_edges[b].back {
++                    return None;
++                }
++                partners[a] = b;
++                partners[b] = a;
++                return Some(());
++            }
++            *work = work.checked_sub(incident.len().checked_mul(incident.len())?)?;
++            let tangent = (vertices[back].point() - vertices[front].point()).normalize();
++            let rays = incident
++                .iter()
++                .map(|&index| {
++                    let edge = &half_edges[index];
++                    let (source, orientation, _) = &indexed[edge.face];
++                    let cell = &cells[*source];
++                    let normal = if *orientation == cell.orientation {
++                        cell.normal
++                    } else {
++                        -cell.normal
++                    };
++                    let direction = vertices[edge.back].point() - vertices[edge.front].point();
++                    let ray = normal.cross(direction).normalize();
++                    ray.magnitude2().is_finite().then_some((index, ray))
++                })
++                .collect::<Option<SmallVec<[_; 4]>>>()?;
++            let reference = rays[0].1;
++            let mut ring = rays
++                .iter()
++                .map(|&(index, ray)| {
++                    let angle = tangent.dot(reference.cross(ray)).atan2(reference.dot(ray));
++                    angle.is_finite().then_some((index, ray, angle))
++                })
++                .collect::<Option<SmallVec<[_; 4]>>>()?;
++            ring.sort_unstable_by(|a, b| a.2.total_cmp(&b.2).then_with(|| a.0.cmp(&b.0)));
++            ring.iter().zip(ring.iter().cycle().skip(1)).try_for_each(
++                |(&(a, ray0, _), &(b, ray1, _))| {
++                    let forward0 = half_edges[a].front == front;
++                    let forward1 = half_edges[b].front == front;
++                    if forward0 == forward1
++                        || (ray0.dot(ray1) > 0.0
++                            && ray0.cross(ray1).magnitude() <= 32.0 * f64::EPSILON)
++                    {
++                        return None;
++                    }
++                    if !forward0 {
++                        partners[a] = b;
++                        partners[b] = a;
++                    }
++                    Some(())
++                },
++            )
++        })?;
++
++    // Only paired edge endpoints connect corners. Equal positions in unrelated
++    // fans receive distinct vertices, including sheets that reconnect elsewhere.
++    let mut parents: Vec<_> = (0..half_edges.len()).collect();
++    partners.iter().enumerate().for_each(|(corner, &partner)| {
++        let a = planar_corner_root(&mut parents, corner);
++        let b = planar_corner_root(&mut parents, half_edges[partner].next);
++        parents[a.max(b)] = a.min(b);
++    });
++    let roots: Vec<_> = (0..half_edges.len())
++        .map(|corner| planar_corner_root(&mut parents, corner))
++        .collect();
++    let representatives: HashMap<_, _> = roots
++        .iter()
++        .enumerate()
++        .filter(|&(corner, &root)| corner == root)
++        .map(|(corner, _)| {
++            (
++                corner,
++                Vertex::new(vertices[half_edges[corner].front].point()),
++            )
++        })
++        .collect();
++    let sheet_vertices = roots
++        .iter()
++        .map(|root| representatives.get(root).cloned())
++        .collect::<Option<Vec<_>>>()?;
++    let corners = indexed
++        .iter()
++        .zip(&offsets)
++        .map(|((_, _, indices), &offset)| roots[offset..offset + indices.len()].to_vec())
++        .collect();
++    let edges = indexed
++        .iter()
++        .zip(&offsets)
++        .map(|((_, _, indices), &offset)| {
++            (offset..offset + indices.len())
++                .map(|corner| corner.min(partners[corner]))
++                .collect()
++        })
++        .collect();
++    Some(PlanarSheetTopology {
++        vertices: sheet_vertices,
++        corners,
++        edges,
++    })
++}
++
+ /// Assemble one common arrangement of the exact input support planes.
+ ///
+ /// Certification covers the complete surfaces and every trim before any result
+@@ -1412,22 +1600,26 @@
+             Some((source, orientation, indices))
+         })
+         .collect::<Option<Vec<_>>>()?;
+-    let mut edges: HashMap<(usize, usize), (Edge<Point3, C>, usize, usize)> = HashMap::default();
++    let topology = planar_sheet_topology(&cells, &indexed, &vertices, &mut work)?;
++    let vertices = topology.vertices;
++    let mut edges: HashMap<usize, (Edge<Point3, C>, usize, usize)> = HashMap::default();
+     let shell = indexed
+         .into_iter()
+-        .map(|(source, orientation, indices)| {
++        .zip(topology.corners)
++        .zip(topology.edges)
++        .map(|(((source, orientation, _), indices), edge_ids)| {
+             let cell = &cells[source];
+             let wire = indices
+                 .iter()
+                 .zip(indices.iter().cycle().skip(1))
+-                .map(|(&a, &b)| {
++                .zip(edge_ids)
++                .map(|((&a, &b), key)| {
+                     if a == b {
+                         return None;
+                     }
+-                    let key = (a.min(b), a.max(b));
+                     if let Some((edge, start, count)) = edges.get_mut(&key) {
+-                        // More than two incident faces, or equal directions, is
+-                        // independently detected nonmanifold output geometry.
++                        // Every material sector must close with the reverse
++                        // half-edge selected by the radial incidence pairing.
+                         if *count != 1 || *start == a {
+                             return None;
+                         }

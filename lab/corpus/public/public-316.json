@@ -1,0 +1,1 @@
+{"a": {"kind": "box", "origin": [0, 0, 0], "size": [40, 30, 10]}, "boolean_tol": 0.05, "group": "fillet", "id": "public-316", "mesh_tol": 0.002, "op": "fillet", "radius": 2, "regression": "engine-path radius-2 fillet"}

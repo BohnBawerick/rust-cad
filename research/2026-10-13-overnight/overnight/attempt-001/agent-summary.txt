@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Hypothesis: classification must sum oriented winding across all operand shells. Subtraction additionally needs winding one at infinity for complemented B. The patch implements this, preserves cavity orientation, handles empty operands explicitly, and probes unknown faces at interior points.
+
+Expected scope: disjoint solids, containment, multiple shells, and improved vertex/edge contact handling. Original B-rep geometry is retained.
+
+Unresolved risks: coplanar face contact, existing intersection-loop failures, and classification near curved boundaries at tessellation tolerance.
+
+Formatted and checked patch whitespace. No compilation or tests run; no commit made.

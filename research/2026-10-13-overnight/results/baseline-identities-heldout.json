@@ -1,0 +1,222 @@
+{
+  "total": 25,
+  "passed": 1,
+  "operation_failed": 18,
+  "identity_failed": 6,
+  "rows": [
+    {
+      "ids": [
+        "heldout-000",
+        "heldout-001",
+        "heldout-002"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -405.20844272770603,
+      "union_plus_intersection_error": 3.410605131648481e-13
+    },
+    {
+      "ids": [
+        "heldout-003",
+        "heldout-004",
+        "heldout-005"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-006",
+        "heldout-007",
+        "heldout-008"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-009",
+        "heldout-010",
+        "heldout-011"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -479.5860060746618,
+      "union_plus_intersection_error": -2.2737367544323206e-13
+    },
+    {
+      "ids": [
+        "heldout-012",
+        "heldout-013",
+        "heldout-014"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-015",
+        "heldout-016",
+        "heldout-017"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-018",
+        "heldout-019",
+        "heldout-020"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-021",
+        "heldout-022",
+        "heldout-023"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-024",
+        "heldout-025",
+        "heldout-026"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -27.750444440154464,
+      "union_plus_intersection_error": 7.105427357601002e-15
+    },
+    {
+      "ids": [
+        "heldout-027",
+        "heldout-028",
+        "heldout-029"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-030",
+        "heldout-031",
+        "heldout-032"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -401.7700118279421,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "heldout-033",
+        "heldout-034",
+        "heldout-035"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -1.1368683772161603e-13,
+      "union_plus_intersection_error": 4.547473508864641e-13
+    },
+    {
+      "ids": [
+        "heldout-036",
+        "heldout-037",
+        "heldout-038"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-039",
+        "heldout-040",
+        "heldout-041"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -246.16108332433004,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "heldout-042",
+        "heldout-043",
+        "heldout-044"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-045",
+        "heldout-046",
+        "heldout-047"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-048",
+        "heldout-049",
+        "heldout-050"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-051",
+        "heldout-052",
+        "heldout-053"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-054",
+        "heldout-055",
+        "heldout-056"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -0.6356943305503611,
+      "union_plus_intersection_error": -0.000545966151656252
+    },
+    {
+      "ids": [
+        "heldout-057",
+        "heldout-058",
+        "heldout-059"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-060",
+        "heldout-061",
+        "heldout-062"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-063",
+        "heldout-064",
+        "heldout-065"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-066",
+        "heldout-067",
+        "heldout-068"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-069",
+        "heldout-070",
+        "heldout-071"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "heldout-072",
+        "heldout-073",
+        "heldout-074"
+      ],
+      "verdict": "operation_failed"
+    }
+  ]
+}

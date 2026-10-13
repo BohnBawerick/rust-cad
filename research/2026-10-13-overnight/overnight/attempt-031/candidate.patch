@@ -1,0 +1,179 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -28,6 +28,8 @@
+ //!   only new transverse generators require intersection-curve assembly.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
++//! - A certified taller sweep can be restricted to the first operand's cap slab
++//!   for intersection and subtraction, preserving exact rational section curves.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -1514,6 +1516,89 @@
+         })
+         .collect::<Option<Vec<_>>>()?;
+     (arcs.len() * 2 == cap_edges.len()).then_some(arcs)
++}
++
++/// Restrict a covering sweep to the cap slab of the first operand.
++///
++/// For a solid `A` contained in a slab `H`, both `A ∩ B` and `A \ B` depend
++/// only on `B ∩ H`. The complete translated control nets certify that clipping
++/// `B` merely shortens its generators; its oriented section is unchanged.
++/// This identity does not hold for union, which must retain `B` outside `H`.
++/// New cap trims use exact rational leaders on the original side supports.
++fn covering_sweep_arcs<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++    bottom_face: &Face<Point3, C, S>,
++    top_face: &Face<Point3, C, S>,
++    translation: Vector3,
++) -> Option<Vec<SweepArc<C, S>>> {
++    let bottom_surface = bottom_face.surface();
++    let top_surface = top_face.surface();
++    let bottom = certified_plane(&bottom_surface)?;
++    let normal = translation.normalize();
++    let height = translation.magnitude();
++    let caps = solid
++        .face_iter()
++        .filter_map(|face| {
++            certified_plane(&face.surface()).filter(|plane| plane.normal().cross(normal).so_small())
++        })
++        .collect::<Vec<_>>();
++    let (arcs, offset) = caps.iter().find_map(|lower| {
++        caps.iter().find_map(|upper| {
++            let extent = (upper.origin() - lower.origin()).dot(normal);
++            let start = (bottom.origin() - lower.origin()).dot(normal);
++            if !extent.is_finite()
++                || !start.is_finite()
++                || extent <= 0.0
++                || start < 0.0
++                || start + height > extent
++                || (start == 0.0 && height == extent)
++            {
++                return None;
++            }
++            let arcs = sweep_arcs(solid, lower, normal * extent)?;
++            Some((arcs, normal * start))
++        })
++    })?;
++    arcs.into_iter()
++        .map(|mut arc| {
++            arc.curve.transform_by(Matrix4::from_translation(offset));
++            let trim = |curve: NurbsCurve<Vector4>, cap: &S| {
++                let front = Vertex::new(curve.front());
++                let back = Vertex::new(curve.back());
++                let boundary0: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
++                let boundary1: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
++                let curve = SurfaceCurve::with_boundaries(
++                    arc.surface.clone(),
++                    cap.clone(),
++                    curve,
++                    boundary0,
++                    boundary1,
++                );
++                let (start, end) = curve.leader().range_tuple();
++                [start, (start + end) / 2.0, end]
++                    .into_iter()
++                    .try_for_each(|parameter| {
++                        let point = curve.search_triple(parameter, 100)?.0;
++                        point
++                            .near(&curve.leader().evaluate(parameter))
++                            .then_some(())
++                    })?;
++                let edge: Edge<Point3, C> = Edge::try_new(&front, &back, curve.into()).ok()?;
++                edge.is_geometric_consistent().then_some(edge)
++            };
++            let mut upper = arc.curve.clone();
++            upper.transform_by(Matrix4::from_translation(translation));
++            // Each cap trim is oriented along the section here. The side wire
++            // assembly reverses the upper trim after trimming to its endpoints.
++            let lower = trim(arc.curve.clone(), &bottom_surface)?;
++            let upper = trim(upper, &top_surface)?;
++            arc.lower = lower;
++            arc.upper = upper;
++            // Keep the original shared generator identities. Assembly cuts
++            // these curves to the slab instead of inventing a smooth SSI seam.
++            Some(arc)
++        })
++        .collect()
+ }
+ 
+ /// Isolate section intersections with positive-weight rational convex hulls.
+@@ -1756,8 +1841,12 @@
+     solid1: &Solid<Point3, C, S>,
+     operation: Operation,
+     tol: f64,
++    clip_second: bool,
+ ) -> Option<Solid<Point3, C, S>> {
+-    if solid0.face_iter().count() > 128 || solid1.face_iter().count() > 128 {
++    if (clip_second && matches!(operation, Operation::Union))
++        || solid0.face_iter().count() > 128
++        || solid1.face_iter().count() > 128
++    {
+         return None;
+     }
+     let caps = solid0
+@@ -1786,7 +1875,11 @@
+                     return None;
+                 }
+                 let arcs0 = sweep_arcs(solid0, pa, translation)?;
+-                let arcs1 = sweep_arcs(solid1, pa, translation)?;
++                let arcs1 = if clip_second {
++                    covering_sweep_arcs(solid1, a, b, translation)
++                } else {
++                    sweep_arcs(solid1, pa, translation)
++                }?;
+                 Some((*a, *pa, *b, translation, arcs0, arcs1))
+             })
+         })?;
+@@ -1895,20 +1988,32 @@
+                     .generators
+                     .iter()
+                     .any(|other| edge.id() == other.id())
+-                    && ((edge.front().point().near(&a.point())
+-                        && edge.back().point().near(&b.point()))
+-                        || (edge.back().point().near(&a.point())
+-                            && edge.front().point().near(&b.point())))
++                    && if clip_second {
++                        let curve = edge.curve();
++                        sweep_parameter(&curve, a.point()).is_some()
++                            && sweep_parameter(&curve, b.point()).is_some()
++                    } else {
++                        (edge.front().point().near(&a.point())
++                            && edge.back().point().near(&b.point()))
++                            || (edge.back().point().near(&a.point())
++                                && edge.front().point().near(&b.point()))
++                    }
+             });
+             let curve = if let Some(edge) = inherited {
+                 // A shared input edge already belongs to both incident supports.
+                 // In particular, a smooth seam must not become a parameter curve
+                 // owned by only one of its distinct surface charts.
+-                let mut curve = edge.curve();
+-                if !curve.front().near(&a.point()) {
+-                    curve.invert();
++                if clip_second {
++                    // A covering sweep can retain only an interior generator
++                    // interval. Cutting preserves the original seam representation.
++                    sweep_trim_edge::<C, S>(edge, a, b)?.curve()
++                } else {
++                    let mut curve = edge.curve();
++                    if !curve.front().near(&a.point()) {
++                        curve.invert();
++                    }
++                    curve
+                 }
+-                curve
+             } else {
+                 let surface0 = first.surface.clone();
+                 let surface1 = second.surface.clone();
+@@ -2076,7 +2181,8 @@
+     } else {
+         boolean_classic(solid0, solid1, tol, operation)
+             .or_else(|error| planar_boolean(solid0, solid1, operation, true).ok_or(error))
+-            .or_else(|error| sweep_boolean(solid0, solid1, operation, tol).ok_or(error))
++            .or_else(|error| sweep_boolean(solid0, solid1, operation, tol, false).ok_or(error))
++            .or_else(|error| sweep_boolean(solid0, solid1, operation, tol, true).ok_or(error))
+     }
+ }
+ 

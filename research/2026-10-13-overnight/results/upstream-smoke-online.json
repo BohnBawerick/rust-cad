@@ -1,0 +1,14 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--manifest-path",
+    "/workspace/lab/kernel/source/Cargo.toml",
+    "-p",
+    "monstertruck-solid",
+    "--test",
+    "boolean_smoke"
+  ],
+  "exit": 0,
+  "seconds": 63.46423928800505
+}

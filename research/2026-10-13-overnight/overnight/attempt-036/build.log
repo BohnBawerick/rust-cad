@@ -1,0 +1,32 @@
+   Compiling monstertruck-solid v0.4.1 (/work/kernel/source/monstertruck-solid)
+error[E0505]: cannot move out of `sewn` because it is borrowed
+   --> /work/kernel/source/monstertruck-solid/src/transversal/classic/mod.rs:746:20
+    |
+743 |     let sewn = sew_contacts(refined, tol)?;
+    |         ---- binding `sewn` declared here
+744 |     sewn.edge_iter()
+    |     ----------------
+    |     |
+    |     borrow of `sewn` occurs here
+    |     a temporary with access to the borrow is created here ...
+745 |         .all(|edge| edge.is_geometric_consistent())
+746 |         .then_some(sewn)
+    |                    ^^^^- ... and the borrow might be used here, when that temporary is dropped and runs the destructor for type `impl Iterator<Item = monstertruck_topology::Edge<monstertruck_core::cgmath::Point3<f64>, C>> + '_`
+    |                    |
+    |                    move out of `sewn` occurs here
+    |
+    = note: the temporary is part of an expression at the end of a block;
+            consider forcing this temporary to be dropped sooner, before the block's local variables are dropped
+help: for example, you could save the expression's value in a new local variable `x` and then make `x` be the expression at the end of the block
+    |
+744 ~     let x = sewn.edge_iter()
+745 |         .all(|edge| edge.is_geometric_consistent())
+746 ~         .then_some(sewn); x
+    |
+help: consider cloning the value if the performance cost is acceptable
+    |
+744 |     sewn.clone().edge_iter()
+    |         ++++++++
+
+For more information about this error, try `rustc --explain E0505`.
+error: could not compile `monstertruck-solid` (lib) due to 1 previous error

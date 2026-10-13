@@ -1,0 +1,134 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling autocfg v1.5.1
+   Compiling version_check v0.9.5
+   Compiling serde_core v1.0.229
+   Compiling libc v0.2.190
+   Compiling num-traits v0.2.19
+    Checking cfg-if v1.0.5
+   Compiling syn v3.0.9
+   Compiling syn v2.0.119
+   Compiling serde v1.0.229
+   Compiling cgmath v0.18.0
+   Compiling crossbeam-utils v0.8.23
+    Checking approx v0.4.0
+   Compiling proc-macro-error-attr v1.0.4
+   Compiling crossbeam-epoch v0.9.21
+   Compiling syn v1.0.109
+    Checking num-complex v0.4.6
+   Compiling proc-macro-error v1.0.4
+    Checking rand_core v0.10.1
+   Compiling getrandom v0.4.3
+    Checking either v1.19.0
+   Compiling crossbeam-deque v0.8.8
+   Compiling thiserror v2.0.21
+    Checking cpufeatures v0.3.1
+    Checking rustc-hash v2.1.3
+    Checking xxhash-rust v0.8.19
+   Compiling rayon-core v1.13.0
+    Checking chacha20 v0.10.2
+    Checking smallvec v1.16.3
+   Compiling parking_lot_core v0.9.12
+    Checking rand v0.10.3
+    Checking scopeguard v1.2.0
+   Compiling unicode-segmentation v1.13.3
+   Compiling branches v0.5.1
+    Checking memchr v2.8.3
+   Compiling convert_case v0.10.0
+    Checking lock_api v0.4.14
+    Checking rayon v1.12.0
+   Compiling unicode-xid v0.2.6
+    Checking parking_lot v0.12.5
+    Checking equivalent v1.0.2
+   Compiling getrandom v0.3.4
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.21
+   Compiling katexit v0.1.5
+   Compiling monstertruck-derive v0.4.1 (/workspace/lab/kernel/source/monstertruck-derive)
+   Compiling derive_more-impl v2.1.1
+   Compiling bytemuck_derive v1.12.1
+    Checking foldhash v0.2.0
+    Checking allocator-api2 v0.2.21
+   Compiling zerocopy v0.8.62
+    Checking bytemuck v1.25.2
+    Checking hashbrown v0.16.1
+   Compiling aho-corasick v1.1.5
+    Checking rclite v0.4.2
+    Checking itertools v0.14.0
+   Compiling ahash v0.8.12
+   Compiling winnow v1.0.4
+    Checking array-macro v2.1.8
+    Checking robust v1.2.0
+    Checking matext4cgmath v0.1.0
+   Compiling regex-syntax v0.8.11
+    Checking monstertruck-core v0.4.1 (/workspace/lab/kernel/source/monstertruck-core)
+    Checking monstertruck-traits v0.4.1 (/workspace/lab/kernel/source/monstertruck-traits)
+   Compiling hashbrown v0.17.1
+    Checking monstertruck-geometry v0.4.1 (/workspace/lab/kernel/source/monstertruck-geometry)
+   Compiling indexmap v2.14.2
+    Checking derive_more v2.1.1
+    Checking monstertruck-mesh v0.4.1 (/workspace/lab/kernel/source/monstertruck-mesh)
+   Compiling regex-automata v0.4.18
+    Checking monstertruck-topology v0.4.1 (/workspace/lab/kernel/source/monstertruck-topology)
+   Compiling toml_parser v1.1.5+spec-1.1.0
+    Checking spade v2.15.1
+    Checking log v0.4.34
+    Checking web-time v1.1.0
+   Compiling toml_datetime v1.1.2+spec-1.1.0
+    Checking once_cell v1.21.4
+   Compiling toml_edit v0.25.17+spec-1.1.0
+    Checking monstertruck-meshing v0.4.1 (/workspace/lab/kernel/source/monstertruck-meshing)
+   Compiling regex v1.13.1
+   Compiling proc-macro-error-attr2 v2.0.0
+   Compiling lazy_static v1.5.1
+   Compiling Inflector v0.11.4
+   Compiling proc-macro-error2 v2.0.1
+   Compiling proc-macro-crate v3.5.0
+    Checking nom v8.0.0
+   Compiling zmij v1.0.23
+   Compiling step-p21-derive v0.1.1
+    Checking monstertruck-fillet v0.4.1 (/workspace/lab/kernel/source/monstertruck-fillet)
+   Compiling derive-new v0.7.0
+    Checking itertools v0.15.0
+   Compiling serde_json v1.0.154
+    Checking iana-time-zone v0.1.65
+    Checking chrono v0.4.45
+    Checking monstertruck-modeling v0.4.1 (/workspace/lab/kernel/source/monstertruck-modeling)
+    Checking nom-language v0.1.0
+    Checking monstertruck-assembly v0.4.1 (/workspace/lab/kernel/source/monstertruck-assembly)
+    Checking step-p21 v0.1.1
+    Checking itoa v1.0.18
+    Checking monstertruck-solid v0.4.1 (/workspace/lab/kernel/source/monstertruck-solid)
+error: unnecessary qualification
+    --> /workspace/lab/kernel/source/monstertruck-solid/src/transversal/classic/mod.rs:2614:54
+     |
+2614 |                 loops_store::BoundaryWire::new(wire, loops_store::ShapesOpStatus::And)
+     |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+note: the lint level is defined here
+    --> /workspace/lab/kernel/source/monstertruck-solid/src/lib.rs:26:41
+     |
+  26 | #![cfg_attr(not(debug_assertions), deny(warnings))]
+     |                                         ^^^^^^^^
+     = note: `#[deny(unused_qualifications)]` implied by `#[deny(warnings)]`
+help: remove the unnecessary path segments
+     |
+2614 -                 loops_store::BoundaryWire::new(wire, loops_store::ShapesOpStatus::And)
+2614 +                 loops_store::BoundaryWire::new(wire, ShapesOpStatus::And)
+     |
+
+error: unnecessary qualification
+    --> /workspace/lab/kernel/source/monstertruck-solid/src/transversal/classic/mod.rs:2620:24
+     |
+2620 |         let mut store: loops_store::LoopsStore<_, _> = iter::once(cap).collect();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2620 -         let mut store: loops_store::LoopsStore<_, _> = iter::once(cap).collect();
+2620 +         let mut store: LoopsStore<_, _> = iter::once(cap).collect();
+     |
+
+error: could not compile `monstertruck-solid` (lib) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...

@@ -1,0 +1,210 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,8 @@
+ //!   before marching, retaining the exact input surfaces.
+ //! - Complete positive-weight spline control nets certify separation, including
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
++//! - Closed analytic supports use their complete rational hulls independently of
++//!   chart parameterization; strict convex containment retains oriented shells.
+ //! - Spline basis positivity certifies curved contacts without shared face patches;
+ //!   exact trim subdivision keeps their material sectors separate.
+ //! - Two independent separating supports certify lower-dimensional contacts;
+@@ -1510,6 +1512,60 @@
+     Difference,
+ }
+ 
++/// Certify that a converted analytic support has no open nonperiodic ends.
++///
++/// A periodic direction covers its complete orbit. In the other direction,
++/// matching boundary curves or two collapsed boundary curves close the support.
++/// This includes compact revolutions and their transformed carriers, without
++/// treating an incidental line-profile interval as a bound on an analytic cone
++/// or cylinder. The conversion is used only as a geometric enclosure; its knot
++/// coordinates need not agree with the original surface parameters.
++fn closed_support<S: ShapeOpsSurface>(surface: &S, spline: &BsplineSurface<Vector4>) -> bool {
++    let periodic = |period: Option<f64>| period.is_some_and(|p| p.is_finite() && p > 0.0);
++    let periodic_u = periodic(surface.period_u());
++    let periodic_v = periodic(surface.period_v());
++    let controls = spline.control_points();
++    if (!periodic_u && !periodic_v)
++        || !spline.is_clamped()
++        || controls.is_empty()
++        || controls[0].is_empty()
++        || controls.iter().map(Vec::len).sum::<usize>() > 65_536
++        || !controls.iter().flatten().all(|point| {
++            point.w.is_finite()
++                && point.w > 0.0
++                && point.to_point().to_vec().magnitude2().is_finite()
++        })
++    {
++        return false;
++    }
++    let same_point = |a: Vector4, b: Vector4| {
++        let a = a.to_point();
++        let b = b.to_point();
++        let roundoff = 32.0 * f64::EPSILON * (a.to_vec().magnitude() + b.to_vec().magnitude());
++        (a - b).magnitude() <= roundoff
++    };
++    let last_u = controls.len() - 1;
++    let last_v = controls[0].len() - 1;
++    // A line profile can be continued outside its incidental knot interval.
++    // Its finite end circles must never certify a compact analytic support.
++    if (!periodic_u && spline.udegree() < 2) || (!periodic_v && spline.vdegree() < 2) {
++        return false;
++    }
++    let closed_u = (0..=last_v).all(|v| {
++        controls[0][v].w == controls[last_u][v].w && same_point(controls[0][v], controls[last_u][v])
++    }) || (0..=last_v).all(|v| {
++        same_point(controls[0][v], controls[0][0])
++            && same_point(controls[last_u][v], controls[last_u][0])
++    });
++    let closed_v = (0..=last_u).all(|u| {
++        controls[u][0].w == controls[u][last_v].w && same_point(controls[u][0], controls[u][last_v])
++    }) || (0..=last_u).all(|u| {
++        same_point(controls[u][0], controls[0][0])
++            && same_point(controls[u][last_v], controls[0][last_v])
++    });
++    closed_u && closed_v
++}
++
+ /// Enclose a bounded solid using complete supports and certified straight trims.
+ ///
+ /// Positive rational weights put every bounded spline face in the convex hull
+@@ -1517,7 +1573,8 @@
+ /// wires. Each of its edges must therefore either border an enclosed spline
+ /// face, or lie on two nonparallel planes, making its endpoints sufficient.
+ /// This argument includes holes and all oriented shells of the input solid.
+-/// Unbounded analytic supports and coplanar seams decline certification.
++/// Closed analytic supports also admit complete rational enclosures. Open
++/// analytic supports and coplanar seams decline certification.
+ fn solid_enclosure<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid: &Solid<Point3, C, S>,
+ ) -> Option<(Point3, Point3)> {
+@@ -1540,7 +1597,8 @@
+     solid.face_iter().try_for_each(|face| {
+         work = work.checked_sub(1)?;
+         let surface = face.surface();
+-        let plane = if surface.supports_exact_patch_domains() {
++        let spline = surface.try_into_homogeneous_bspline_surface()?;
++        let plane = if surface.supports_exact_patch_domains() || closed_support(&surface, &spline) {
+             // These supports are bounded on their spline knot domains. Do not
+             // use incidental conversion domains of unbounded analytic surfaces.
+             None
+@@ -1551,7 +1609,6 @@
+         } else {
+             return None;
+         };
+-        let spline = surface.try_into_homogeneous_bspline_surface()?;
+         spline
+             .control_points()
+             .iter()
+@@ -1595,6 +1652,84 @@
+         .then_some((minimum, maximum))
+ }
+ 
++/// Prove strict containment of a complete enclosure in a convex planar solid.
++///
++/// Every boundary vertex must lie behind every oriented support plane. Since
++/// [`planar_cells`] certifies the complete planar faces and their straight
++/// trims, a single closed shell satisfying these inequalities bounds their
++/// convex intersection. All eight enclosure corners strictly inside every
++/// half-space then certify containment of the entire inner solid.
++fn convexly_contains<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    outer: &Solid<Point3, C, S>,
++    inner: &Solid<Point3, C, S>,
++) -> Option<()> {
++    if outer.boundaries().len() != 1 {
++        return None;
++    }
++    let mut work = 65_536_usize;
++    let cells = planar_cells(outer, &mut work)?;
++    if cells.is_empty() {
++        return None;
++    }
++    let (minimum, maximum) = solid_enclosure(inner)?;
++    cells.iter().try_for_each(|plane| {
++        cells.iter().try_for_each(|cell| {
++            cell.points.iter().try_for_each(|point| {
++                work = work.checked_sub(1)?;
++                let (distance, error) = plane_distance(*point, plane.points[0], plane.normal);
++                (distance.is_finite() && error.is_finite() && distance <= error).then_some(())
++            })
++        })?;
++        (0..8).try_for_each(|index| {
++            work = work.checked_sub(1)?;
++            let point = Point3::new(
++                if index & 1 == 0 { minimum.x } else { maximum.x },
++                if index & 2 == 0 { minimum.y } else { maximum.y },
++                if index & 4 == 0 { minimum.z } else { maximum.z },
++            );
++            let (distance, error) = plane_distance(point, plane.points[0], plane.normal);
++            (distance.is_finite() && error.is_finite() && distance < -error).then_some(())
++        })
++    })
++}
++
++/// Apply nested set identities only after complete geometric containment proof.
++fn contained_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
++    if convexly_contains(solid1, solid0).is_some() {
++        match operation {
++            Operation::Intersection => Some(solid0.clone()),
++            Operation::Union => Some(solid1.clone()),
++            Operation::Difference => Solid::try_new(Vec::new()).ok(),
++        }
++    } else if convexly_contains(solid0, solid1).is_some() {
++        match operation {
++            Operation::Intersection => Some(solid1.clone()),
++            Operation::Union => Some(solid0.clone()),
++            Operation::Difference => {
++                let reversed = solid1
++                    .boundaries()
++                    .iter()
++                    .map(|shell| shell.iter().map(Face::inverse).collect::<Shell<_, _, _>>());
++                Solid::try_new(
++                    solid0
++                        .boundaries()
++                        .iter()
++                        .cloned()
++                        .chain(reversed)
++                        .collect(),
++                )
++                .ok()
++            }
++        }
++    } else {
++        None
++    }
++}
++
+ /// Keep independent material sectors at a certified line or point contact.
+ ///
+ /// Two independent separating planes confine the common boundary to their
+@@ -1711,13 +1846,13 @@
+     solid.face_iter().try_for_each(|face| {
+         *work = work.checked_sub(1)?;
+         let surface = face.surface();
+-        if !surface.supports_exact_patch_domains() {
++        let spline = surface.try_into_homogeneous_bspline_surface()?;
++        if !surface.supports_exact_patch_domains() && !closed_support(&surface, &spline) {
+             let plane = certified_plane(&surface)?;
+             let (distance, error) = plane_distance(plane.origin(), origin, normal);
+             (!plane.normal().cross(normal).so_small() || distance.abs() > error.max(roundoff))
+                 .then_some(())
+         } else {
+-            let spline = surface.try_into_homogeneous_bspline_surface()?;
+             let controls = spline.control_points();
+             let (p, q) = spline.degrees();
+             if !spline.is_clamped() {
+@@ -2720,6 +2855,8 @@
+         Ok(solid)
+     } else if let Some(solid) = separated_boolean(solid0, solid1, operation) {
+         Ok(solid)
++    } else if let Some(solid) = contained_boolean(solid0, solid1, operation) {
++        Ok(solid)
+     } else {
+         boolean_classic(solid0, solid1, tol, operation).or_else(|error| {
+             if matches!(operation, Operation::Union) {

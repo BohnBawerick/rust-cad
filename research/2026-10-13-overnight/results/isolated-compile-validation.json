@@ -1,0 +1,5 @@
+{
+  "exit": 0,
+  "seconds": 0.8254750210326165,
+  "output": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.59s\nwarning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1\nnote: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`\n     Running `/target/debug/kernel-probe /missing-input.json`\n{\"error\":\"No such file or directory (os error 2)\",\"status\":\"error\"}\n"
+}

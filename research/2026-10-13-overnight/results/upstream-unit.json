@@ -1,0 +1,17 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "--offline",
+    "--manifest-path",
+    "/workspace/lab/kernel/source/Cargo.toml",
+    "-p",
+    "monstertruck-solid",
+    "--lib",
+    "--",
+    "--test-threads=2"
+  ],
+  "exit": 101,
+  "seconds": 6.832195066032
+}

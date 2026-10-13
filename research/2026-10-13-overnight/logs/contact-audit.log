@@ -1,0 +1,50 @@
+[
+  {
+    "id": "public-007",
+    "original": true,
+    "normalized": false,
+    "bad_segments": 2
+  },
+  {
+    "id": "public-046",
+    "original": true,
+    "normalized": false,
+    "bad_segments": 2
+  },
+  {
+    "id": "public-085",
+    "original": true,
+    "normalized": false,
+    "bad_segments": 2
+  },
+  {
+    "id": "public-124",
+    "original": true,
+    "normalized": false,
+    "bad_segments": 2
+  },
+  {
+    "id": "public-166",
+    "original": true,
+    "normalized": false,
+    "bad_segments": 2
+  },
+  {
+    "id": "public-178",
+    "original": true,
+    "normalized": false,
+    "bad_segments": 2
+  },
+  {
+    "id": "public-229",
+    "original": true,
+    "normalized": false,
+    "bad_segments": 2
+  },
+  {
+    "id": "public-315",
+    "original": true,
+    "normalized": true,
+    "bad_segments": 0
+  }
+]

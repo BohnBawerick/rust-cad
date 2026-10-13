@@ -1,0 +1,367 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -29,6 +29,7 @@
+ use monstertruck_geometry::prelude::*;
+ use monstertruck_meshing::prelude::*;
+ use monstertruck_topology::*;
++use rustc_hash::FxHashMap as HashMap;
+ use std::iter;
+ 
+ type ClassicResult<T> = std::result::Result<T, ShapeOpsError>;
+@@ -318,6 +319,289 @@
+     Some(votes >= 2)
+ }
+ 
++/// Test membership in a bounded curve, including the parameter interval.
++fn on_edge<C>(point: Point3, edge: &Edge<Point3, C>) -> bool
++where
++    C: BoundedCurve<Point = Point3> + SearchParameter<CurveParameter, Point = Point3> + Clone,
++{
++    let curve = edge.curve();
++    let (start, end) = curve.range_tuple();
++    curve
++        .search_parameter(point, None, 100)
++        .is_some_and(|t| t >= start && t <= end && curve.evaluate(t).near(&point))
++}
++
++/// Match complete trims in both directions, rather than just their vertices.
++fn matching_edges<C>(a: &Edge<Point3, C>, b: &Edge<Point3, C>, tol: f64) -> bool
++where
++    C: BoundedCurve<Point = Point3>
++        + SearchParameter<CurveParameter, Point = Point3>
++        + ParameterDivision1D<Point = Point3>
++        + Clone,
++{
++    let endpoints_match = (a.front().point().near(&b.front().point())
++        && a.back().point().near(&b.back().point()))
++        || (a.front().point().near(&b.back().point()) && a.back().point().near(&b.front().point()));
++    endpoints_match
++        && [(a, b), (b, a)].into_iter().all(|(source, target)| {
++            let curve = source.curve();
++            let (parameters, points) = curve.parameter_division(curve.range_tuple(), tol);
++            points.into_iter().all(|point| on_edge(point, target))
++                && parameters
++                    .windows(2)
++                    .all(|span| on_edge(curve.evaluate((span[0] + span[1]) / 2.0), target))
++        })
++}
++
++/// Recognize coincident supports from their analytic or exact spline data.
++fn same_support<S: ShapeOpsSurface>(a: &S, b: &S) -> bool {
++    match (
++        a.try_into_analytic_surface_kind(),
++        b.try_into_analytic_surface_kind(),
++    ) {
++        (Some(AnalyticSurfaceKind::Plane(a)), Some(AnalyticSurfaceKind::Plane(b))) => {
++            a.normal().cross(b.normal()).near(&Vector3::zero())
++                && (a.origin() - b.origin()).dot(a.normal()).so_small()
++        }
++        _ => a
++            .try_into_homogeneous_bspline_surface()
++            .zip(b.try_into_homogeneous_bspline_surface())
++            .is_some_and(|(a, b)| a == b),
++    }
++}
++
++/// Detect positive-area overlap of coplanar triangles by separating axes.
++fn coplanar_overlap(a: &PolygonMesh, b: &PolygonMesh, normal: Vector3) -> bool {
++    let triangles = |mesh: &PolygonMesh| {
++        mesh.face_iter()
++            .flat_map(|face| {
++                (2..face.len())
++                    .map(move |i| [face[0], face[i - 1], face[i]].map(|v| mesh.positions()[v.pos]))
++            })
++            .collect::<Vec<_>>()
++    };
++    let triangles0 = triangles(a);
++    let triangles1 = triangles(b);
++    triangles0.iter().any(|a| {
++        triangles1.iter().any(|b| {
++            [a, b].into_iter().all(|triangle| {
++                (0..3).all(|i| {
++                    let axis = normal.cross(triangle[(i + 1) % 3] - triangle[i]);
++                    let interval = |points: &[Point3; 3]| {
++                        points
++                            .iter()
++                            .map(|p| (*p - a[0]).dot(axis))
++                            .fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), x| {
++                                (min.min(x), max.max(x))
++                            })
++                    };
++                    let (min0, max0) = interval(a);
++                    let (min1, max1) = interval(b);
++                    max0.min(max1) > min0.max(min1)
++                })
++            })
++        })
++    })
++}
++
++/// Recognize an already conforming boundary arrangement before marching.
++///
++/// Shared patches must have the same complete trims. All other interference
++/// segments must lie on both existing boundaries. Partial coplanar overlaps
++/// and intersections through face interiors still require subdivision.
++fn conforming_contacts<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell0: &Shell<Point3, C, S>,
++    shell1: &Shell<Point3, C, S>,
++    polygons0: &PolyShell,
++    polygons1: &PolyShell,
++    tol: f64,
++) -> Option<Vec<(usize, usize)>> {
++    let edges0: Vec<Vec<_>> = shell0
++        .iter()
++        .map(|face| face.edge_iter().collect())
++        .collect();
++    let edges1: Vec<Vec<_>> = shell1
++        .iter()
++        .map(|face| face.edge_iter().collect())
++        .collect();
++    let contacts: Vec<_> = shell0
++        .iter()
++        .enumerate()
++        .flat_map(|(i, a)| {
++            let edges0 = &edges0;
++            let edges1 = &edges1;
++            shell1.iter().enumerate().filter_map(move |(j, b)| {
++                // Reject different trims before converting surfaces or intersecting meshes.
++                let matching = edges0[i].len() == edges1[j].len()
++                    && edges0[i].iter().all(|edge0| {
++                        edges1[j]
++                            .iter()
++                            .any(|edge1| matching_edges(edge0, edge1, tol))
++                    })
++                    && edges1[j].iter().all(|edge1| {
++                        edges0[i]
++                            .iter()
++                            .any(|edge0| matching_edges(edge0, edge1, tol))
++                    })
++                    && same_support(&a.surface(), &b.surface());
++                matching.then_some((i, j))
++            })
++        })
++        .collect();
++    // Each patch has one owner in each operand. Ambiguity requires subdivision.
++    if contacts.is_empty()
++        || contacts
++            .iter()
++            .any(|(i, j)| contacts.iter().filter(|(k, l)| i == k || j == l).count() != 1)
++    {
++        return None;
++    }
++    if contacts.len() == shell0.len() && contacts.len() == shell1.len() {
++        return Some(contacts);
++    }
++    shell0.iter().enumerate().try_for_each(|(i, a)| {
++        shell1.iter().enumerate().try_for_each(|(j, b)| {
++            if contacts.contains(&(i, j)) {
++                return Some(());
++            }
++            let mesh0 = polygons0[i].surface()?;
++            let mesh1 = polygons1[j].surface()?;
++            let surface0 = a.surface();
++            let surface1 = b.surface();
++            // Unmatched curved patches require the existing subdivision pipeline.
++            // In particular, a mesh chord is not a separation certificate for them.
++            let (Some(AnalyticSurfaceKind::Plane(plane0)), Some(AnalyticSurfaceKind::Plane(_))) = (
++                surface0.try_into_analytic_surface_kind(),
++                surface1.try_into_analytic_surface_kind(),
++            ) else {
++                return None;
++            };
++            if same_support(&surface0, &surface1)
++                && coplanar_overlap(&mesh0, &mesh1, plane0.normal())
++            {
++                return None;
++            }
++            mesh0
++                .extract_interference(&mesh1)
++                .into_iter()
++                .all(|(p, q)| {
++                    [p, p.midpoint(q), q].into_iter().all(|point| {
++                        edges0[i].iter().any(|edge| on_edge(point, edge))
++                            && edges1[j].iter().any(|edge| on_edge(point, edge))
++                    })
++                })
++                .then_some(())
++        })
++    })?;
++    Some(contacts)
++}
++
++/// Sew only the open seams left by removing shared patches.
++///
++/// Closed components retain their topology, including components meeting only
++/// at a vertex or an edge. Every seam needs one oppositely directed partner.
++fn sew_contacts<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: Shell<Point3, C, S>,
++    tol: f64,
++) -> Option<Shell<Point3, C, S>> {
++    let boundary: Vec<_> = shell.extract_boundaries().into_iter().flatten().collect();
++    if boundary.is_empty() {
++        return Some(shell);
++    }
++    let mut vertices = HashMap::default();
++    let mut representatives: Vec<Vertex<Point3>> = Vec::new();
++    boundary
++        .iter()
++        .flat_map(|edge| [edge.front(), edge.back()])
++        .for_each(|vertex| {
++            let representative = representatives
++                .iter()
++                .find(|other| vertex.point().near(&other.point()))
++                .cloned()
++                .unwrap_or_else(|| {
++                    representatives.push(vertex.clone());
++                    vertex.clone()
++                });
++            vertices.insert(vertex.id(), representative);
++        });
++    let mut replacements = HashMap::default();
++    boundary.iter().try_for_each(|edge| {
++        if replacements.contains_key(&edge.id()) {
++            return Some(());
++        }
++        let mut partners = boundary.iter().filter(|other| {
++            other.id() != edge.id()
++                && edge.front().point().near(&other.back().point())
++                && edge.back().point().near(&other.front().point())
++                && matching_edges(edge, other, tol)
++        });
++        let partner = partners.next()?;
++        if partners.next().is_some() || replacements.contains_key(&partner.id()) {
++            return None;
++        }
++        let joined = Edge::try_new(
++            vertices.get(&edge.front().id())?,
++            vertices.get(&edge.back().id())?,
++            edge.oriented_curve(),
++        )
++        .ok()?;
++        replacements.insert(
++            edge.id(),
++            if edge.orientation() {
++                joined.clone()
++            } else {
++                joined.inverse()
++            },
++        );
++        replacements.insert(
++            partner.id(),
++            if partner.orientation() {
++                joined.inverse()
++            } else {
++                joined
++            },
++        );
++        Some(())
++    })?;
++    shell
++        .iter()
++        .map(|face| {
++            let wires = face
++                .absolute_boundaries()
++                .iter()
++                .map(|wire| {
++                    wire.iter()
++                        .map(|edge| {
++                            if !replacements.contains_key(&edge.id()) {
++                                let front = edge.absolute_front();
++                                let back = edge.absolute_back();
++                                let rebuilt = Edge::try_new(
++                                    vertices.get(&front.id()).unwrap_or(front),
++                                    vertices.get(&back.id()).unwrap_or(back),
++                                    edge.curve(),
++                                )
++                                .ok()?;
++                                replacements.insert(edge.id(), rebuilt);
++                            }
++                            let rebuilt = replacements.get(&edge.id())?;
++                            Some(if edge.orientation() {
++                                rebuilt.clone()
++                            } else {
++                                rebuilt.inverse()
++                            })
++                        })
++                        .collect::<Option<Wire<_, _>>>()
++                })
++                .collect::<Option<Vec<_>>>()?;
++            let mut rebuilt = Face::try_new(wires, face.surface()).ok()?;
++            if !face.orientation() {
++                rebuilt.invert();
++            }
++            Some(rebuilt)
++        })
++        .collect()
++}
++
+ /// Split the combined boundaries into intersection and union boundaries.
+ ///
+ /// All shells of an operand participate in the same winding query. They are
+@@ -328,18 +612,25 @@
+     shell1: &Shell<Point3, C, S>,
+     tol: f64,
+     second_at_infinity: isize,
+-) -> Option<[AltCurveShell<C, S>; 2]> {
++) -> Option<([AltCurveShell<C, S>; 2], bool)> {
+     let poly_shell0 = shell0.triangulation(tol);
+     let poly_shell1 = shell1.triangulation(tol);
+     let altshell0: AltCurveShell<C, S> =
+         shell0.mapped(|x| *x, |c| Alternative::FirstType(c.clone()), Clone::clone);
+     let altshell1: AltCurveShell<C, S> =
+         shell1.mapped(|x| *x, |c| Alternative::FirstType(c.clone()), Clone::clone);
+-    let loops_store::LoopsStoreQuadruple {
+-        geom_loops_store0: loops_store0,
+-        geom_loops_store1: loops_store1,
+-        ..
+-    } = loops_store::create_loops_stores(&altshell0, &poly_shell0, &altshell1, &poly_shell1)?;
++    let contacts = conforming_contacts(shell0, shell1, &poly_shell0, &poly_shell1, tol);
++    let contact_arrangement = contacts.is_some();
++    let (loops_store0, loops_store1) = if contact_arrangement {
++        (
++            altshell0.face_iter().collect(),
++            altshell1.face_iter().collect(),
++        )
++    } else {
++        let stores =
++            loops_store::create_loops_stores(&altshell0, &poly_shell0, &altshell1, &poly_shell1)?;
++        (stores.geom_loops_store0, stores.geom_loops_store1)
++    };
+     let mut cls0 = divide_face::divide_faces(&altshell0, &loops_store0, tol)?;
+     if cls0.and_or_unknown()[2]
+         .connected_components()
+@@ -390,7 +681,7 @@
+     })?;
+     and0.append(&mut and1);
+     or0.append(&mut or1);
+-    Some([and0, or0])
++    Some(([and0, or0], contact_arrangement))
+ }
+ 
+ fn finalize<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+@@ -445,14 +736,21 @@
+             }
+         }
+     } else {
+-        let [and_shell, or_shell] = process_one_pair_of_shells(&shell0, &shell1, tol, at_infinity)
+-            .ok_or(ShapeOpsError::EmptyOutputShell { operation: name })?;
++        let ([and_shell, or_shell], contacts) =
++            process_one_pair_of_shells(&shell0, &shell1, tol, at_infinity)
++                .ok_or(ShapeOpsError::EmptyOutputShell { operation: name })?;
+         let selected = match operation {
+             Operation::Union => or_shell,
+             Operation::Intersection | Operation::Difference => and_shell,
+         };
+-        altshell_to_shell(&selected)
+-            .ok_or(ShapeOpsError::AltShellConversionFailed { operation: name })?
++        let converted = altshell_to_shell(&selected)
++            .ok_or(ShapeOpsError::AltShellConversionFailed { operation: name })?;
++        if contacts {
++            sew_contacts(converted, tol)
++                .ok_or(ShapeOpsError::AltShellConversionFailed { operation: name })?
++        } else {
++            converted
++        }
+     };
+     // An empty boundary is a valid empty result; only pipeline failure is an error.
+     finalize(name, shell)

@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate recovers failed planar edge construction by restricting original trims or constructing parameter-space lines on certified affine surfaces. The certificate checks the complete control net. Existing classification and successful edge construction retain precedence.
+
+Expected scope: certified polyhedral solids, including nonconvex shapes and oriented cavities, without primitive recognition.
+
+Risks remain in earlier classification failures and downstream meshing. No gain is established.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

@@ -1,0 +1,10 @@
+{
+  "baseline_score": 51.22418091168091,
+  "final_score": 77.63532763532764,
+  "baseline_passed": 127,
+  "final_passed": 324,
+  "total": 351,
+  "regressions": [],
+  "new_incorrect_successes": [],
+  "seconds": 152.40174085699255
+}

@@ -1,0 +1,401 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,8 @@
+ //!   before marching, retaining the exact input surfaces.
+ //! - Complete positive-weight spline control nets certify separation, including
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
++//! - Failed common-cap arrangements recover shared boundary chains using
++//!   certified affine traces on the original spline supports.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -1256,6 +1258,381 @@
+     finalize(name, shell)
+ }
+ 
++/// Recover an affine isoparametric trace from the complete homogeneous net.
++///
++/// A degree-one section with equal positive weights is a straight segment.
++/// This certificate avoids repeated intersection projections along a shared
++/// ruling, while retaining a curve on an original exact support.
++fn affine_trace<S: ShapeOpsSurface>(
++    surface: &S,
++    front: Point3,
++    back: Point3,
++) -> Option<ParameterCurve<Line<Point2>, S>> {
++    if !surface.supports_exact_patch_domains() {
++        return None;
++    }
++    let a = surface.search_parameter(front, None, 100)?;
++    let b = surface.search_parameter(back, Some(a), 100)?;
++    let spline = surface.try_into_homogeneous_bspline_surface()?;
++    let equal = |x: f64, y: f64| (x - y).abs() <= 32.0 * f64::EPSILON * (1.0 + x.abs() + y.abs());
++    let clamped = |knots: &KnotVector| {
++        knots.len() == 4 && knots[0] == knots[1] && knots[2] == knots[3] && knots[0] < knots[3]
++    };
++    let (start, end, controls) =
++        if equal(a.0, b.0) && spline.vdegree() == 1 && clamped(spline.knot_vector_v()) {
++            (
++                Point2::new(a.0, a.1),
++                Point2::new(a.0, b.1),
++                [
++                    spline.curve_u(0).evaluate(a.0),
++                    spline.curve_u(1).evaluate(a.0),
++                ],
++            )
++        } else if equal(a.1, b.1) && spline.udegree() == 1 && clamped(spline.knot_vector_u()) {
++            (
++                Point2::new(a.0, a.1),
++                Point2::new(b.0, a.1),
++                [
++                    spline.curve_v(0).evaluate(a.1),
++                    spline.curve_v(1).evaluate(a.1),
++                ],
++            )
++        } else {
++            return None;
++        };
++    if !controls
++        .iter()
++        .all(|point| point.w.is_finite() && point.w > 0.0)
++        || controls[0].w != controls[1].w
++        || front.near(&back)
++    {
++        return None;
++    }
++    let curve = ParameterCurve::new(Line(start, end), surface.clone());
++    (curve.front().near(&front) && curve.back().near(&back)).then_some(curve)
++}
++
++/// Materialize transverse straight intersections once on an exact support.
++fn ruling_shell<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: &AltCurveShell<C, S>,
++) -> Option<Shell<Point3, C, S>> {
++    let converted: Shell<Point3, C, S> = shell.try_mapped(
++        |point| Some(*point),
++        |curve| match curve {
++            Alternative::FirstType(curve) => Some(curve.clone()),
++            Alternative::SecondType(curve) => {
++                let front = curve.leader().front();
++                let back = curve.leader().back();
++                let first = affine_trace(curve.surface0(), front, back)?;
++                let second = affine_trace(curve.surface1(), front, back)?;
++                let middle = first.evaluate(0.5);
++                let uv0 = curve.surface0().search_parameter(middle, None, 100)?;
++                let uv1 = curve.surface1().search_parameter(middle, None, 100)?;
++                let normal0 = curve.surface0().normal(uv0.0, uv0.1);
++                let normal1 = curve.surface1().normal(uv1.0, uv1.1);
++                if normal0.cross(normal1).so_small()
++                    || !first.evaluate(0.5).near(&second.evaluate(0.5))
++                    || !curve
++                        .leader()
++                        .iter()
++                        .all(|point| first.search_parameter(*point, None, 100).is_some())
++                {
++                    return None;
++                }
++                C::try_from(first).ok()
++            }
++        },
++        |surface| Some(surface.clone()),
++    )?;
++    let consistent = converted
++        .edge_iter()
++        .all(|edge| edge.is_geometric_consistent());
++    consistent.then_some(converted)
++}
++
++/// Certify a shared support plane without inferring planarity from trim vertices.
++fn support_plane<S: ShapeOpsSurface>(surface: &S) -> Option<Plane> {
++    let AnalyticSurfaceKind::Plane(plane) = surface.try_into_analytic_surface_kind()? else {
++        return None;
++    };
++    let spline = surface.try_into_homogeneous_bspline_surface()?;
++    spline
++        .control_points()
++        .iter()
++        .flatten()
++        .all(|control| {
++            let (distance, error) =
++                plane_distance(control.to_point(), plane.origin(), plane.normal());
++            control.w.is_finite()
++                && control.w > 0.0
++                && distance.is_finite()
++                && distance.abs() <= error
++        })
++        .then_some(plane)
++}
++
++/// Certify coincidence with a common plane across the complete support net.
++fn in_support_plane<S: ShapeOpsSurface>(surface: &S, plane: &Plane) -> bool {
++    support_plane(surface).is_some()
++        && surface
++            .try_into_homogeneous_bspline_surface()
++            .is_some_and(|spline| {
++                spline.control_points().iter().flatten().all(|control| {
++                    let (distance, error) =
++                        plane_distance(control.to_point(), plane.origin(), plane.normal());
++                    distance.is_finite() && distance.abs() <= error
++                })
++            })
++}
++
++/// Determine which side of a plane encloses the entire bounded solid.
++fn enclosure_side(enclosure: (Point3, Point3), plane: &Plane) -> Option<i8> {
++    let (min, max) = enclosure;
++    let distances = [min.x, max.x].into_iter().flat_map(|x| {
++        [min.y, max.y].into_iter().flat_map(move |y| {
++            [min.z, max.z]
++                .into_iter()
++                .map(move |z| plane_distance(Point3::new(x, y, z), plane.origin(), plane.normal()))
++        })
++    });
++    let (negative, positive) = distances.fold((true, true), |(negative, positive), (d, e)| {
++        (negative && d <= e, positive && d >= -e)
++    });
++    if negative && !positive {
++        Some(-1)
++    } else if positive && !negative {
++        Some(1)
++    } else {
++        None
++    }
++}
++
++/// Keep edge subdivisions even when a face has no classified interior cuts.
++fn divided_sides<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: &AltCurveShell<C, S>,
++    loops: &loops_store::LoopsStore<Point3, AltCurve<C, S>>,
++    tol: f64,
++) -> Option<[AltCurveShell<C, S>; 3]> {
++    let rebuilt: AltCurveShell<C, S> = shell
++        .iter()
++        .zip(loops)
++        .map(|(face, loops)| {
++            if loops
++                .iter()
++                .all(|wire| wire.status() == loops_store::ShapesOpStatus::Unknown)
++            {
++                let wires = loops.iter().map(|wire| (**wire).clone()).collect();
++                let mut rebuilt = Face::try_new(wires, face.surface()).ok()?;
++                if !face.orientation() {
++                    rebuilt.invert();
++                }
++                Some(rebuilt)
++            } else {
++                Some(face.clone())
++            }
++        })
++        .collect::<Option<_>>()?;
++    Some(divide_face::divide_faces(&rebuilt, loops, tol)?.and_or_unknown())
++}
++
++/// Recover a failed arrangement at common supporting planes.
++///
++/// Supporting planes cannot cut either interior. March only the remaining
++/// faces, then close their selected boundary chains on the common planes.
++/// Only certified affine intersection traces are accepted in this recovery.
++fn capped_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    tol: f64,
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
++    let enclosure0 = solid_enclosure(solid0)?;
++    let enclosure1 = solid_enclosure(solid1)?;
++    let shell0: Shell<Point3, C, S> = solid0.face_iter().cloned().collect();
++    let mut shell1: Shell<Point3, C, S> = solid1.face_iter().cloned().collect();
++    if shell0.len().checked_mul(shell1.len())? > 4096 {
++        return None;
++    }
++    let mut caps: Vec<(S, Plane, i8)> = Vec::new();
++    shell0.iter().for_each(|face| {
++        let surface = face.surface();
++        if let Some(plane) = support_plane(&surface) {
++            let side = enclosure_side(enclosure0, &plane);
++            if side.is_some()
++                && side == enclosure_side(enclosure1, &plane)
++                && shell1
++                    .iter()
++                    .any(|other| in_support_plane(&other.surface(), &plane))
++                && !caps
++                    .iter()
++                    .any(|(_, other, _)| in_support_plane(&surface, other))
++            {
++                if let Some(side) = side {
++                    caps.push((surface, plane, side));
++                }
++            }
++        }
++    });
++    if caps.is_empty() {
++        return None;
++    }
++    let is_cap = |face: &Face<Point3, C, S>| {
++        caps.iter()
++            .any(|(_, plane, _)| in_support_plane(&face.surface(), plane))
++    };
++    let at_infinity = if matches!(operation, Operation::Difference) {
++        shell1.iter_mut().for_each(|face| {
++            face.invert();
++        });
++        1
++    } else {
++        0
++    };
++    let polygons0 = shell0.triangulation(tol);
++    let polygons1 = shell1.triangulation(tol);
++    let sides0: Shell<Point3, C, S> = shell0
++        .iter()
++        .filter(|face| !is_cap(face))
++        .cloned()
++        .collect();
++    let sides1: Shell<Point3, C, S> = shell1
++        .iter()
++        .filter(|face| !is_cap(face))
++        .cloned()
++        .collect();
++    if sides0.is_empty()
++        || sides1.is_empty()
++        || sides0.iter().any(|a| {
++            sides1
++                .iter()
++                .any(|b| same_support(&a.surface(), &b.surface()))
++        })
++    {
++        return None;
++    }
++    let alt0: AltCurveShell<C, S> =
++        sides0.mapped(|p| *p, |c| Alternative::FirstType(c.clone()), Clone::clone);
++    let alt1: AltCurveShell<C, S> =
++        sides1.mapped(|p| *p, |c| Alternative::FirstType(c.clone()), Clone::clone);
++    let stores = loops_store::create_loops_stores(
++        &alt0,
++        &sides0.triangulation(tol),
++        &alt1,
++        &sides1.triangulation(tol),
++    )?;
++    let classes0 = divided_sides(&alt0, &stores.geom_loops_store0, tol)?;
++    let classes1 = divided_sides(&alt1, &stores.geom_loops_store1, tol)?;
++    let union = matches!(operation, Operation::Union);
++    let mut selected = AltCurveShell::default();
++    [
++        (classes0, &polygons1, at_infinity),
++        (classes1, &polygons0, 0),
++    ]
++    .into_iter()
++    .try_for_each(|(classes, other, infinity)| {
++        let [intersection, outside, unknown] = classes;
++        selected.extend(if union { outside } else { intersection });
++        unknown.into_iter().try_for_each(|face| {
++            let (point, _) = interior_point(&face, tol)?;
++            if inside(point, other, infinity)? != union {
++                selected.push(face);
++            }
++            Some(())
++        })
++    })?;
++    if selected.is_empty() {
++        // No complete arrangement has certified that the solid is empty here.
++        return None;
++    }
++    let mut selected = ruling_shell(&selected)?;
++    let mut groups: Vec<Vec<(Wire<Point3, C>, PolylineCurve<Point2>)>> =
++        caps.iter().map(|_| Vec::new()).collect();
++    selected
++        .extract_boundaries()
++        .into_iter()
++        .try_for_each(|wire| {
++            let wire = wire.inverse();
++            if !wire.is_closed() || !wire.is_simple() {
++                return None;
++            }
++            let points: Vec<_> = wire
++                .edge_iter()
++                .flat_map(|edge| {
++                    let curve = edge.oriented_curve();
++                    curve
++                        .parameter_division(curve.range_tuple(), tol)
++                        .1
++                        .into_iter()
++                        .skip(1)
++                })
++                .collect();
++            let index = caps.iter().position(|(_, plane, _)| {
++                points.iter().all(|point| {
++                    let (distance, error) = plane_distance(*point, plane.origin(), plane.normal());
++                    distance.abs() <= error
++                })
++            })?;
++            let (surface, _, _) = &caps[index];
++            let parameters = points
++                .into_iter()
++                .map(|point| surface.search_parameter(point, None, 100).map(Point2::from))
++                .collect::<Option<Vec<_>>>()?;
++            groups[index].push((wire, PolylineCurve(parameters)));
++            Some(())
++        })?;
++    caps.into_iter()
++        .zip(groups)
++        .try_for_each(|((surface, plane, side), loops)| {
++            let (u, v) = surface.search_parameter(plane.origin(), None, 100)?;
++            let orientation = surface.normal(u, v).dot(plane.normal()) * f64::from(side) < 0.0;
++            let sign = if orientation { 1.0 } else { -1.0 };
++            let mut regions: Vec<_> = loops
++                .iter()
++                .filter(|(_, poly)| poly.area() * sign > 0.0)
++                .map(|(wire, poly)| (vec![wire.clone()], poly))
++                .collect();
++            loops
++                .iter()
++                .filter(|(_, poly)| poly.area() * sign <= 0.0)
++                .try_for_each(|(wire, poly)| {
++                    if poly.area() == 0.0 {
++                        return None;
++                    }
++                    let index = regions
++                        .iter()
++                        .enumerate()
++                        .filter(|(_, (_, outer))| outer.include(poly.front()))
++                        .min_by(|(_, (_, a)), (_, (_, b))| {
++                            a.area().abs().total_cmp(&b.area().abs())
++                        })
++                        .map(|(index, _)| index)?;
++                    regions[index].0.push(wire.clone());
++                    Some(())
++                })?;
++            regions.into_iter().try_for_each(|(wires, _)| {
++                let wires = if orientation {
++                    wires
++                } else {
++                    wires.into_iter().map(|wire| wire.inverse()).collect()
++                };
++                let mut face = Face::try_new(wires, surface.clone()).ok()?;
++                if !orientation {
++                    face.invert();
++                }
++                selected.push(face);
++                Some(())
++            })
++        })?;
++    if selected
++        .edge_iter()
++        .all(|edge| edge.is_geometric_consistent())
++    {
++        Solid::try_new(selected.connected_components()).ok()
++    } else {
++        None
++    }
++}
++
+ fn boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+@@ -1275,6 +1652,7 @@
+         Ok(solid)
+     } else {
+         boolean_classic(solid0, solid1, tol, operation)
++            .or_else(|error| capped_boolean(solid0, solid1, tol, operation).ok_or(error))
+     }
+ }
+ 

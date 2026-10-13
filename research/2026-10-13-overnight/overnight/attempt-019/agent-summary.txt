@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The fallback handles concave planar trims and holes by certifying a positive triangle chain with exactly the original oriented boundary. This establishes an exact planar decomposition. Assembly partitions coplanar regions consistently and constructs internal edges in certified affine surface charts.
+
+Expected scope: certifiable polyhedral solids with multiple oriented shells. Existing successful paths retain precedence.
+
+Risks remain in numerical degeneracy, conservative certification, work limits, and compatibility between incident surface charts. Curved intersection failures remain unresolved.
+
+Formatted and checked patch whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

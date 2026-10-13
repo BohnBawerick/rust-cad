@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate repairs failed common-cap assembly using shared exact curves with trims on both incident surfaces. Positive-weight spline control nets certify curved cap rims; joint corner projection aligns adjoining edges.
+
+Expected scope: certifiable spline solids with shared planar caps, independent of primitive shape. Existing successful paths retain precedence, including disjoint and containment handling.
+
+Risks remain in marching, loop nesting, tangencies, and downstream mesh closure.
+
+Formatted and checked patch whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

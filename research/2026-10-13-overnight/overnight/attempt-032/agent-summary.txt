@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The new fallback pairs incident faces by angular material sectors around contact edges, then separates disconnected vertex neighborhoods. This preserves distinct closed shells at valid contacts while retaining exact surfaces and cavity orientations. Existing successful paths retain precedence.
+
+Expected scope: certified planar arrangements, including rotated solids and multiple oriented shells. Curved tangencies, compilation, and downstream mesh closure remain unresolved.
+
+Rustfmt and whitespace checks completed. No builds, tests, or commits were performed. Findings are saved in `/work/scratch/partial.txt`.

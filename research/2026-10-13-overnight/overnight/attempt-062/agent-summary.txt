@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate recovers missing classification meshes before intersection construction using face-local parameter trims. Temporary meshes use absolute surface orientation; winding applies each face’s sign once, preserving cavity semantics. Exact B-rep geometry and shared topology remain intact.
+
+Expected scope: curved, periodic, or singular faces whose ordinary boundary projection fails, including multiple oriented shells. Incomplete mesh recovery remains an operation failure, distinct from valid empty output.
+
+Risks: incorrect but nonempty meshes and intersection-fitting failures remain unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits performed.

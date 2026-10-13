@@ -1,0 +1,207 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,8 @@
+ //!   before marching, retaining the exact input surfaces.
+ //! - Complete positive-weight spline control nets certify separation, including
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
++//! - Spline basis positivity certifies curved contacts without shared face patches;
++//!   exact trim subdivision keeps their material sectors separate.
+ //! - Two independent separating supports certify lower-dimensional contacts;
+ //!   their union retains separate material sectors and exact trim subdivisions.
+ //! - Failed planar arrangements reconcile support normals using complete control
+@@ -1692,11 +1694,157 @@
+     Solid::try_new(solid0.boundaries().iter().cloned().chain(shells1).collect()).ok()
+ }
+ 
++/// Exclude an open face patch on a certified separating plane.
++///
++/// On each open knot rectangle, the active tensor-product spline basis is
++/// positive. Since the complete control net is on one side of the plane,
++/// one strictly off-plane active control point excludes a coplanar patch.
++/// Knot lines may still touch the plane; they have no surface interior.
++/// The enclosing hull certificate also covers the wires of analytic planes.
++fn excludes_plane_patch<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++    origin: Point3,
++    normal: Vector3,
++    roundoff: f64,
++    work: &mut usize,
++) -> Option<()> {
++    solid.face_iter().try_for_each(|face| {
++        *work = work.checked_sub(1)?;
++        let surface = face.surface();
++        if !surface.supports_exact_patch_domains() {
++            let plane = certified_plane(&surface)?;
++            let (distance, error) = plane_distance(plane.origin(), origin, normal);
++            (!plane.normal().cross(normal).so_small() || distance.abs() > error.max(roundoff))
++                .then_some(())
++        } else {
++            let spline = surface.try_into_homogeneous_bspline_surface()?;
++            let controls = spline.control_points();
++            let (p, q) = spline.degrees();
++            if !spline.is_clamped() {
++                return None;
++            }
++            let width = controls[0].len();
++            let off_plane = controls
++                .iter()
++                .flatten()
++                .map(|control| {
++                    *work = work.checked_sub(1)?;
++                    if !control.w.is_finite() || control.w <= 0.0 {
++                        return None;
++                    }
++                    let (distance, error) = plane_distance(control.to_point(), origin, normal);
++                    (distance.is_finite() && error.is_finite())
++                        .then_some(distance.abs() > error.max(roundoff))
++                })
++                .collect::<Option<SmallVec<[bool; 64]>>>()?;
++            let uknots = spline.knot_vector_u();
++            let vknots = spline.knot_vector_v();
++            (p..controls.len()).try_for_each(|i| {
++                if uknots[i] == uknots[i + 1] {
++                    return Some(());
++                }
++                (q..controls[0].len()).try_for_each(|j| {
++                    if vknots[j] == vknots[j + 1] {
++                        return Some(());
++                    }
++                    *work = work.checked_sub((p + 1).checked_mul(q + 1)?)?;
++                    ((i - p..=i).any(|u| (j - q..=j).any(|v| off_plane[u * width + v])))
++                        .then_some(())
++                })
++            })
++        }
++    })
++}
++
++/// Assemble a union whose separating plane contains no open boundary patch.
++///
++/// The input enclosures establish disjoint interiors; [`excludes_plane_patch`]
++/// establishes that no face must be cancelled. All oriented shells therefore
++/// remain in the union, including cavity shells. Shared trim occurrences still
++/// belong to independent material sectors and must retain separate topology.
++/// Cutting the second occurrence changes only its exact curve decomposition.
++/// Trim samples select edges for subdivision, never certify solid separation.
++fn curved_contact_union<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    origin: Point3,
++    normal: Vector3,
++    roundoff: f64,
++) -> Option<Solid<Point3, C, S>> {
++    let mut work = 262_144_usize;
++    excludes_plane_patch(solid0, origin, normal, roundoff, &mut work)?;
++    excludes_plane_patch(solid1, origin, normal, roundoff, &mut work)?;
++    let on_plane = |point| {
++        let (distance, error) = plane_distance(point, origin, normal);
++        distance.is_finite() && distance.abs() <= error.max(roundoff)
++    };
++    let edges0 = solid0
++        .edge_iter()
++        .filter(|edge| on_plane(edge.front().point()) && on_plane(edge.back().point()))
++        .collect::<Vec<_>>();
++    if edges0.is_empty() {
++        return None;
++    }
++    let mut shells1 = solid1.boundaries().clone();
++    let mut visited = HashMap::default();
++    let mut subdivisions = 0_usize;
++    solid1.edge_iter().try_for_each(|edge| {
++        work = work.checked_sub(1)?;
++        if visited.insert(edge.id(), ()).is_some()
++            || !on_plane(edge.front().point())
++            || !on_plane(edge.back().point())
++        {
++            return Some(());
++        }
++        let curve = edge.curve();
++        let (start, end) = curve.range_tuple();
++        let middle = start + (end - start) / 2.0;
++        if !middle.is_finite() || middle <= start || middle >= end {
++            return None;
++        }
++        let point = curve.evaluate(middle);
++        if !on_plane(point) {
++            return Some(());
++        }
++        let coincident = edges0.iter().try_fold(false, |found, other| {
++            work = work.checked_sub(1)?;
++            let a = edge.front().point();
++            let b = edge.back().point();
++            let c = other.front().point();
++            let d = other.back().point();
++            Some(
++                found
++                    || (((a.near(&c) && b.near(&d)) || (a.near(&d) && b.near(&c)))
++                        && on_edge(point, other)),
++            )
++        })?;
++        if coincident {
++            if point.near(&edge.front().point()) || point.near(&edge.back().point()) {
++                return None;
++            }
++            let vertex = Vertex::new(point);
++            let (first, second) = shells1
++                .iter_mut()
++                .find_map(|shell| shell.cut_edge(edge.id(), &vertex))?;
++            if !first.is_geometric_consistent() || !second.is_geometric_consistent() {
++                return None;
++            }
++            subdivisions += 1;
++        }
++        Some(())
++    })?;
++    if subdivisions == 0 {
++        None
++    } else {
++        Solid::try_new(solid0.boundaries().iter().cloned().chain(shells1).collect()).ok()
++    }
++}
++
+ /// Apply set identities only after a support enclosure separates the interiors.
+ ///
+ /// Weak separation permits boundary contact: regularized intersection is empty
+ /// and subtraction retains the first solid, including its cavity orientations.
+-/// Union requires a strict gap here because shared faces need seam assembly.
++/// Union needs either a strict gap or a certificate excluding shared face patches.
+ fn separated_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+@@ -1712,7 +1860,7 @@
+         (min1.z - max0.z, min1.z.abs() + max0.z.abs()),
+         (min0.z - max1.z, min0.z.abs() + max1.z.abs()),
+     ];
+-    if !separations.iter().any(|(gap, _)| *gap >= 0.0) {
++    if !separations.iter().any(|(gap, _)| *gap >= 0.0) && !matches!(operation, Operation::Union) {
+         return None;
+     }
+     match operation {
+@@ -1733,7 +1881,26 @@
+                 )
+                 .ok()
+             } else {
+-                None
++                // Hull bounds include all surface controls, not just vertices.
++                // Only arithmetic roundoff is admitted at a weak separation.
++                (0..3).find_map(|axis| {
++                    let scale =
++                        min0[axis].abs() + max0[axis].abs() + min1[axis].abs() + max1[axis].abs();
++                    let roundoff = 64.0 * f64::EPSILON * scale;
++                    [(max0[axis], min1[axis]), (max1[axis], min0[axis])]
++                        .into_iter()
++                        .find_map(|(a, b)| {
++                            let gap = b - a;
++                            if !roundoff.is_finite() || gap.abs() > roundoff {
++                                return None;
++                            }
++                            let mut origin = Point3::origin();
++                            origin[axis] = a + gap / 2.0;
++                            let mut normal = Vector3::zero();
++                            normal[axis] = 1.0;
++                            curved_contact_union(solid0, solid1, origin, normal, roundoff)
++                        })
++                })
+             }
+         }
+     }

@@ -1,0 +1,132 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,8 @@
+ //!   before marching, retaining the exact input surfaces.
+ //! - Complete positive-weight spline control nets certify separation, including
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
++//! - Two independent separating supports certify lower-dimensional contacts;
++//!   their union retains separate material sectors and exact trim subdivisions.
+ //! - Failed planar arrangements reconcile support normals using complete control
+ //!   nets, avoiding ill-conditioned comparisons between independently derived normals.
+ //! - Failed certified sweeps retain the input trim curves and smooth seam curves;
+@@ -1591,6 +1593,105 @@
+         .then_some((minimum, maximum))
+ }
+ 
++/// Keep independent material sectors at a certified line or point contact.
++///
++/// Two independent separating planes confine the common boundary to their
++/// intersection line. No open face patch can be shared, so union concatenates
++/// the oriented shells, including cavities. The certificate uses complete
++/// planar supports and straight trims from [`planar_cells`], and does not
++/// require either solid to be convex or have a single boundary shell.
++///
++/// Coincident trims belong to different material sectors. Subdividing the
++/// second occurrence retains its exact curve while giving each sector a
++/// distinct edge decomposition instead of a four-face edge at the contact.
++fn lower_dimensional_union<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++) -> Option<Solid<Point3, C, S>> {
++    let mut work = 262_144_usize;
++    let cells0 = planar_cells(solid0, &mut work)?;
++    let cells1 = planar_cells(solid1, &mut work)?;
++    let mut separating_normal: Option<Vector3> = None;
++    let mut line_contact = false;
++    cells0.iter().chain(&cells1).try_for_each(|plane| {
++        if line_contact {
++            return Some(());
++        }
++        // The complete operands must lie on opposite sides of each support.
++        // Boundary roundoff uses the same predicate as the arrangement.
++        let sides = [&cells0, &cells1].map(|cells| {
++            cells.iter().flat_map(|cell| &cell.points).try_fold(
++                (true, true, false, false),
++                |(nonpositive, nonnegative, negative, positive), point| {
++                    work = work.checked_sub(1)?;
++                    let (distance, error) = plane_distance(*point, plane.points[0], plane.normal);
++                    if !distance.is_finite() || !error.is_finite() {
++                        return None;
++                    }
++                    Some((
++                        nonpositive && distance <= error,
++                        nonnegative && distance >= -error,
++                        negative || distance < -error,
++                        positive || distance > error,
++                    ))
++                },
++            )
++        });
++        let [Some(a), Some(b)] = sides else {
++            return None;
++        };
++        if (a.0 && a.2 && b.1 && b.3) || (b.0 && b.2 && a.1 && a.3) {
++            if let Some(normal) = separating_normal {
++                line_contact = !normal.cross(plane.normal).so_small();
++            } else {
++                separating_normal = Some(plane.normal);
++            }
++        }
++        Some(())
++    })?;
++    if !line_contact {
++        return None;
++    }
++
++    let edges0 = solid0.edge_iter().collect::<Vec<_>>();
++    let mut shells1 = solid1.boundaries().clone();
++    let mut visited = HashMap::default();
++    solid1.edge_iter().try_for_each(|edge| {
++        if visited.insert(edge.id(), ()).is_some() {
++            return Some(());
++        }
++        let front = edge.absolute_front().point();
++        let back = edge.absolute_back().point();
++        let coincident = edges0.iter().try_fold(false, |found, other| {
++            work = work.checked_sub(1)?;
++            let a = other.absolute_front().point();
++            let b = other.absolute_back().point();
++            // Certified straight trims with matching endpoints coincide.
++            Some(found || (front.near(&a) && back.near(&b)) || (front.near(&b) && back.near(&a)))
++        })?;
++        if coincident {
++            let curve = edge.curve();
++            let (start, end) = curve.range_tuple();
++            let middle = start + (end - start) / 2.0;
++            if !middle.is_finite() || middle <= start || middle >= end {
++                return None;
++            }
++            let vertex = Vertex::new(curve.evaluate(middle));
++            if vertex.point().near(&front) || vertex.point().near(&back) {
++                return None;
++            }
++            let (first, second) = shells1
++                .iter_mut()
++                .find_map(|shell| shell.cut_edge(edge.id(), &vertex))?;
++            if !first.is_geometric_consistent() || !second.is_geometric_consistent() {
++                return None;
++            }
++        }
++        Some(())
++    })?;
++    Solid::try_new(solid0.boundaries().iter().cloned().chain(shells1).collect()).ok()
++}
++
+ /// Apply set identities only after a support enclosure separates the interiors.
+ ///
+ /// Weak separation permits boundary contact: regularized intersection is empty
+@@ -2453,7 +2554,13 @@
+     } else if let Some(solid) = separated_boolean(solid0, solid1, operation) {
+         Ok(solid)
+     } else {
+-        boolean_classic(solid0, solid1, tol, operation)
++        boolean_classic(solid0, solid1, tol, operation).or_else(|error| {
++            if matches!(operation, Operation::Union) {
++                lower_dimensional_union(solid0, solid1).ok_or(error)
++            } else {
++                Err(error)
++            }
++        })
+     }
+ }
+ 

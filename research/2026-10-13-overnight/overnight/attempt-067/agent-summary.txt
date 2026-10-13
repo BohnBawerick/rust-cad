@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate repairs failed assemblies by aligning open-seam subdivisions on existing curves, then sewing uniquely paired opposite intervals. Subdivision preserves geometry and oriented boundaries, including cavity shells.
+
+The fallback runs after existing recovery paths and reuses converted shells. It applies to planar and curved solids without shape-specific recognition.
+
+Unresolved risks include numerical coincidence, intersection generation, and curve-fitting failures. Controller evaluation is required.
+
+Formatted and checked whitespace. No builds, tests, or commits performed.

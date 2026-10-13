@@ -1,0 +1,344 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,8 @@
+ //!   before marching, retaining the exact input surfaces.
+ //! - Complete positive-weight spline control nets certify separation, including
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
++//! - Failed planar arrangements can certify an exact positive triangle chain
++//!   for concave trims and holes, including coplanar subdivision edges.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -797,6 +799,218 @@
+         .then_some(cells)
+ }
+ 
++/// Represent a coplanar subdivision edge in a certified affine surface chart.
++fn planar_chart_line<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    surface: &S,
++    front: Point3,
++    back: Point3,
++) -> Option<C> {
++    let spline = surface.try_into_homogeneous_bspline_surface()?;
++    let net = spline.control_points();
++    if spline.udegree() != 1
++        || spline.vdegree() != 1
++        || net.len() != 2
++        || net.iter().any(|row| row.len() != 2)
++    {
++        return None;
++    }
++    let weight = net[0][0].w;
++    if weight <= 0.0 || net.iter().flatten().any(|p| p.w != weight) {
++        return None;
++    }
++    let [a, b, c, d] = [net[0][0], net[0][1], net[1][0], net[1][1]].map(|p| p.to_point());
++    let scale = 1.0
++        + a.to_vec().magnitude()
++        + b.to_vec().magnitude()
++        + c.to_vec().magnitude()
++        + d.to_vec().magnitude();
++    if ((d - c) - (b - a)).magnitude() > 64.0 * f64::EPSILON * scale {
++        return None;
++    }
++    let a = surface.search_parameter(front, None, 100)?;
++    let b = surface.search_parameter(back, Some(a), 100)?;
++    C::try_from(ParameterCurve::new(
++        Line(Point2::new(a.0, a.1), Point2::new(b.0, b.1)),
++        surface.clone(),
++    ))
++    .ok()
++}
++
++/// Decompose straight planar trims only when their oriented boundary is preserved.
++///
++/// A positive planar triangle chain with the same boundary as a valid trimmed
++/// face represents exactly that face: their difference is a compact planar
++/// two-cycle and therefore vanishes. Tessellation supplies a candidate chain;
++/// support and boundary certificates, rather than its sampling tolerance,
++/// establish that no approximation enters the returned geometry.
++fn planar_chain_cells<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++    tol: f64,
++    work: &mut usize,
++) -> Option<Vec<PlanarCell<S>>> {
++    let mut incidence: HashMap<EdgeId<C>, (Vector3, usize)> = HashMap::default();
++    let faces = solid
++        .face_iter()
++        .map(|face| {
++            let surface = face.surface();
++            let AnalyticSurfaceKind::Plane(plane) = surface.try_into_analytic_surface_kind()?
++            else {
++                return None;
++            };
++            let spline = surface.try_into_homogeneous_bspline_surface()?;
++            spline
++                .control_points()
++                .iter()
++                .flatten()
++                .try_for_each(|control| {
++                    *work = work.checked_sub(1)?;
++                    let (distance, error) =
++                        plane_distance(control.to_point(), plane.origin(), plane.normal());
++                    (control.w.is_finite()
++                        && control.w > 0.0
++                        && distance.is_finite()
++                        && error.is_finite()
++                        && distance.abs() <= error)
++                        .then_some(())
++                })?;
++            face.edge_iter().try_for_each(|edge| {
++                *work = work.checked_sub(1)?;
++                let entry = incidence.entry(edge.id()).or_insert((plane.normal(), 0));
++                if entry.1 > 1 || (entry.1 == 1 && entry.0.cross(plane.normal()).so_small()) {
++                    return None;
++                }
++                entry.1 += 1;
++                Some(())
++            })?;
++            let normal = if face.orientation() {
++                plane.normal()
++            } else {
++                -plane.normal()
++            };
++            Some((face, surface, normal))
++        })
++        .collect::<Option<Vec<_>>>()?;
++    if incidence.values().any(|(_, count)| *count != 2) {
++        return None;
++    }
++    faces
++        .into_iter()
++        .try_fold(Vec::new(), |mut cells, (face, surface, normal)| {
++            let shell: Shell<Point3, C, S> = iter::once(face.clone()).collect();
++            let meshed = shell.triangulation(tol);
++            let mesh = meshed.first()?.surface()?;
++            let edges: Vec<_> = face.edge_iter().collect();
++            let scale = edges
++                .iter()
++                .flat_map(|edge| [edge.front().point(), edge.back().point()])
++                .fold(1.0_f64, |scale, p| {
++                    scale.max(p.x.abs()).max(p.y.abs()).max(p.z.abs())
++                });
++            let error = 128.0 * f64::EPSILON * scale;
++            let mut vertices: Vec<Point3> = Vec::new();
++            let mut chain: HashMap<(usize, usize), (isize, usize)> = HashMap::default();
++            mesh.face_iter().try_for_each(|polygon| {
++                (2..polygon.len()).try_for_each(|index| {
++                    let mut points = [polygon[0], polygon[index - 1], polygon[index]]
++                        .map(|vertex| mesh.positions()[vertex.pos]);
++                    let area = (points[1] - points[0])
++                        .cross(points[2] - points[0])
++                        .dot(normal);
++                    if !area.is_finite() || area == 0.0 {
++                        return None;
++                    }
++                    if area < 0.0 {
++                        points.swap(1, 2);
++                    }
++                    let indices = points
++                        .iter()
++                        .map(|point| {
++                            *work = work.checked_sub(vertices.len() + 1)?;
++                            let (distance, bound) =
++                                plane_distance(*point, edges.first()?.front().point(), normal);
++                            if !distance.is_finite() || distance.abs() > bound {
++                                return None;
++                            }
++                            Some(
++                                vertices
++                                    .iter()
++                                    .position(|p| p.distance2(*point) <= error * error)
++                                    .unwrap_or_else(|| {
++                                        vertices.push(*point);
++                                        vertices.len() - 1
++                                    }),
++                            )
++                        })
++                        .collect::<Option<Vec<_>>>()?;
++                    indices
++                        .iter()
++                        .zip(indices.iter().cycle().skip(1))
++                        .try_for_each(|(&a, &b)| {
++                            if a == b {
++                                return None;
++                            }
++                            let entry = chain.entry((a.min(b), a.max(b))).or_insert((0, 0));
++                            entry.0 += if a < b { 1 } else { -1 };
++                            entry.1 += 1;
++                            (entry.1 <= 2).then_some(())
++                        })?;
++                    cells.push(PlanarCell {
++                        surface: surface.clone(),
++                        orientation: face.orientation(),
++                        normal,
++                        points: points.to_vec(),
++                    });
++                    Some(())
++                })
++            })?;
++            let mut coverage: Vec<Vec<(f64, f64)>> = edges.iter().map(|_| Vec::new()).collect();
++            chain.into_iter().try_for_each(|((a, b), (count, uses))| {
++                if count == 0 && uses == 2 {
++                    return Some(());
++                }
++                if count.abs() != 1 || uses != 1 {
++                    return None;
++                }
++                let (a, b) = if count > 0 {
++                    (vertices[a], vertices[b])
++                } else {
++                    (vertices[b], vertices[a])
++                };
++                let (index, interval) = edges.iter().enumerate().find_map(|(index, edge)| {
++                    let origin = edge.front().point();
++                    let direction = edge.back().point() - origin;
++                    let length2 = direction.magnitude2();
++                    if length2 == 0.0 {
++                        return None;
++                    }
++                    let start = (a - origin).dot(direction) / length2;
++                    let end = (b - origin).dot(direction) / length2;
++                    let slack = error / length2.sqrt();
++                    (start < end
++                        && start >= -slack
++                        && end <= 1.0 + slack
++                        && (origin + direction * start).distance2(a) <= error * error
++                        && (origin + direction * end).distance2(b) <= error * error)
++                        .then_some((index, (start, end)))
++                })?;
++                coverage[index].push(interval);
++                Some(())
++            })?;
++            coverage
++                .iter_mut()
++                .zip(&edges)
++                .try_for_each(|(intervals, edge)| {
++                    intervals.sort_by(|a, b| a.0.total_cmp(&b.0));
++                    let slack = error / edge.front().point().distance(edge.back().point());
++                    let end = intervals.iter().try_fold(0.0_f64, |end, &(a, b)| {
++                        ((a - end).abs() <= slack).then_some(b)
++                    })?;
++                    ((end - 1.0).abs() <= slack).then_some(())
++                })?;
++            Some(cells)
++        })
++}
++
+ /// Subdivide an exact convex planar domain without discarding small-area cells.
+ fn split_planar_cell(points: Vec<Point3>, origin: Point3, normal: Vector3) -> Vec<Vec<Point3>> {
+     let distances: Vec<_> = points
+@@ -878,25 +1092,47 @@
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+     operation: Operation,
++    decomposition: Option<f64>,
+ ) -> Option<Solid<Point3, C, S>> {
+     let mut work = 262_144_usize;
+     let mut projections = 2048_usize;
+-    let mut cells = planar_cells(solid0, &mut work)?;
++    let mut cells = if let Some(tol) = decomposition {
++        planar_chain_cells(solid0, tol, &mut work)?
++    } else {
++        planar_cells(solid0, &mut work)?
++    };
+     let first_len = cells.len();
+-    cells.extend(planar_cells(solid1, &mut work)?);
++    cells.extend(if let Some(tol) = decomposition {
++        planar_chain_cells(solid1, tol, &mut work)?
++    } else {
++        planar_cells(solid1, &mut work)?
++    });
++    let planes: Vec<_> = cells
++        .iter()
++        .flat_map(|cell| {
++            iter::once((cell.points[0], cell.normal)).chain(
++                cell.points
++                    .iter()
++                    .zip(cell.points.iter().cycle().skip(1))
++                    .filter(|_| decomposition.is_some())
++                    .map(move |(a, b)| (*a, (*b - *a).cross(cell.normal).normalize())),
++            )
++        })
++        .collect();
+     let mut retained = Vec::new();
+     cells.iter().enumerate().try_for_each(|(index, source)| {
+-        let pieces = cells
+-            .iter()
+-            .try_fold(vec![source.points.clone()], |pieces, plane| {
+-                pieces
+-                    .into_iter()
+-                    .try_fold(Vec::new(), |mut divided, points| {
+-                        work = work.checked_sub(points.len())?;
+-                        divided.extend(split_planar_cell(points, plane.points[0], plane.normal));
+-                        Some(divided)
+-                    })
+-            })?;
++        let pieces =
++            planes
++                .iter()
++                .try_fold(vec![source.points.clone()], |pieces, &(origin, normal)| {
++                    pieces
++                        .into_iter()
++                        .try_fold(Vec::new(), |mut divided, points| {
++                            work = work.checked_sub(points.len())?;
++                            divided.extend(split_planar_cell(points, origin, normal));
++                            Some(divided)
++                        })
++                })?;
+         let first = index < first_len;
+         let other = if first {
+             &cells[first_len..]
+@@ -1016,18 +1252,23 @@
+                                     other.surface.search_parameter(p, None, 100).map(|_| ())
+                                 })?;
+                             Some(other)
+-                        })?;
+-                        let leader = BsplineCurve::from(Line(front, back));
+-                        let boundary0: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
+-                        let boundary1: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
+-                        let curve = SurfaceCurve::with_boundaries(
+-                            cell.surface.clone(),
+-                            support.surface.clone(),
+-                            leader,
+-                            boundary0,
+-                            boundary1,
+-                        )
+-                        .into();
++                        });
++                        let curve = if let Some(support) = support {
++                            let leader = BsplineCurve::from(Line(front, back));
++                            let boundary0: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
++                            let boundary1: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
++                            SurfaceCurve::with_boundaries(
++                                cell.surface.clone(),
++                                support.surface.clone(),
++                                leader,
++                                boundary0,
++                                boundary1,
++                            )
++                            .into()
++                        } else {
++                            decomposition?;
++                            planar_chart_line(&cell.surface, front, back)?
++                        };
+                         let edge = Edge::try_new(&vertices[a], &vertices[b], curve).ok()?;
+                         if !edge.is_geometric_consistent() {
+                             return None;
+@@ -1266,7 +1507,7 @@
+         Err(ShapeOpsError::InvalidTolerance)
+     } else if solid0.is_empty() || solid1.is_empty() {
+         boolean_classic(solid0, solid1, tol, operation)
+-    } else if let Some(solid) = planar_boolean(solid0, solid1, operation) {
++    } else if let Some(solid) = planar_boolean(solid0, solid1, operation, None) {
+         // A certified arrangement establishes membership on each open cell.
+         // Its empty boundary is therefore a valid empty result, while failure
+         // to certify or assemble an arrangement still requires marching.
+@@ -1275,6 +1516,7 @@
+         Ok(solid)
+     } else {
+         boolean_classic(solid0, solid1, tol, operation)
++            .or_else(|error| planar_boolean(solid0, solid1, operation, Some(tol)).ok_or(error))
+     }
+ }
+ 

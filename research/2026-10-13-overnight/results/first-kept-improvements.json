@@ -1,0 +1,130 @@
+{
+  "new_visible_passes": [
+    {
+      "group": "boxes",
+      "op": "difference",
+      "relation": "contained",
+      "count": 4
+    },
+    {
+      "group": "boxes",
+      "op": "difference",
+      "relation": "contains",
+      "count": 4
+    },
+    {
+      "group": "boxes",
+      "op": "difference",
+      "relation": "disjoint",
+      "count": 4
+    },
+    {
+      "group": "boxes",
+      "op": "difference",
+      "relation": "far_negative",
+      "count": 4
+    },
+    {
+      "group": "boxes",
+      "op": "difference",
+      "relation": "near_gap",
+      "count": 4
+    },
+    {
+      "group": "boxes",
+      "op": "difference",
+      "relation": "regression",
+      "count": 1
+    },
+    {
+      "group": "boxes",
+      "op": "difference",
+      "relation": "touch_vertex",
+      "count": 4
+    },
+    {
+      "group": "boxes",
+      "op": "intersection",
+      "relation": "contained",
+      "count": 4
+    },
+    {
+      "group": "boxes",
+      "op": "intersection",
+      "relation": "contains",
+      "count": 4
+    },
+    {
+      "group": "boxes",
+      "op": "intersection",
+      "relation": "disjoint",
+      "count": 1
+    },
+    {
+      "group": "boxes",
+      "op": "intersection",
+      "relation": "touch_vertex",
+      "count": 1
+    },
+    {
+      "group": "boxes",
+      "op": "union",
+      "relation": "contained",
+      "count": 4
+    },
+    {
+      "group": "boxes",
+      "op": "union",
+      "relation": "contains",
+      "count": 4
+    },
+    {
+      "group": "boxes",
+      "op": "union",
+      "relation": "disjoint",
+      "count": 2
+    },
+    {
+      "group": "boxes",
+      "op": "union",
+      "relation": "near_gap",
+      "count": 1
+    },
+    {
+      "group": "boxes",
+      "op": "union",
+      "relation": "touch_vertex",
+      "count": 1
+    },
+    {
+      "group": "cylinders",
+      "op": "difference",
+      "relation": "d/r=2.0",
+      "count": 2
+    },
+    {
+      "group": "cylinders",
+      "op": "difference",
+      "relation": "d/r=2.001",
+      "count": 5
+    },
+    {
+      "group": "cylinders",
+      "op": "difference",
+      "relation": "d/r=3.0",
+      "count": 5
+    },
+    {
+      "group": "cylinders",
+      "op": "difference",
+      "relation": "d/r=3.0000000000000004",
+      "count": 2
+    },
+    {
+      "group": "cylinders",
+      "op": "intersection",
+      "relation": "d/r=2.0",
+      "count": 1
+    }
+  ]
+}

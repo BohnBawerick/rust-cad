@@ -1,0 +1,215 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -400,6 +400,130 @@
+                     max0.min(max1) > min0.max(min1)
+                 })
+             })
++        })
++    })
++}
++
++/// Exact planar support and straight boundary segments of one input face.
++struct PlanarBoundary {
++    plane: Plane,
++    segments: Vec<(Point3, Point3)>,
++}
++
++/// Certify straight trims from the two incident support planes of every edge.
++///
++/// A valid edge on two nonparallel planes lies on their intersection line.
++/// Coplanar subdivisions and curved supports deliberately fail this certificate.
++/// Thus the vertices bound the entire trimmed face, not just a sampled mesh.
++fn planar_boundaries<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: &Shell<Point3, C, S>,
++) -> Option<Vec<PlanarBoundary>> {
++    let mut incidence: HashMap<EdgeId<C>, (Vector3, usize)> = HashMap::default();
++    let faces = shell
++        .iter()
++        .map(|face| {
++            let surface = face.surface();
++            let AnalyticSurfaceKind::Plane(plane) = surface.try_into_analytic_surface_kind()?
++            else {
++                return None;
++            };
++            let normal = plane.normal();
++            // Verify the whole support, since an analytic recognizer may also
++            // identify nearly planar control nets within its modeling tolerance.
++            let spline = surface.try_into_homogeneous_bspline_surface()?;
++            if !spline.control_points().iter().flatten().all(|control| {
++                if !control.w.is_finite() || control.w == 0.0 {
++                    return false;
++                }
++                let (distance, error) =
++                    planar_projection(control.to_point(), plane.origin(), normal);
++                distance.is_finite() && error.is_finite() && distance.abs() <= error
++            }) {
++                return None;
++            }
++            let segments = face
++                .edge_iter()
++                .map(|edge| {
++                    if let Some((other, count)) = incidence.get_mut(&edge.id()) {
++                        if *count != 1 || normal.cross(*other).so_small() {
++                            return None;
++                        }
++                        *count += 1;
++                    } else {
++                        incidence.insert(edge.id(), (normal, 1));
++                    }
++                    Some((edge.front().point(), edge.back().point()))
++                })
++                .collect::<Option<Vec<_>>>()?;
++            (!segments.is_empty()).then_some(PlanarBoundary { plane, segments })
++        })
++        .collect::<Option<Vec<_>>>()?;
++    incidence
++        .values()
++        .all(|(_, count)| *count == 2)
++        .then_some(faces)
++}
++
++/// Project one point, accounting only for floating-point arithmetic roundoff.
++fn planar_projection(point: Point3, origin: Point3, axis: Vector3) -> (f64, f64) {
++    let distance = (point - origin).dot(axis);
++    let scale = (point.x.abs() + origin.x.abs()) * axis.x.abs()
++        + (point.y.abs() + origin.y.abs()) * axis.y.abs()
++        + (point.z.abs() + origin.z.abs()) * axis.z.abs();
++    (distance, 8.0 * f64::EPSILON * scale)
++}
++
++/// Projection bounds independent of the tessellation tolerance.
++fn planar_interval(face: &PlanarBoundary, origin: Point3, axis: Vector3) -> (f64, f64, f64) {
++    face.segments
++        .iter()
++        .map(|(point, _)| planar_projection(*point, origin, axis))
++        .fold(
++            (f64::INFINITY, f64::NEG_INFINITY, 0.0_f64),
++            |(min, max, error), (distance, roundoff)| {
++                (min.min(distance), max.max(distance), error.max(roundoff))
++            },
++        )
++}
++
++/// Certify that every face pair is disjoint or meets only on both boundaries.
++///
++/// Nonparallel faces must each stay on one side of the other's support.
++/// Coplanar faces need a separating in-plane axis. These are sufficient tests
++/// for arbitrary planar domains, including concave faces and multiple wires.
++/// Failure to find a certificate leaves subdivision to the ordinary pipeline.
++fn planar_boundary_contacts<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell0: &Shell<Point3, C, S>,
++    shell1: &Shell<Point3, C, S>,
++) -> Option<()> {
++    let faces0 = planar_boundaries(shell0)?;
++    let faces1 = planar_boundaries(shell1)?;
++    faces0.iter().try_for_each(|a| {
++        faces1.iter().try_for_each(|b| {
++            let normal0 = a.plane.normal();
++            let normal1 = b.plane.normal();
++            let (min0, max0, error0) = planar_interval(a, b.plane.origin(), normal1);
++            let (min1, max1, error1) = planar_interval(b, a.plane.origin(), normal0);
++            if min0 > error0 || max0 < -error0 || min1 > error1 || max1 < -error1 {
++                return Some(());
++            }
++            let parallel = normal0.cross(normal1).magnitude() <= 16.0 * f64::EPSILON;
++            let boundary_only = if parallel {
++                // Shared area cannot be removed without a common subdivision.
++                // A separating axis excludes positive-area overlap even for concave faces.
++                a.segments.iter().chain(&b.segments).any(|(start, end)| {
++                    let axis = normal0.cross(*end - *start);
++                    if axis.magnitude2() == 0.0 {
++                        return false;
++                    }
++                    let (min0, max0, error0) = planar_interval(a, *start, axis);
++                    let (min1, max1, error1) = planar_interval(b, *start, axis);
++                    max0.min(max1) - min0.max(min1) <= error0 + error1
++                })
++            } else {
++                (min0 >= -error0 || max0 <= error0) && (min1 >= -error1 || max1 <= error1)
++            };
++            boundary_only.then_some(())
+         })
+     })
+ }
+@@ -449,10 +573,13 @@
+         })
+         .collect();
+     // Each patch has one owner in each operand. Ambiguity requires subdivision.
+-    if contacts.is_empty()
+-        || contacts
+-            .iter()
+-            .any(|(i, j)| contacts.iter().filter(|(k, l)| i == k || j == l).count() != 1)
++    if contacts.is_empty() {
++        planar_boundary_contacts(shell0, shell1)?;
++        return Some(contacts);
++    }
++    if contacts
++        .iter()
++        .any(|(i, j)| contacts.iter().filter(|(k, l)| i == k || j == l).count() != 1)
+     {
+         return None;
+     }
+@@ -621,33 +748,34 @@
+         shell1.mapped(|x| *x, |c| Alternative::FirstType(c.clone()), Clone::clone);
+     let contacts = conforming_contacts(shell0, shell1, &poly_shell0, &poly_shell1, tol);
+     let contact_arrangement = contacts.is_some();
+-    let (loops_store0, loops_store1) = if contact_arrangement {
++    let ([mut and0, mut or0, unknown0], [mut and1, mut or1, unknown1]) = if contact_arrangement {
++        // No face needs subdivision. Preserve its original trims, including
++        // small valid faces that the loop divider would otherwise discard.
+         (
+-            altshell0.face_iter().collect(),
+-            altshell1.face_iter().collect(),
++            [Shell::default(), Shell::default(), altshell0],
++            [Shell::default(), Shell::default(), altshell1],
+         )
+     } else {
+         let stores =
+             loops_store::create_loops_stores(&altshell0, &poly_shell0, &altshell1, &poly_shell1)?;
+-        (stores.geom_loops_store0, stores.geom_loops_store1)
++        let mut cls0 = divide_face::divide_faces(&altshell0, &stores.geom_loops_store0, tol)?;
++        if cls0.and_or_unknown()[2]
++            .connected_components()
++            .iter()
++            .all(|component| !component.extract_boundaries().is_empty())
++        {
++            cls0.integrate_by_component();
++        }
++        let mut cls1 = divide_face::divide_faces(&altshell1, &stores.geom_loops_store1, tol)?;
++        if cls1.and_or_unknown()[2]
++            .connected_components()
++            .iter()
++            .all(|component| !component.extract_boundaries().is_empty())
++        {
++            cls1.integrate_by_component();
++        }
++        (cls0.and_or_unknown(), cls1.and_or_unknown())
+     };
+-    let mut cls0 = divide_face::divide_faces(&altshell0, &loops_store0, tol)?;
+-    if cls0.and_or_unknown()[2]
+-        .connected_components()
+-        .iter()
+-        .all(|component| !component.extract_boundaries().is_empty())
+-    {
+-        cls0.integrate_by_component();
+-    }
+-    let mut cls1 = divide_face::divide_faces(&altshell1, &loops_store1, tol)?;
+-    if cls1.and_or_unknown()[2]
+-        .connected_components()
+-        .iter()
+-        .all(|component| !component.extract_boundaries().is_empty())
+-    {
+-        cls1.integrate_by_component();
+-    }
+-    let [mut and0, mut or0, unknown0] = cls0.and_or_unknown();
+     unknown0.into_iter().try_for_each(|face| {
+         let (point, normal) = interior_point(&face, tol)?;
+         if let Some(same_orientation) =
+@@ -666,7 +794,6 @@
+         }
+         Some(())
+     })?;
+-    let [mut and1, mut or1, unknown1] = cls1.and_or_unknown();
+     unknown1.into_iter().try_for_each(|face| {
+         let (point, normal) = interior_point(&face, tol)?;
+         // The first operand owns coincident patches.

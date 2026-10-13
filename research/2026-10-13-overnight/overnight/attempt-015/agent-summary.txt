@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate requires face subdivision to conserve oriented boundary chains: internal cuts cancel, leaving the source boundary. Failed assemblies retry reconstruction using loop orientation and hole nesting, retaining exact curves, surfaces, and cavity orientation. Existing successful results take precedence.
+
+Expected scope: valid trimmed regions lost during face division, independent of solid shape. Risks remain in intersection tracing, sampled hole containment, and periodic parameter charts.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

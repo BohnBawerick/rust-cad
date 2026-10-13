@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs:810).
+
+The candidate retries failed planar arrangements using common support normals certified against complete spline control nets and trim vertices. This addresses normalization error from narrow parameter charts while retaining original geometry, orientations, and tolerances.
+
+The repair applies to certified planar solids with convex faces, including nonconvex assemblies and multiple oriented shells. Existing successful paths retain precedence.
+
+Curved intersections and downstream mesh closure remain unresolved. Formatted and checked patch whitespace; no builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

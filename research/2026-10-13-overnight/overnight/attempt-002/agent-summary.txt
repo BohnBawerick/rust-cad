@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate sums oriented winding across all shells and gives complemented B winding one at infinity. This targets disjoint subtraction, containment, cavity orientation, and valid empty results. It also adds coincident-patch ownership and fits intersection leaders to projected curves to address the previous geometry-consistency veto.
+
+The implementation remains generic over supported curves and surfaces and retains B-rep geometry.
+
+Unresolved risks include coplanar subdivision, contact-edge sewing, thin curved regions during classification, and increased curve-fitting cost.
+
+Formatted and checked patch whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

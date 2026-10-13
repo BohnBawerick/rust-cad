@@ -1,0 +1,949 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -18,13 +18,800 @@
+ //!   the current error enum has no single `Internal` variant.
+ //! - Classification sums oriented shell windings and tracks the exterior
+ //!   winding explicitly when intersecting with a complement for subtraction.
++//! - Boundary-contact retries reuse existing exact trims instead of inserting
++//!   duplicate cuts, and assign coincident patches after subdivision.
+ //! - Failed assemblies can use a support-plane arrangement for certified
+ //!   planar solids with convex faces, retaining the exact input surfaces.
+ 
+ mod divide_face;
+ mod faces_classification;
+ mod intersection_curve;
+-mod loops_store;
++// Trim reuse belongs to the loop builder so both operands share exact edges.
++mod loops_store {
++    use super::{ShapeOpsSurface, intersection_curve, same_support};
++    use monstertruck_core::cgmath64::*;
++    use monstertruck_geometry::prelude::*;
++    use monstertruck_meshing::prelude::*;
++    use monstertruck_topology::{Vertex, *};
++    use rustc_hash::FxHashMap as HashMap;
++
++    type PolylineCurve = monstertruck_meshing::prelude::PolylineCurve<Point3>;
++
++    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
++    pub(super) enum ShapesOpStatus {
++        Unknown,
++        And,
++        Or,
++    }
++
++    impl ShapesOpStatus {
++        fn not(self) -> Self {
++            match self {
++                Self::Unknown => Self::Unknown,
++                Self::And => Self::Or,
++                Self::Or => Self::And,
++            }
++        }
++    }
++
++    #[derive(Clone, Debug)]
++    pub(super) struct BoundaryWire<P, C> {
++        wire: Wire<P, C>,
++        status: ShapesOpStatus,
++    }
++
++    impl<P, C> BoundaryWire<P, C> {
++        #[inline(always)]
++        pub(super) fn new(wire: Wire<P, C>, status: ShapesOpStatus) -> Self {
++            Self { wire, status }
++        }
++        #[inline(always)]
++        pub(super) fn status(&self) -> ShapesOpStatus {
++            self.status
++        }
++        #[inline(always)]
++        pub(super) fn inverse(&self) -> Self {
++            Self {
++                wire: self.wire.inverse(),
++                status: self.status.not(),
++            }
++        }
++    }
++
++    impl ShapesOpStatus {
++        fn from_is_curve<C, S0, S1>(curve: &IntersectionCurve<C, S0, S1>) -> Option<ShapesOpStatus>
++        where
++            C: ParametricCurve3D + BoundedCurve,
++            S0: ParametricSurface3D + SearchNearestParameter<SurfaceParameter, Point = Point3>,
++            S1: ParametricSurface3D + SearchNearestParameter<SurfaceParameter, Point = Point3>,
++        {
++            let (t0, t1) = curve.range_tuple();
++            let t = (t0 + t1) / 2.0;
++            let (_, pt0, pt1) = curve.search_triple(t, 100)?;
++            let der = curve.leader().derivative(t);
++            let normal0 = curve.surface0().normal(pt0[0], pt0[1]);
++            let normal1 = curve.surface1().normal(pt1[0], pt1[1]);
++            match normal0.cross(der).dot(normal1) > 0.0 {
++                true => Some(ShapesOpStatus::Or),
++                false => Some(ShapesOpStatus::And),
++            }
++        }
++    }
++
++    impl<P, C> std::ops::Deref for BoundaryWire<P, C> {
++        type Target = Wire<P, C>;
++        #[inline(always)]
++        fn deref(&self) -> &Self::Target {
++            &self.wire
++        }
++    }
++
++    impl<P, C> std::ops::DerefMut for BoundaryWire<P, C> {
++        #[inline(always)]
++        fn deref_mut(&mut self) -> &mut Self::Target {
++            &mut self.wire
++        }
++    }
++
++    #[derive(Clone, Debug)]
++    pub(super) struct Loops<P, C>(Vec<BoundaryWire<P, C>>);
++    #[derive(Clone, Debug)]
++    pub(super) struct LoopsStore<P, C>(Vec<Loops<P, C>>);
++
++    impl<P, C> std::ops::Deref for Loops<P, C> {
++        type Target = Vec<BoundaryWire<P, C>>;
++        #[inline(always)]
++        fn deref(&self) -> &Self::Target {
++            &self.0
++        }
++    }
++
++    impl<P, C> std::ops::DerefMut for Loops<P, C> {
++        #[inline(always)]
++        fn deref_mut(&mut self) -> &mut Self::Target {
++            &mut self.0
++        }
++    }
++
++    impl<P, C> std::ops::Deref for LoopsStore<P, C> {
++        type Target = Vec<Loops<P, C>>;
++        #[inline(always)]
++        fn deref(&self) -> &Self::Target {
++            &self.0
++        }
++    }
++
++    impl<P, C> std::ops::DerefMut for LoopsStore<P, C> {
++        #[inline(always)]
++        fn deref_mut(&mut self) -> &mut Self::Target {
++            &mut self.0
++        }
++    }
++
++    impl<P, C> FromIterator<BoundaryWire<P, C>> for Loops<P, C> {
++        #[inline(always)]
++        fn from_iter<I: IntoIterator<Item = BoundaryWire<P, C>>>(iter: I) -> Self {
++            Self(Vec::from_iter(iter))
++        }
++    }
++
++    impl<'a, P, C, S> From<&'a Face<P, C, S>> for Loops<P, C> {
++        #[inline(always)]
++        fn from(face: &'a Face<P, C, S>) -> Loops<P, C> {
++            face.absolute_boundaries()
++                .iter()
++                .map(|wire| BoundaryWire::new(wire.clone(), ShapesOpStatus::Unknown))
++                .collect()
++        }
++    }
++
++    impl<'a, P: 'a, C: 'a, S: 'a> FromIterator<&'a Face<P, C, S>> for LoopsStore<P, C> {
++        fn from_iter<I: IntoIterator<Item = &'a Face<P, C, S>>>(iter: I) -> Self {
++            Self(iter.into_iter().map(Loops::from).collect())
++        }
++    }
++
++    impl<'a, P, C> IntoIterator for &'a LoopsStore<P, C> {
++        type Item = <&'a Vec<Loops<P, C>> as IntoIterator>::Item;
++        type IntoIter = <&'a Vec<Loops<P, C>> as IntoIterator>::IntoIter;
++        fn into_iter(self) -> Self::IntoIter {
++            self.0.iter()
++        }
++    }
++
++    #[derive(Clone, Debug, Copy, PartialEq)]
++    enum ParameterKind {
++        Front,
++        Back,
++        Inner(f64),
++    }
++
++    impl ParameterKind {
++        fn try_new(t: f64, (t0, t1): (f64, f64)) -> Option<ParameterKind> {
++            if t0.near(&t) {
++                Some(ParameterKind::Front)
++            } else if t1.near(&t) {
++                Some(ParameterKind::Back)
++            } else if t0 < t && t < t1 {
++                Some(ParameterKind::Inner(t))
++            } else {
++                None
++            }
++        }
++    }
++
++    impl<P: Copy, C: Clone> Loops<P, C> {
++        fn search_parameter(&self, pt: P) -> Option<(usize, usize, ParameterKind)>
++        where
++            C: BoundedCurve<Point = P> + SearchParameter<CurveParameter, Point = P>,
++        {
++            self.iter()
++                .enumerate()
++                .flat_map(move |(i, wire)| {
++                    wire.iter().enumerate().map(move |(j, edge)| (i, j, edge))
++                })
++                .find_map(|(i, j, edge)| {
++                    let curve = edge.curve();
++                    curve.search_parameter(pt, None, 1).and_then(|t| {
++                        let kind = ParameterKind::try_new(t, curve.range_tuple())?;
++                        Some((i, j, kind))
++                    })
++                })
++        }
++
++        fn change_vertex(
++            &mut self,
++            old_vertex: &Vertex<P>,
++            new_vertex: &Vertex<P>,
++            emap: &mut HashMap<EdgeId<C>, Edge<P, C>>,
++        ) {
++            self.iter_mut()
++                .flat_map(|wire| wire.iter_mut())
++                .for_each(|edge| {
++                    let mut new_edge = if edge.absolute_front() == old_vertex {
++                        emap.entry(edge.id()).or_insert_with(|| {
++                            Edge::new(new_vertex, edge.absolute_back(), edge.curve())
++                        })
++                    } else if edge.absolute_back() == old_vertex {
++                        emap.entry(edge.id()).or_insert_with(|| {
++                            Edge::new(edge.absolute_front(), new_vertex, edge.curve())
++                        })
++                    } else {
++                        return;
++                    }
++                    .clone();
++                    if !edge.orientation() {
++                        new_edge.invert();
++                    }
++                    // Remove the edge from the HashMap when it is no longer there because Id reassignment will occur.
++                    if edge.count() == 1 {
++                        emap.remove(&edge.id());
++                    }
++                    *edge = new_edge;
++                })
++        }
++
++        fn swap_edge_into_wire(&mut self, edge_id: EdgeId<C>, new_wire: &Wire<P, C>) {
++            self.iter_mut().for_each(|wire| {
++                let mut iter = wire.iter().enumerate();
++                if let Some((idx, edge)) = iter.find(|(_, edge)| edge.id() == edge_id) {
++                    if edge.orientation() {
++                        wire.swap_edge_into_wire(idx, new_wire.clone());
++                    } else {
++                        wire.swap_edge_into_wire(idx, new_wire.inverse());
++                    }
++                }
++            });
++        }
++
++        #[inline(always)]
++        fn add_independent_loop(&mut self, r#loop: BoundaryWire<P, C>) {
++            self.push(r#loop.inverse());
++            self.push(r#loop);
++        }
++
++        fn add_edge(
++            &mut self,
++            edge0: Edge<P, C>,
++            status: ShapesOpStatus,
++        ) -> [Option<(usize, usize)>; 2] {
++            let a = self.iter().enumerate().find_map(|(i, wire)| {
++                wire.iter().enumerate().find_map(|(j, edge)| {
++                    if edge.front() == edge0.back() {
++                        Some((i, j))
++                    } else {
++                        None
++                    }
++                })
++            });
++            let b = self.iter().enumerate().find_map(|(i, wire)| {
++                wire.iter().enumerate().find_map(|(j, edge)| {
++                    if edge.front() == edge0.front() {
++                        Some((i, j))
++                    } else {
++                        None
++                    }
++                })
++            });
++            if let Some((wire_index0, edge_index0)) = a {
++                self[wire_index0].rotate_left(edge_index0);
++                self[wire_index0].push_front(edge0.clone());
++                self[wire_index0].push_back(edge0.inverse());
++            }
++            match (a, b) {
++                (Some((wire_index0, edge_index0)), Some((wire_index1, edge_index1))) => {
++                    if wire_index0 == wire_index1 {
++                        let len = self[wire_index0].len() - 2;
++                        let edge_index1 = (len + edge_index1 - edge_index0) % len + 1;
++                        let new_wire = self[wire_index0].split_off(edge_index1);
++                        self[wire_index0].status = status;
++                        self.push(BoundaryWire::new(new_wire, status.not()));
++                    } else {
++                        let mut new_wire0 = self[wire_index1].clone();
++                        let mut new_wire1 = new_wire0.split_off(edge_index1);
++                        new_wire0.append(&mut self[wire_index0]);
++                        new_wire0.append(&mut new_wire1);
++                        self[wire_index0] = new_wire0;
++                        self.swap_remove(wire_index1);
++                    }
++                }
++                (None, Some((wire_index1, edge_index1))) => {
++                    self[wire_index1].rotate_left(edge_index1);
++                    self[wire_index1].push_front(edge0.inverse());
++                    self[wire_index1].push_back(edge0);
++                }
++                (None, None) => self.push(BoundaryWire::new(
++                    vec![edge0.inverse(), edge0].into(),
++                    ShapesOpStatus::Unknown,
++                )),
++                _ => {}
++            }
++            [a, b]
++        }
++    }
++
++    impl<P: Copy + Tolerance, C: Clone> LoopsStore<P, C> {
++        #[inline(always)]
++        fn change_vertex(
++            &mut self,
++            old_vertex: &Vertex<P>,
++            new_vertex: &Vertex<P>,
++            emap: &mut HashMap<EdgeId<C>, Edge<P, C>>,
++        ) {
++            self.iter_mut()
++                .for_each(|loops| loops.change_vertex(old_vertex, new_vertex, emap));
++        }
++
++        #[inline(always)]
++        fn swap_edge_into_wire(&mut self, edge_id: EdgeId<C>, new_wire: &Wire<P, C>) {
++            self.iter_mut()
++                .for_each(|loops| loops.swap_edge_into_wire(edge_id, new_wire))
++        }
++
++        fn add_polygon_vertex(
++            &mut self,
++            loops_index: usize,
++            v: &Vertex<P>,
++            emap: &mut HashMap<EdgeId<C>, Edge<P, C>>,
++        ) -> Option<(usize, usize, ParameterKind)>
++        where
++            C: Cut<Point = P> + SearchParameter<CurveParameter, Point = P>,
++        {
++            let pt = v.point();
++            let (wire_index, edge_index, kind) = self[loops_index].search_parameter(pt)?;
++            match kind {
++                ParameterKind::Front => {
++                    let old_vertex = self[loops_index][wire_index][edge_index]
++                        .absolute_front()
++                        .clone();
++                    self.change_vertex(&old_vertex, v, emap);
++                }
++                ParameterKind::Back => {
++                    let old_vertex = self[loops_index][wire_index][edge_index]
++                        .absolute_back()
++                        .clone();
++                    self.change_vertex(&old_vertex, v, emap);
++                }
++                ParameterKind::Inner(t) => {
++                    let edge = self[loops_index][wire_index][edge_index].absolute_clone();
++                    let edge_id = edge.id();
++                    let (edge0, edge1) = edge.cut_with_parameter(v, t)?;
++                    let new_wire: Wire<_, _> = vec![edge0, edge1].into();
++                    self.swap_edge_into_wire(edge_id, &new_wire);
++                }
++            }
++            Some((wire_index, edge_index, kind))
++        }
++    }
++
++    impl<C> LoopsStore<Point3, C> {
++        fn add_geom_vertex<S>(
++            &mut self,
++            (loops_index, wire_index, edge_index): (usize, usize, usize),
++            v: &Vertex<Point3>,
++            kind: ParameterKind,
++            another_surface: &S,
++            emap: &mut HashMap<EdgeId<C>, Edge<Point3, C>>,
++            reuse_trims: bool,
++        ) -> Option<()>
++        where
++            C: Cut<Point = Point3, Vector = Vector3>
++                + SearchNearestParameter<CurveParameter, Point = Point3>,
++            S: ParametricSurface3D + SearchNearestParameter<SurfaceParameter, Point = Point3>,
++        {
++            match kind {
++                ParameterKind::Front => {
++                    let old_vertex = self[loops_index][wire_index][edge_index]
++                        .absolute_front()
++                        .clone();
++                    v.set_point(old_vertex.point());
++                    self.change_vertex(&old_vertex, v, emap);
++                }
++                ParameterKind::Back => {
++                    let old_vertex = self[loops_index][wire_index][edge_index]
++                        .absolute_back()
++                        .clone();
++                    v.set_point(old_vertex.point());
++                    self.change_vertex(&old_vertex, v, emap);
++                }
++                ParameterKind::Inner(_) => {
++                    let curve = self[loops_index][wire_index][edge_index].curve();
++                    let on_support = if reuse_trims {
++                        curve
++                            .search_nearest_parameter(v.point(), None, 100)
++                            .and_then(|t| {
++                                let (start, end) = curve.range_tuple();
++                                let point = curve.evaluate(t);
++                                let (u, w) =
++                                    another_surface.search_nearest_parameter(point, None, 100)?;
++                                (t >= start
++                                    && t <= end
++                                    && point.near(&another_surface.evaluate(u, w)))
++                                .then_some((point, t, Point2::new(u, w)))
++                            })
++                    } else {
++                        None
++                    };
++                    let (pt, t, _) = on_support.or_else(|| {
++                        curve_surface_projection(
++                            &curve,
++                            None,
++                            another_surface,
++                            None,
++                            v.point(),
++                            100,
++                        )
++                    })?;
++                    v.set_point(pt);
++                    let edge = self[loops_index][wire_index][edge_index].absolute_clone();
++                    let edge_id = edge.id();
++                    let (edge0, edge1) = edge.cut_with_parameter(v, t)?;
++                    let new_wire: Wire<_, _> = vec![edge0, edge1].into();
++                    self.swap_edge_into_wire(edge_id, &new_wire);
++                }
++            }
++            Some(())
++        }
++    }
++
++    fn curve_surface_projection<C, S>(
++        curve: &C,
++        curve_hint: Option<f64>,
++        surface: &S,
++        surface_hint: Option<(f64, f64)>,
++        point: Point3,
++        trials: usize,
++    ) -> Option<(Point3, f64, Point2)>
++    where
++        C: ParametricCurve3D + SearchNearestParameter<CurveParameter, Point = Point3>,
++        S: ParametricSurface3D + SearchNearestParameter<SurfaceParameter, Point = Point3>,
++    {
++        if trials == 0 {
++            return None;
++        }
++        let t = curve.search_nearest_parameter(point, curve_hint, 10)?;
++        let pt0 = curve.evaluate(t);
++        let (u, v) = surface.search_nearest_parameter(point, surface_hint, 10)?;
++        let pt1 = surface.evaluate(u, v);
++        if point.near(&pt0) && point.near(&pt1) && pt0.near(&pt1) {
++            Some((point, t, Point2::new(u, v)))
++        } else {
++            let l = curve.derivative(t);
++            let n = surface.normal(u, v);
++            let t0 = (pt1 - pt0).dot(n) / l.dot(n);
++            curve_surface_projection(
++                curve,
++                Some(t),
++                surface,
++                Some((u, v)),
++                pt0 + t0 * l,
++                trials - 1,
++            )
++        }
++    }
++
++    fn create_independent_loop<P, C, D>(mut poly_curve0: C) -> Wire<P, D>
++    where
++        C: Cut<Point = P>,
++        D: From<C>,
++    {
++        let (t0, t1) = poly_curve0.range_tuple();
++        let t = (t0 + t1) / 2.0;
++        let poly_curve1 = poly_curve0.cut(t);
++        let v0 = Vertex::new(poly_curve0.front());
++        let v1 = Vertex::new(poly_curve1.front());
++        let edge0 = Edge::new(&v0, &v1, poly_curve0.into());
++        let edge1 = Edge::new(&v1, &v0, poly_curve1.into());
++        wire![edge0, edge1]
++    }
++
++    /// Find a complete existing trim chain with the same polygonal trace.
++    ///
++    /// Polygons locate topology only. Reused curves must also lie on the other
++    /// exact support. Both directions are checked to exclude a complementary arc.
++    fn boundary_chain<C, S>(
++        polygons: &Loops<Point3, PolylineCurve>,
++        geometry: &Loops<Point3, C>,
++        front: &Vertex<Point3>,
++        back: &Vertex<Point3>,
++        trace: &PolylineCurve,
++        support: &S,
++        tol: f64,
++        work: &mut usize,
++    ) -> Option<Option<(Wire<Point3, PolylineCurve>, Wire<Point3, C>)>>
++    where
++        C: BoundedCurve<Point = Point3> + ParameterDivision1D<Point = Point3> + Clone,
++        S: ShapeOpsSurface,
++    {
++        for (poly, geom) in polygons.iter().zip(geometry.iter()) {
++            if poly.len() != geom.len() {
++                return None;
++            }
++            for reverse in [false, true] {
++                let poly = if reverse {
++                    poly.wire.inverse()
++                } else {
++                    poly.wire.clone()
++                };
++                let geom = if reverse {
++                    geom.wire.inverse()
++                } else {
++                    geom.wire.clone()
++                };
++                for start in 0..poly.len() {
++                    *work = work.checked_sub(1)?;
++                    if poly[start].front() != front {
++                        continue;
++                    }
++                    let length = (0..poly.len())
++                        .position(|offset| poly[(start + offset) % poly.len()].back() == back);
++                    let Some(length) = length.map(|offset| offset + 1) else {
++                        continue;
++                    };
++                    *work = work.checked_sub(length.checked_mul(trace.len())?)?;
++                    let indices = (0..length).map(|offset| (start + offset) % poly.len());
++                    let candidate: Wire<_, _> = indices.clone().map(|i| poly[i].clone()).collect();
++                    let on_trace = candidate.iter().all(|edge| {
++                        edge.curve().windows(2).all(|span| {
++                            [span[0], span[0].midpoint(span[1]), span[1]]
++                                .into_iter()
++                                .all(|point| trace.search_parameter(point, None, 100).is_some())
++                        })
++                    });
++                    let covers_trace = trace.windows(2).all(|span| {
++                        [span[0], span[0].midpoint(span[1]), span[1]]
++                            .into_iter()
++                            .all(|point| {
++                                candidate.iter().any(|edge| {
++                                    edge.curve().search_parameter(point, None, 100).is_some()
++                                })
++                            })
++                    });
++                    if !on_trace || !covers_trace {
++                        continue;
++                    }
++                    let exact: Wire<_, _> = indices.map(|i| geom[i].clone()).collect();
++                    let certified = exact.iter().try_fold(true, |valid, edge| {
++                        let curve = edge.curve();
++                        let (parameters, points) =
++                            curve.parameter_division(curve.range_tuple(), tol);
++                        *work = work.checked_sub(points.len().checked_add(parameters.len())?)?;
++                        Some(
++                            valid
++                                && points
++                                    .into_iter()
++                                    .chain(
++                                        parameters
++                                            .windows(2)
++                                            .map(|span| curve.evaluate((span[0] + span[1]) / 2.0)),
++                                    )
++                                    .all(|point| {
++                                        support.search_parameter(point, None, 100).is_some_and(
++                                            |(u, v)| support.evaluate(u, v).near(&point),
++                                        )
++                                    }),
++                        )
++                    })?;
++                    if certified {
++                        return Some(Some((candidate, exact)));
++                    }
++                }
++            }
++        }
++        Some(None)
++    }
++
++    pub(super) struct LoopsStoreQuadruple<C> {
++        pub(super) geom_loops_store0: LoopsStore<Point3, C>,
++        pub(super) geom_loops_store1: LoopsStore<Point3, C>,
++    }
++
++    pub(super) fn create_loops_stores<C, S>(
++        geom_shell0: &Shell<Point3, C, S>,
++        poly_shell0: &Shell<Point3, PolylineCurve, Option<PolygonMesh>>,
++        geom_shell1: &Shell<Point3, C, S>,
++        poly_shell1: &Shell<Point3, PolylineCurve, Option<PolygonMesh>>,
++        reuse_trims: bool,
++        tol: f64,
++    ) -> Option<LoopsStoreQuadruple<C>>
++    where
++        C: SearchNearestParameter<CurveParameter, Point = Point3>
++            + SearchParameter<CurveParameter, Point = Point3>
++            + Cut<Point = Point3, Vector = Vector3>
++            + From<IntersectionCurve<PolylineCurve, S, S>>
++            + ParameterDivision1D<Point = Point3>,
++        S: ShapeOpsSurface,
++    {
++        let mut geom_loops_store0: LoopsStore<_, _> = geom_shell0.face_iter().collect();
++        let mut poly_loops_store0: LoopsStore<_, _> = poly_shell0.face_iter().collect();
++        let mut geom_loops_store1: LoopsStore<_, _> = geom_shell1.face_iter().collect();
++        let mut poly_loops_store1: LoopsStore<_, _> = poly_shell1.face_iter().collect();
++        let mut work = 32_768_usize;
++        let store0_len = geom_loops_store0.len();
++        let store1_len = geom_loops_store1.len();
++        (0..store0_len)
++            .flat_map(move |i| (0..store1_len).map(move |j| (i, j)))
++            .try_for_each(|(face_index0, face_index1)| {
++                if reuse_trims {
++                    work = work.checked_sub(1)?;
++                }
++                let ori0 = geom_shell0[face_index0].orientation();
++                let ori1 = geom_shell1[face_index1].orientation();
++                let surface0 = geom_shell0[face_index0].surface();
++                let surface1 = geom_shell1[face_index1].surface();
++                // Coincident supports have a two-dimensional overlap, not an SSI curve.
++                // Their trims are cut by adjacent faces and classified after subdivision.
++                if reuse_trims && same_support(&surface0, &surface1) {
++                    return Some(());
++                }
++                let polygon0 = poly_shell0[face_index0].surface()?;
++                let polygon1 = poly_shell1[face_index1].surface()?;
++                if reuse_trims {
++                    let pairs = polygon0
++                        .face_iter()
++                        .count()
++                        .checked_mul(polygon1.face_iter().count())?;
++                    work = work.checked_sub(pairs)?;
++                }
++                intersection_curve::intersection_curves(
++                    surface0.clone(),
++                    &polygon0,
++                    surface1.clone(),
++                    &polygon1,
++                )?
++                .into_iter()
++                .try_for_each(|(polyline, mut intersection_curve)| {
++                    let status = ShapesOpStatus::from_is_curve(&intersection_curve)?;
++                    let (status0, status1) = match (ori0, ori1) {
++                        (true, true) => (status, status.not()),
++                        (true, false) => (status.not(), status.not()),
++                        (false, true) => (status, status),
++                        (false, false) => (status.not(), status),
++                    };
++                    if polyline.front().near(&polyline.back()) {
++                        let poly_wire = create_independent_loop(polyline);
++                        poly_loops_store0[face_index0]
++                            .add_independent_loop(BoundaryWire::new(poly_wire.clone(), status0));
++                        poly_loops_store1[face_index1]
++                            .add_independent_loop(BoundaryWire::new(poly_wire, status1));
++                        let geom_wire = create_independent_loop(intersection_curve);
++                        geom_loops_store0[face_index0]
++                            .add_independent_loop(BoundaryWire::new(geom_wire.clone(), status0));
++                        geom_loops_store1[face_index1]
++                            .add_independent_loop(BoundaryWire::new(geom_wire, status1));
++                    } else {
++                        let pv0 = Vertex::new(polyline.front());
++                        let pv1 = Vertex::new(polyline.back());
++                        let gv0 = Vertex::new(polyline.front());
++                        let gv1 = Vertex::new(polyline.back());
++                        let mut pemap0 = HashMap::default();
++                        let mut pemap1 = HashMap::default();
++                        let mut gemap0 = HashMap::default();
++                        let mut gemap1 = HashMap::default();
++                        let idx00 =
++                            poly_loops_store0.add_polygon_vertex(face_index0, &pv0, &mut pemap0);
++                        if let Some((wire_index, edge_index, kind)) = idx00 {
++                            geom_loops_store0.add_geom_vertex(
++                                (face_index0, wire_index, edge_index),
++                                &gv0,
++                                kind,
++                                &surface1,
++                                &mut gemap0,
++                                reuse_trims,
++                            )?;
++                            let polyline = intersection_curve.leader_mut();
++                            *polyline.first_mut()? = gv0.point();
++                        }
++                        let idx01 =
++                            poly_loops_store0.add_polygon_vertex(face_index0, &pv1, &mut pemap1);
++                        if let Some((wire_index, edge_index, kind)) = idx01 {
++                            geom_loops_store0.add_geom_vertex(
++                                (face_index0, wire_index, edge_index),
++                                &gv1,
++                                kind,
++                                &surface1,
++                                &mut gemap1,
++                                reuse_trims,
++                            )?;
++                            let polyline = intersection_curve.leader_mut();
++                            *polyline.last_mut()? = gv1.point();
++                        }
++                        let idx10 =
++                            poly_loops_store1.add_polygon_vertex(face_index1, &pv0, &mut pemap0);
++                        if let Some((wire_index, edge_index, kind)) = idx10 {
++                            geom_loops_store1.add_geom_vertex(
++                                (face_index1, wire_index, edge_index),
++                                &gv0,
++                                kind,
++                                &surface0,
++                                &mut gemap0,
++                                reuse_trims,
++                            )?;
++                            let polyline = intersection_curve.leader_mut();
++                            *polyline.first_mut()? = gv0.point();
++                        }
++                        let idx11 =
++                            poly_loops_store1.add_polygon_vertex(face_index1, &pv1, &mut pemap1);
++                        if let Some((wire_index, edge_index, kind)) = idx11 {
++                            geom_loops_store1.add_geom_vertex(
++                                (face_index1, wire_index, edge_index),
++                                &gv1,
++                                kind,
++                                &surface0,
++                                &mut gemap1,
++                                reuse_trims,
++                            )?;
++                            let polyline = intersection_curve.leader_mut();
++                            *polyline.last_mut()? = gv1.point();
++                        }
++                        let boundary0 = if reuse_trims {
++                            boundary_chain(
++                                &poly_loops_store0[face_index0],
++                                &geom_loops_store0[face_index0],
++                                &pv0,
++                                &pv1,
++                                &polyline,
++                                &surface1,
++                                tol,
++                                &mut work,
++                            )?
++                        } else {
++                            None
++                        };
++                        let boundary1 = if reuse_trims {
++                            boundary_chain(
++                                &poly_loops_store1[face_index1],
++                                &geom_loops_store1[face_index1],
++                                &pv0,
++                                &pv1,
++                                &polyline,
++                                &surface0,
++                                tol,
++                                &mut work,
++                            )?
++                        } else {
++                            None
++                        };
++                        match (boundary0, boundary1) {
++                            (Some(_), Some(_)) => {
++                                // Both faces already contain this trim. Sewing handles
++                                // any exposed seam after material classification.
++                            }
++                            (Some((poly, geom)), None) => {
++                                poly.into_iter().for_each(|edge| {
++                                    poly_loops_store1[face_index1].add_edge(edge, status1);
++                                });
++                                geom.into_iter().for_each(|edge| {
++                                    geom_loops_store1[face_index1].add_edge(edge, status1);
++                                });
++                            }
++                            (None, Some((poly, geom))) => {
++                                poly.into_iter().for_each(|edge| {
++                                    poly_loops_store0[face_index0].add_edge(edge, status0);
++                                });
++                                geom.into_iter().for_each(|edge| {
++                                    geom_loops_store0[face_index0].add_edge(edge, status0);
++                                });
++                            }
++                            (None, None) => {
++                                let pedge = Edge::new(&pv0, &pv1, polyline);
++                                let gedge = Edge::new(&gv0, &gv1, intersection_curve.into());
++                                poly_loops_store0[face_index0].add_edge(pedge.clone(), status0);
++                                geom_loops_store0[face_index0].add_edge(gedge.clone(), status0);
++                                poly_loops_store1[face_index1].add_edge(pedge, status1);
++                                geom_loops_store1[face_index1].add_edge(gedge, status1);
++                            }
++                        }
++                    }
++                    Some(())
++                })
++            })?;
++        Some(LoopsStoreQuadruple {
++            geom_loops_store0,
++            geom_loops_store1,
++        })
++    }
++}
+ 
+ use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
+ use crate::alternative::Alternative;
+@@ -614,6 +1401,7 @@
+     shell1: &Shell<Point3, C, S>,
+     tol: f64,
+     second_at_infinity: isize,
++    reuse_trims: bool,
+ ) -> Option<([AltCurveShell<C, S>; 2], bool)> {
+     let poly_shell0 = shell0.triangulation(tol);
+     let poly_shell1 = shell1.triangulation(tol);
+@@ -629,11 +1417,21 @@
+             altshell1.face_iter().collect(),
+         )
+     } else {
+-        let stores =
+-            loops_store::create_loops_stores(&altshell0, &poly_shell0, &altshell1, &poly_shell1)?;
++        let stores = loops_store::create_loops_stores(
++            &altshell0,
++            &poly_shell0,
++            &altshell1,
++            &poly_shell1,
++            reuse_trims,
++            tol,
++        )?;
+         (stores.geom_loops_store0, stores.geom_loops_store1)
+     };
+     let mut cls0 = divide_face::divide_faces(&altshell0, &loops_store0, tol)?;
++    if reuse_trims && cls0.and_or_unknown().iter().all(|shell| shell.is_empty()) {
++        // Subdivision must partition a nonempty operand boundary before selection.
++        return None;
++    }
+     if cls0.and_or_unknown()[2]
+         .connected_components()
+         .iter()
+@@ -642,6 +1440,10 @@
+         cls0.integrate_by_component();
+     }
+     let mut cls1 = divide_face::divide_faces(&altshell1, &loops_store1, tol)?;
++    if reuse_trims && cls1.and_or_unknown().iter().all(|shell| shell.is_empty()) {
++        // Subdivision must partition a nonempty operand boundary before selection.
++        return None;
++    }
+     if cls1.and_or_unknown()[2]
+         .connected_components()
+         .iter()
+@@ -649,7 +1451,21 @@
+     {
+         cls1.integrate_by_component();
+     }
+-    let [mut and0, mut or0, unknown0] = cls0.and_or_unknown();
++    let classify = |classification: &faces_classification::FacesClassification<_, _, _>| {
++        let [and, or, unknown] = classification.and_or_unknown();
++        if reuse_trims {
++            // Cut labels describe transverse intersections only. Re-evaluate
++            // every patch when coincident supports participate in an arrangement.
++            [
++                Shell::default(),
++                Shell::default(),
++                and.into_iter().chain(or).chain(unknown).collect(),
++            ]
++        } else {
++            [and, or, unknown]
++        }
++    };
++    let [mut and0, mut or0, unknown0] = classify(&cls0);
+     unknown0.into_iter().try_for_each(|face| {
+         let (point, normal) = interior_point(&face, tol)?;
+         if let Some(same_orientation) =
+@@ -668,7 +1484,7 @@
+         }
+         Some(())
+     })?;
+-    let [mut and1, mut or1, unknown1] = cls1.and_or_unknown();
++    let [mut and1, mut or1, unknown1] = classify(&cls1);
+     unknown1.into_iter().try_for_each(|face| {
+         let (point, normal) = interior_point(&face, tol)?;
+         // The first operand owns coincident patches.
+@@ -683,7 +1499,7 @@
+     })?;
+     and0.append(&mut and1);
+     or0.append(&mut or1);
+-    Some(([and0, or0], contact_arrangement))
++    Some(([and0, or0], contact_arrangement || reuse_trims))
+ }
+ 
+ /// A certified convex planar face, with its material-side orientation.
+@@ -1070,6 +1886,7 @@
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+     operation: Operation,
++    reuse_trims: bool,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+     if !tol.is_finite() || tol <= 0.0 {
+         return Err(ShapeOpsError::InvalidTolerance);
+@@ -1101,7 +1918,7 @@
+         }
+     } else {
+         let ([and_shell, or_shell], contacts) =
+-            process_one_pair_of_shells(&shell0, &shell1, tol, at_infinity)
++            process_one_pair_of_shells(&shell0, &shell1, tol, at_infinity, reuse_trims)
+                 .ok_or(ShapeOpsError::EmptyOutputShell { operation: name })?;
+         let selected = match operation {
+             Operation::Union => or_shell,
+@@ -1126,13 +1943,36 @@
+     tol: f64,
+     operation: Operation,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+-    boolean_classic(solid0, solid1, tol, operation).or_else(|error| {
+-        if tol.is_finite() && tol > 0.0 {
+-            planar_boolean(solid0, solid1, operation).ok_or(error)
+-        } else {
+-            Err(error)
+-        }
+-    })
++    boolean_classic(solid0, solid1, tol, operation, false)
++        .or_else(|error| {
++            if tol.is_finite() && tol > 0.0 {
++                planar_boolean(solid0, solid1, operation).ok_or(error)
++            } else {
++                Err(error)
++            }
++        })
++        .or_else(|error| {
++            if !tol.is_finite() || tol <= 0.0 {
++                return Err(error);
++            }
++            let faces0: Vec<_> = solid0.face_iter().collect();
++            let faces1: Vec<_> = solid1.face_iter().collect();
++            let bounded = faces0
++                .len()
++                .checked_mul(faces1.len())
++                .is_some_and(|pairs| pairs <= 4096);
++            let shared_support = bounded
++                && faces0.iter().any(|a| {
++                    faces1
++                        .iter()
++                        .any(|b| same_support(&a.surface(), &b.surface()))
++                });
++            if shared_support {
++                boolean_classic(solid0, solid1, tol, operation, true)
++            } else {
++                Err(error)
++            }
++        })
+ }
+ 
+ /// AND operation between two solids (classic backend).

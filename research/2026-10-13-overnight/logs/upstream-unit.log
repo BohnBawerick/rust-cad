@@ -1,0 +1,64 @@
+   Compiling monstertruck-solid v0.4.1 (/workspace/lab/kernel/source/monstertruck-solid)
+warning: unnecessary qualification
+    --> monstertruck-solid/src/transversal/classic/mod.rs:2614:54
+     |
+2614 |                 loops_store::BoundaryWire::new(wire, loops_store::ShapesOpStatus::And)
+     |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+note: the lint level is defined here
+    --> monstertruck-solid/src/lib.rs:41:5
+     |
+  41 |     unused_qualifications
+     |     ^^^^^^^^^^^^^^^^^^^^^
+help: remove the unnecessary path segments
+     |
+2614 -                 loops_store::BoundaryWire::new(wire, loops_store::ShapesOpStatus::And)
+2614 +                 loops_store::BoundaryWire::new(wire, ShapesOpStatus::And)
+     |
+
+warning: unnecessary qualification
+    --> monstertruck-solid/src/transversal/classic/mod.rs:2620:24
+     |
+2620 |         let mut store: loops_store::LoopsStore<_, _> = iter::once(cap).collect();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2620 -         let mut store: loops_store::LoopsStore<_, _> = iter::once(cap).collect();
+2620 +         let mut store: LoopsStore<_, _> = iter::once(cap).collect();
+     |
+
+warning: `monstertruck-solid` (lib test) generated 2 warnings (run `cargo fix --lib -p monstertruck-solid --tests` to apply 2 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.91s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (lab/upstream-target/debug/deps/monstertruck_solid-3d65b8f57865d527)
+
+running 9 tests
+test transversal::integrate::tests::boolean_matrix_and_crossing_cubes ... ok
+test transversal::integrate::tests::adjacent_cubes_or ... FAILED
+test transversal::integrate::tests::cube_clip_high_z ... ok
+test transversal::integrate::tests::cube_clip_high_z_flip ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive0 ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive1 ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive2 ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive3 ... ok
+test transversal::integrate::tests::punched_cube ... ok
+
+failures:
+
+---- transversal::integrate::tests::adjacent_cubes_or stdout ----
+
+thread 'transversal::integrate::tests::adjacent_cubes_or' (4121718) panicked at monstertruck-solid/src/transversal/integrate/tests.rs:41:5:
+assertion `left == right` failed
+  left: 30
+ right: 12
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    transversal::integrate::tests::adjacent_cubes_or
+
+test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.87s
+
+error: test failed, to rerun pass `-p monstertruck-solid --lib`

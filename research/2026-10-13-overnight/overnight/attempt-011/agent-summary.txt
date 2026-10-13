@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate adds a fallback for failed shared-cap operations. Certified supporting planes cannot cut either solid’s interior, so selected side boundaries determine the cap regions. Rebuilding caps with those exact edges avoids duplicate rim cuts and preserves shared topology.
+
+Classification uses all original oriented shells. Existing disjoint, containment, and planar paths retain precedence.
+
+Expected scope: transverse curved overlaps with common planar caps. Remaining risks include marching failures, sampled hole nesting, and conversion-domain assumptions. Pure tangencies are declined.
+
+Formatted and checked patch whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

@@ -1,0 +1,125 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -28,6 +28,8 @@
+ //!   only new transverse generators require intersection-curve assembly.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
++//! - Missing classification meshes can retry parameter inversion, provided every
++//!   recovered mesh vertex lies on its exact support. Shared edge identity is retained.
+ //! - Failed assembly can reconstruct all nested trim loops, retaining small
+ //!   chart regions and assigning each hole to its immediate containing boundary.
+ //! - Failed intersection fits can retain exact rational sections of certified
+@@ -55,6 +57,75 @@
+ type AltCurve<C, S> = Alternative<C, IntersectionCurve<PolylineCurve<Point3>, S, S>>;
+ type AltCurveShell<C, S> = Shell<Point3, AltCurve<C, S>, S>;
+ type PolyShell = Shell<Point3, PolylineCurve<Point3>, Option<PolygonMesh>>;
++
++/// Retry a failed inverse query without relaxing geometric membership.
++///
++/// A nearest-parameter query can converge when the strict inverse solver fails.
++/// Its result is usable as an inverse only if evaluation recovers the input point.
++fn boundary_parameter<S: ShapeOpsSurface>(
++    surface: &S,
++    point: Point3,
++    hint: Option<(f64, f64)>,
++) -> Option<(f64, f64)> {
++    surface.search_parameter(point, hint, 100).or_else(|| {
++        surface
++            .search_nearest_parameter(point, hint, 100)
++            .filter(|&(u, v)| u.is_finite() && v.is_finite() && surface.evaluate(u, v).near(&point))
++    })
++}
++
++/// Recover missing face meshes while preserving the common boundary discretization.
++///
++/// Winding classification and intersection seeding require every boundary face.
++/// Retry only faces whose strict tessellation failed, using the same tolerance.
++/// A nearest-point mesh is accepted only when all its referenced coordinates
++/// evaluate back to the original support with the kernel's membership predicate.
++/// Copying only the polygon surface retains shared polyline edges, face order,
++/// and orientation. These meshes never replace exact output curves or surfaces.
++fn classification_mesh<C, S>(shell: &Shell<Point3, C, S>, tol: f64) -> Option<PolyShell>
++where
++    C: ParametricCurve3D + BoundedCurve + ParameterDivision1D<Point = Point3> + Send + Sync,
++    S: ShapeOpsSurface,
++{
++    let meshed = shell.triangulation(tol);
++    let mut work = 65_536_usize;
++    let mut recoveries = 32_usize;
++    shell.iter().zip(&meshed).try_for_each(|(face, polygon)| {
++        if polygon.surface().is_some() {
++            return Some(());
++        }
++        recoveries = recoveries.checked_sub(1)?;
++        let patch: Shell<Point3, C, S> = iter::once(face.clone()).collect();
++        let recovered = patch.robust_triangulation(tol);
++        let mesh = recovered.first()?.surface()?;
++        if mesh.face_iter().next().is_none() {
++            return None;
++        }
++        let surface = face.surface();
++        mesh.face_iter().try_for_each(|vertices| {
++            work = work.checked_sub(vertices.len())?;
++            vertices.iter().try_for_each(|vertex| {
++                let point = mesh.positions().get(vertex.pos)?;
++                let uv = mesh.uv_coords().get(vertex.uv?)?;
++                (uv.x.is_finite() && uv.y.is_finite() && surface.evaluate(uv.x, uv.y).near(point))
++                    .then_some(())
++            })
++        })?;
++        // The retained edges are those tessellated jointly for the whole shell.
++        // Check their samples as well, including any omitted by triangulation.
++        polygon.edge_iter().try_for_each(|edge| {
++            let curve = edge.curve();
++            work = work.checked_sub(curve.len())?;
++            let _ = curve.iter().try_fold(None, |hint, point| {
++                boundary_parameter(&surface, *point, hint).map(Some)
++            })?;
++            Some(())
++        })?;
++        polygon.set_surface(Some(mesh));
++        Some(())
++    })?;
++    Some(meshed)
++}
+ 
+ /// Check a leader on both exact supports using continuation in parameter space.
+ ///
+@@ -338,7 +409,7 @@
+     tol: f64,
+ ) -> Option<(Point3, Vector3)> {
+     let shell: AltCurveShell<C, S> = iter::once(face.clone()).collect();
+-    let meshed = shell.triangulation(tol);
++    let meshed = classification_mesh(&shell, tol)?;
+     let mesh = meshed.first()?.surface()?;
+     let triangle = mesh
+         .face_iter()
+@@ -813,7 +884,7 @@
+                 }
+                 projections = projections.checked_sub(1)?;
+                 let front = wire.front_vertex()?.point();
+-                let first = surface.search_parameter(front, None, 100)?;
++                let first = boundary_parameter(&surface, front, None)?;
+                 let mut hint = first;
+                 let mut points = vec![Point2::from(first)];
+                 wire.iter().try_for_each(|edge| {
+@@ -828,7 +899,7 @@
+                         } else {
+                             poly.len() - 1 - index
+                         };
+-                        hint = surface.search_parameter(poly[index], Some(hint), 100)?;
++                        hint = boundary_parameter(&surface, poly[index], Some(hint))?;
+                         if !hint.0.is_finite() || !hint.1.is_finite() {
+                             return None;
+                         }
+@@ -983,8 +1054,8 @@
+     tol: f64,
+     second_at_infinity: isize,
+ ) -> Option<impl Fn(FaceDivision) -> Option<([AltCurveShell<C, S>; 2], bool)>> {
+-    let poly_shell0 = shell0.triangulation(tol);
+-    let poly_shell1 = shell1.triangulation(tol);
++    let poly_shell0 = classification_mesh(&shell0, tol)?;
++    let poly_shell1 = classification_mesh(&shell1, tol)?;
+     let altshell0: AltCurveShell<C, S> =
+         shell0.mapped(|x| *x, |c| Alternative::FirstType(c.clone()), Clone::clone);
+     let altshell1: AltCurveShell<C, S> =

@@ -1,0 +1,488 @@
+{
+  "attempts": 69,
+  "keeps": 12,
+  "kept_attempts": [
+    3,
+    4,
+    6,
+    9,
+    10,
+    20,
+    27,
+    30,
+    43,
+    46,
+    58,
+    59
+  ],
+  "dispositions": {
+    "regression_or_no_gain": 52,
+    "operator_veto_new_timeouts": 1,
+    "improved_without_regression": 12,
+    "build_failed": 3,
+    "agent_timeout_or_failure": 1
+  },
+  "patch_replay_matches": true,
+  "final_source_sha256": "236db6d3833ce9c5ff61c1a8bafd8020b6f5d9f4814e75dd01acde4a0b90f206",
+  "final_patch_sha256": "2c26c8673b8c2e51eb5152ed3ebfcfecfe09d592e4981064fa6b0bb48c36d6a7",
+  "kept_public_regressions": [],
+  "kept_private_regressions": [],
+  "metrics": {
+    "public": {
+      "before": {
+        "passed": 108,
+        "total": 318,
+        "score": 48.20122670441142,
+        "groups": {
+          "boxes": {
+            "passed": 40,
+            "total": 157
+          },
+          "cylinders": {
+            "passed": 26,
+            "total": 78
+          },
+          "extrude": {
+            "passed": 13,
+            "total": 13
+          },
+          "revolve": {
+            "passed": 0,
+            "total": 13
+          },
+          "fillet": {
+            "passed": 0,
+            "total": 14
+          },
+          "chamfer": {
+            "passed": 13,
+            "total": 13
+          },
+          "holes": {
+            "passed": 0,
+            "total": 13
+          },
+          "patterns": {
+            "passed": 13,
+            "total": 13
+          },
+          "step": {
+            "passed": 3,
+            "total": 4
+          }
+        }
+      },
+      "after": {
+        "passed": 290,
+        "total": 318,
+        "score": 75.0,
+        "groups": {
+          "boxes": {
+            "passed": 157,
+            "total": 157
+          },
+          "cylinders": {
+            "passed": 78,
+            "total": 78
+          },
+          "extrude": {
+            "passed": 13,
+            "total": 13
+          },
+          "revolve": {
+            "passed": 0,
+            "total": 13
+          },
+          "fillet": {
+            "passed": 0,
+            "total": 14
+          },
+          "chamfer": {
+            "passed": 13,
+            "total": 13
+          },
+          "holes": {
+            "passed": 13,
+            "total": 13
+          },
+          "patterns": {
+            "passed": 13,
+            "total": 13
+          },
+          "step": {
+            "passed": 3,
+            "total": 4
+          }
+        }
+      },
+      "failures": [
+        {
+          "id": "public-235",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "public-236",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-241",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "public-242",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-247",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "public-248",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-253",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "public-254",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-259",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "public-260",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-265",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "public-266",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-271",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "public-272",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-277",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "public-278",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-283",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "public-284",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-289",
+          "group": "revolve",
+          "reasons": [
+            "area",
+            "centroid",
+            "mesh_closure",
+            "volume"
+          ]
+        },
+        {
+          "id": "public-290",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-295",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "public-296",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-301",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "public-302",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-307",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "public-308",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-316",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "public-317",
+          "group": "step",
+          "reasons": [
+            "empty_success"
+          ]
+        }
+      ]
+    },
+    "heldout": {
+      "before": {
+        "passed": 33,
+        "total": 102,
+        "score": 48.856209150326805,
+        "groups": {
+          "boxes": {
+            "passed": 16,
+            "total": 51
+          },
+          "cylinders": {
+            "passed": 2,
+            "total": 24
+          },
+          "extrude": {
+            "passed": 4,
+            "total": 4
+          },
+          "revolve": {
+            "passed": 0,
+            "total": 4
+          },
+          "fillet": {
+            "passed": 0,
+            "total": 4
+          },
+          "chamfer": {
+            "passed": 4,
+            "total": 4
+          },
+          "holes": {
+            "passed": 0,
+            "total": 4
+          },
+          "patterns": {
+            "passed": 4,
+            "total": 4
+          },
+          "step": {
+            "passed": 3,
+            "total": 3
+          }
+        }
+      },
+      "after": {
+        "passed": 91,
+        "total": 102,
+        "score": 76.63398692810456,
+        "groups": {
+          "boxes": {
+            "passed": 50,
+            "total": 51
+          },
+          "cylinders": {
+            "passed": 22,
+            "total": 24
+          },
+          "extrude": {
+            "passed": 4,
+            "total": 4
+          },
+          "revolve": {
+            "passed": 0,
+            "total": 4
+          },
+          "fillet": {
+            "passed": 0,
+            "total": 4
+          },
+          "chamfer": {
+            "passed": 4,
+            "total": 4
+          },
+          "holes": {
+            "passed": 4,
+            "total": 4
+          },
+          "patterns": {
+            "passed": 4,
+            "total": 4
+          },
+          "step": {
+            "passed": 3,
+            "total": 3
+          }
+        }
+      },
+      "failures": [
+        {
+          "id": "heldout-007",
+          "group": "boxes",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "heldout-072",
+          "group": "cylinders",
+          "reasons": [
+            "error:invalid output shell for `difference`: This shell is not oriented and closed.."
+          ]
+        },
+        {
+          "id": "heldout-074",
+          "group": "cylinders",
+          "reasons": [
+            "error:invalid output shell for `and`: This shell is not oriented and closed.."
+          ]
+        },
+        {
+          "id": "heldout-076",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "heldout-077",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "heldout-082",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "heldout-083",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "heldout-088",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "heldout-089",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        },
+        {
+          "id": "heldout-094",
+          "group": "revolve",
+          "reasons": [
+            "mesh_closure"
+          ]
+        },
+        {
+          "id": "heldout-095",
+          "group": "fillet",
+          "reasons": [
+            "geometric_consistency"
+          ]
+        }
+      ]
+    }
+  }
+}

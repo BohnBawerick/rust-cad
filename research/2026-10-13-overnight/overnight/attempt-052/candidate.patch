@@ -1,0 +1,133 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -30,6 +30,8 @@
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
+ //! - Failed assembly can reconstruct all nested trim loops, retaining small
+ //!   chart regions and assigning each hole to its immediate containing boundary.
++//! - Face division audits directed trim incidences, recovering omitted loops
++//!   locally before a closed or empty partial boundary can appear successful.
+ //! - Failed intersection fits can retain exact rational sections of certified
+ //!   translational supports, including oblique cuts by planar supports.
+ 
+@@ -48,7 +50,7 @@
+ use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
+ use crate::alternative::Alternative;
+ use faces_classification::FacesClassification;
+-use loops_store::{LoopsStore, ShapesOpStatus};
++use loops_store::{Loops, LoopsStore, ShapesOpStatus};
+ 
+ type ClassicResult<T> = std::result::Result<T, ShapeOpsError>;
+ 
+@@ -956,6 +958,86 @@
+     Some(result)
+ }
+ 
++/// Check that division retained every directed trim incidence of one face.
++///
++/// Internal cuts occur twice, with opposite directions. Counting directions
++/// separately detects the loss of both sides of a small region, which a signed
++/// boundary sum would miss. Absolute boundaries use the support's orientation,
++/// so inward cavity faces obey the same invariant as outward faces.
++fn division_preserves_trims<C, S>(
++    loops: &Loops<Point3, C>,
++    divided: &FacesClassification<Point3, C, S>,
++) -> bool {
++    let count = |mut counts: HashMap<(EdgeId<C>, bool), usize>, edge: &Edge<Point3, C>| {
++        *counts.entry((edge.id(), edge.orientation())).or_default() += 1;
++        counts
++    };
++    let expected = loops
++        .iter()
++        .flat_map(|wire| wire.iter())
++        .fold(HashMap::default(), count);
++    let actual = divided
++        .and_or_unknown()
++        .iter()
++        .flat_map(|shell| shell.iter())
++        .flat_map(|face| face.absolute_boundaries().iter())
++        .flat_map(|wire| wire.iter())
++        .fold(HashMap::default(), count);
++    expected == actual
++}
++
++/// Recover incomplete divisions locally, before classifying their output.
++///
++/// The classic divider can discard a chart region whose area is below the
++/// spatial tolerance, or leave an untouched face with stale unsplit edges.
++/// Neither defect necessarily prevents the selected result from being closed.
++/// A complete nested reconstruction can repair that face while other faces
++/// retain their established division, including their periodic charts.
++fn conservative_division<C, S>(
++    shell: &Shell<Point3, C, S>,
++    store: &LoopsStore<Point3, C>,
++    tol: f64,
++) -> Option<FacesClassification<Point3, C, S>>
++where
++    C: BoundedCurve<Point = Point3> + ParameterDivision1D<Point = Point3> + Clone,
++    S: ShapeOpsSurface,
++{
++    if shell.len() != store.len() {
++        return None;
++    }
++    let mut result = FacesClassification::default();
++    shell.iter().zip(store).try_for_each(|(face, loops)| {
++        let local_shell = iter::once(face.clone()).collect();
++        let mut local_store: LoopsStore<_, _> = iter::once(face).collect();
++        local_store[0] = loops.clone();
++        let classic = divide_face::divide_faces(&local_shell, &local_store, tol);
++        let divided = if classic
++            .as_ref()
++            .is_some_and(|divided| division_preserves_trims(loops, divided))
++        {
++            classic
++        } else {
++            // Coincident loops can legitimately cancel. Only replace the
++            // established division when a complete reconstruction succeeds.
++            nested_division(&local_shell, &local_store, tol)
++                .filter(|divided| division_preserves_trims(loops, divided))
++                .or(classic)
++        }?;
++        [
++            ShapesOpStatus::And,
++            ShapesOpStatus::Or,
++            ShapesOpStatus::Unknown,
++        ]
++        .into_iter()
++        .zip(divided.and_or_unknown())
++        .for_each(|(status, faces)| {
++            faces.into_iter().for_each(|face| result.push(face, status));
++        });
++        Some(())
++    })?;
++    Some(result)
++}
++
+ fn divide_boundary_faces<C, S>(
+     shell: &Shell<Point3, C, S>,
+     store: &LoopsStore<Point3, C>,
+@@ -967,7 +1049,7 @@
+     S: ShapeOpsSurface,
+ {
+     match division {
+-        FaceDivision::Classic => divide_face::divide_faces(shell, store, tol),
++        FaceDivision::Classic => conservative_division(shell, store, tol),
+         FaceDivision::Nested => nested_division(shell, store, tol),
+     }
+ }
+@@ -2343,13 +2425,13 @@
+                 } else {
+                     wire.clone()
+                 };
+-                loops_store::BoundaryWire::new(wire, loops_store::ShapesOpStatus::And)
++                loops_store::BoundaryWire::new(wire, ShapesOpStatus::And)
+             })
+-            .collect::<loops_store::Loops<_, _>>();
++            .collect::<Loops<_, _>>();
+         if wires.is_empty() {
+             return None;
+         }
+-        let mut store: loops_store::LoopsStore<_, _> = iter::once(cap).collect();
++        let mut store: LoopsStore<_, _> = iter::once(cap).collect();
+         store[0] = wires;
+         let cap_shell = iter::once(cap.clone()).collect();
+         let [mut divided, _, _] =

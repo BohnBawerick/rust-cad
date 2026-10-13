@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Reapplied attempt 49, fixed the reported borrow error, and removed both reported redundant qualifications.
+
+The hypothesis remains: signed winding classification requires complete oriented boundaries. Failed parameter inversion can retry nearest-parameter search, accepting recovered coordinates only when they evaluate onto the original surface. Exact output geometry, shared edges, and shell orientations remain intact.
+
+Expected scope: general supported solids with classification-mesh or trim-inversion failures. Periodic charts, recovery runtime, and touching-union mesh closure remain unresolved risks.
+
+Formatted and checked whitespace. No builds, tests, or commits performed.

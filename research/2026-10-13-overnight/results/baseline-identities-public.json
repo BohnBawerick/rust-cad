@@ -1,0 +1,692 @@
+{
+  "total": 78,
+  "passed": 4,
+  "operation_failed": 48,
+  "identity_failed": 26,
+  "rows": [
+    {
+      "ids": [
+        "public-000",
+        "public-001",
+        "public-002"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -270.6281161684713,
+      "union_plus_intersection_error": -1.1368683772161603e-13
+    },
+    {
+      "ids": [
+        "public-003",
+        "public-004",
+        "public-005"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-006",
+        "public-007",
+        "public-008"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-009",
+        "public-010",
+        "public-011"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-012",
+        "public-013",
+        "public-014"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-015",
+        "public-016",
+        "public-017"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-018",
+        "public-019",
+        "public-020"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-021",
+        "public-022",
+        "public-023"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-024",
+        "public-025",
+        "public-026"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -0.519564318095736,
+      "union_plus_intersection_error": 2.220446049250313e-16
+    },
+    {
+      "ids": [
+        "public-027",
+        "public-028",
+        "public-029"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-030",
+        "public-031",
+        "public-032"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -322.25430510230484,
+      "union_plus_intersection_error": -1.1368683772161603e-13
+    },
+    {
+      "ids": [
+        "public-033",
+        "public-034",
+        "public-035"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 2.7755575615628914e-17,
+      "union_plus_intersection_error": 5.551115123125783e-17
+    },
+    {
+      "ids": [
+        "public-036",
+        "public-037",
+        "public-038"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-039",
+        "public-040",
+        "public-041"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-042",
+        "public-043",
+        "public-044"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-045",
+        "public-046",
+        "public-047"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-048",
+        "public-049",
+        "public-050"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -3.1210220230893952,
+      "union_plus_intersection_error": 1.7763568394002505e-15
+    },
+    {
+      "ids": [
+        "public-051",
+        "public-052",
+        "public-053"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-054",
+        "public-055",
+        "public-056"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-057",
+        "public-058",
+        "public-059"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-060",
+        "public-061",
+        "public-062"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-063",
+        "public-064",
+        "public-065"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-066",
+        "public-067",
+        "public-068"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-069",
+        "public-070",
+        "public-071"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -5.899898844782432,
+      "union_plus_intersection_error": 7.105427357601002e-15
+    },
+    {
+      "ids": [
+        "public-072",
+        "public-073",
+        "public-074"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 2.220446049250313e-16,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-075",
+        "public-076",
+        "public-077"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-078",
+        "public-079",
+        "public-080"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-081",
+        "public-082",
+        "public-083"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-084",
+        "public-085",
+        "public-086"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-087",
+        "public-088",
+        "public-089"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -39.41771673840741,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-090",
+        "public-091",
+        "public-092"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-093",
+        "public-094",
+        "public-095"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-096",
+        "public-097",
+        "public-098"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-099",
+        "public-100",
+        "public-101"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-102",
+        "public-103",
+        "public-104"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -0.5377299089427836,
+      "union_plus_intersection_error": 2.220446049250313e-16
+    },
+    {
+      "ids": [
+        "public-105",
+        "public-106",
+        "public-107"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-108",
+        "public-109",
+        "public-110"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -0.44883407092405114,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-111",
+        "public-112",
+        "public-113"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 4.440892098500626e-16,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-114",
+        "public-115",
+        "public-116"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-117",
+        "public-118",
+        "public-119"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -272.68650074134916,
+      "union_plus_intersection_error": 1.1368683772161603e-13
+    },
+    {
+      "ids": [
+        "public-120",
+        "public-121",
+        "public-122"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-123",
+        "public-124",
+        "public-125"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-126",
+        "public-127",
+        "public-128"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -672.1438323413183,
+      "union_plus_intersection_error": -2.2737367544323206e-13
+    },
+    {
+      "ids": [
+        "public-129",
+        "public-130",
+        "public-131"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-132",
+        "public-133",
+        "public-134"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-135",
+        "public-136",
+        "public-137"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-138",
+        "public-139",
+        "public-140"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-141",
+        "public-142",
+        "public-143"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -4.040820193693065,
+      "union_plus_intersection_error": 1.7763568394002505e-15
+    },
+    {
+      "ids": [
+        "public-144",
+        "public-145",
+        "public-146"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-147",
+        "public-148",
+        "public-149"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -28.985698880089405,
+      "union_plus_intersection_error": 3.552713678800501e-14
+    },
+    {
+      "ids": [
+        "public-150",
+        "public-151",
+        "public-152"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 2.6645352591003757e-15,
+      "union_plus_intersection_error": 5.329070518200751e-15
+    },
+    {
+      "ids": [
+        "public-153",
+        "public-154",
+        "public-155"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-156",
+        "public-157",
+        "public-158"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-159",
+        "public-160",
+        "public-161"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -1.2614056560729037,
+      "union_plus_intersection_error": -0.0010833583984917183
+    },
+    {
+      "ids": [
+        "public-162",
+        "public-163",
+        "public-164"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-165",
+        "public-166",
+        "public-167"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -2.2818175113702566,
+      "union_plus_intersection_error": -0.0019597392422880944
+    },
+    {
+      "ids": [
+        "public-168",
+        "public-169",
+        "public-170"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -2.7717783264689304,
+      "union_plus_intersection_error": -0.0023805421469029753
+    },
+    {
+      "ids": [
+        "public-171",
+        "public-172",
+        "public-173"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-174",
+        "public-175",
+        "public-176"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -0.7723207382609975,
+      "union_plus_intersection_error": -0.0008210946568614208
+    },
+    {
+      "ids": [
+        "public-177",
+        "public-178",
+        "public-179"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-180",
+        "public-181",
+        "public-182"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -1.6577644881255824,
+      "union_plus_intersection_error": -0.0014237712286080395
+    },
+    {
+      "ids": [
+        "public-183",
+        "public-184",
+        "public-185"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-186",
+        "public-187",
+        "public-188"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-189",
+        "public-190",
+        "public-191"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -2.693352769108742,
+      "union_plus_intersection_error": -0.002313186347461915
+    },
+    {
+      "ids": [
+        "public-192",
+        "public-193",
+        "public-194"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -3.804898930920418,
+      "union_plus_intersection_error": -0.003267837901503867
+    },
+    {
+      "ids": [
+        "public-195",
+        "public-196",
+        "public-197"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-198",
+        "public-199",
+        "public-200"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-201",
+        "public-202",
+        "public-203"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -1.7835207171255205,
+      "union_plus_intersection_error": -0.0015317769809195525
+    },
+    {
+      "ids": [
+        "public-204",
+        "public-205",
+        "public-206"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -2.6332378181223097,
+      "union_plus_intersection_error": -0.002261556614726601
+    },
+    {
+      "ids": [
+        "public-207",
+        "public-208",
+        "public-209"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-210",
+        "public-211",
+        "public-212"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -4.808320379634731,
+      "union_plus_intersection_error": -0.0041296265322881
+    },
+    {
+      "ids": [
+        "public-213",
+        "public-214",
+        "public-215"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -1.4319232754880626,
+      "union_plus_intersection_error": -0.001229807476179623
+    },
+    {
+      "ids": [
+        "public-216",
+        "public-217",
+        "public-218"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-219",
+        "public-220",
+        "public-221"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -0.9821508200266194,
+      "union_plus_intersection_error": -0.0008435203490764209
+    },
+    {
+      "ids": [
+        "public-222",
+        "public-223",
+        "public-224"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-225",
+        "public-226",
+        "public-227"
+      ],
+      "verdict": "operation_failed"
+    },
+    {
+      "ids": [
+        "public-228",
+        "public-229",
+        "public-230"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -4.284302220989903,
+      "union_plus_intersection_error": -0.003679573473736042
+    },
+    {
+      "ids": [
+        "public-231",
+        "public-232",
+        "public-233"
+      ],
+      "verdict": "identity_failed",
+      "difference_plus_intersection_error": -3.2081883028337943,
+      "union_plus_intersection_error": -0.0027553529073749417
+    }
+  ]
+}

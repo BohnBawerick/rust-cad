@@ -1,0 +1,87 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -28,6 +28,8 @@
+ //!   only new transverse generators require intersection-curve assembly.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
++//! - Unpartitioned faces retain shared-edge refinements from the intersection
++//!   loop store before component classification and shell assembly.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -42,6 +44,8 @@
+ use rustc_hash::FxHashMap as HashMap;
+ use smallvec::SmallVec;
+ use std::iter;
++
++use self::loops_store::{LoopsStore, ShapesOpStatus};
+ 
+ type ClassicResult<T> = std::result::Result<T, ShapeOpsError>;
+ 
+@@ -613,6 +617,57 @@
+         .collect()
+ }
+ 
++/// Carry inherited trim refinements into faces that need no interior division.
++///
++/// [`divide_face::divide_faces`] preserves the supplied face when every loop
++/// has unknown status. However, inserting an intersection endpoint updates the
++/// [`LoopsStore`] on both incident faces, even if only one face is partitioned.
++/// Reusing the original face would discard the other incidence of that split.
++/// Reconstruct only loops consisting of inherited trims; unresolved intersection
++/// slits still belong to the division pipeline. Absolute wire orientation and
++/// the original surface are retained, including reversed cavity faces.
++fn refined_unpartitioned_faces<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: &AltCurveShell<C, S>,
++    loops_store: &LoopsStore<Point3, AltCurve<C, S>>,
++) -> Option<AltCurveShell<C, S>> {
++    if shell.len() != loops_store.len() {
++        return None;
++    }
++    shell
++        .iter()
++        .zip(loops_store)
++        .map(|(face, loops)| {
++            let boundaries = face.absolute_boundaries();
++            let unchanged = loops.len() == boundaries.len()
++                && loops
++                    .iter()
++                    .zip(boundaries)
++                    .all(|(wire, original)| wire.iter().eq(original.iter()));
++            let inherited = !unchanged
++                && loops.len() == boundaries.len()
++                && loops.iter().all(|wire| {
++                    wire.status() == ShapesOpStatus::Unknown
++                        && wire
++                            .iter()
++                            .all(|edge| matches!(edge.curve(), Alternative::FirstType(_)))
++                });
++            if inherited {
++                let boundaries = loops
++                    .iter()
++                    .map(|wire| wire.iter().cloned().collect())
++                    .collect();
++                let mut refined = Face::try_new(boundaries, face.surface()).ok()?;
++                if !face.orientation() {
++                    refined.invert();
++                }
++                Some(refined)
++            } else {
++                Some(face.clone())
++            }
++        })
++        .collect()
++}
++
+ /// Split the combined boundaries into intersection and union boundaries.
+ ///
+ /// All shells of an operand participate in the same winding query. They are
+@@ -642,6 +697,8 @@
+             loops_store::create_loops_stores(&altshell0, &poly_shell0, &altshell1, &poly_shell1)?;
+         (stores.geom_loops_store0, stores.geom_loops_store1)
+     };
++    let altshell0 = refined_unpartitioned_faces(&altshell0, &loops_store0)?;
++    let altshell1 = refined_unpartitioned_faces(&altshell1, &loops_store1)?;
+     let mut cls0 = divide_face::divide_faces(&altshell0, &loops_store0, tol)?;
+     if cls0.and_or_unknown()[2]
+         .connected_components()

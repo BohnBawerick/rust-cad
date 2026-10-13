@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate preserves shared-edge refinements on unpartitioned faces before classification. Both incident faces must retain matching subdivisions for their oriented boundaries to cancel. Original curves, surfaces, and cavity orientations remain intact.
+
+This repair applies to general supported solids. Missing intersections, unresolved intersection slits, and touching-solid mesh closure remain risks.
+
+Formatted and checked whitespace. No builds, tests, or commits were performed.

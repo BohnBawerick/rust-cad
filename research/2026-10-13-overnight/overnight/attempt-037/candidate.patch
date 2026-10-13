@@ -1,0 +1,170 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -28,6 +28,8 @@
+ //!   only new transverse generators require intersection-curve assembly.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
++//! - Failed seam assembly refines open trims to a common endpoint partition
++//!   before sewing, preserving the original curves and oriented faces.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -611,6 +613,136 @@
+             Some(rebuilt)
+         })
+         .collect()
++}
++
++/// Refine open seams to a common partition before matching complete trims.
++///
++/// Two adjacent faces can retain different subdivisions of the same boundary.
++/// An edge then has no whole-edge partner even though its subintervals do.
++/// Cut only edges with one incident face, using parameters recovered on their
++/// original curves. Closed seams and components retain their input topology.
++/// Sewing still requires unique, oppositely oriented geometric partners for
++/// every open interval; isolated contacts cannot fill a missing face.
++fn refine_open_seams<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: &Shell<Point3, C, S>,
++    tol: f64,
++) -> Option<Shell<Point3, C, S>> {
++    let mut work = 65_536_usize;
++    let mut incidence = HashMap::default();
++    shell.edge_iter().try_for_each(|edge| {
++        work = work.checked_sub(1)?;
++        let entry = incidence.entry(edge.id()).or_insert((0_usize, 0_isize));
++        entry.0 += 1;
++        entry.1 += if edge.orientation() { 1 } else { -1 };
++        Some(())
++    })?;
++    if incidence
++        .values()
++        .any(|&(count, winding)| count > 2 || (count == 2 && winding != 0))
++    {
++        return None;
++    }
++    let boundary = shell
++        .edge_iter()
++        .filter(|edge| {
++            incidence
++                .get(&edge.id())
++                .is_some_and(|&(count, _)| count == 1)
++        })
++        .collect::<Vec<_>>();
++    if boundary.is_empty() || boundary.len() > 256 {
++        return None;
++    }
++    let endpoints = boundary
++        .iter()
++        .flat_map(|edge| [edge.front().point(), edge.back().point()])
++        .collect::<Vec<_>>();
++    let mut replacements = HashMap::default();
++    let mut intervals = 0_usize;
++    boundary.iter().try_for_each(|edge| {
++        let curve = edge.curve();
++        let (start, end) = curve.range_tuple();
++        if !start.is_finite() || !end.is_finite() || start >= end {
++            return None;
++        }
++        work = work.checked_sub(endpoints.len())?;
++        let mut divisions = iter::once((start, edge.absolute_front().clone()))
++            .chain(endpoints.iter().filter_map(|point| {
++                if point.near(&edge.absolute_front().point())
++                    || point.near(&edge.absolute_back().point())
++                {
++                    return None;
++                }
++                let parameter = sweep_parameter(&curve, *point)?;
++                (parameter > start && parameter < end).then(|| (parameter, Vertex::new(*point)))
++            }))
++            .chain(iter::once((end, edge.absolute_back().clone())))
++            .collect::<Vec<_>>();
++        divisions.sort_by(|a, b| a.0.total_cmp(&b.0));
++        // Repeated endpoint queries must not create zero-length intervals.
++        // Parameter proximity alone is not invariant under reparameterization.
++        divisions.dedup_by(|a, b| a.1.point().near(&b.1.point()));
++        intervals += divisions.len().checked_sub(1)?;
++        if intervals > 256 {
++            return None;
++        }
++        let pieces = if divisions.len() == 2 {
++            vec![edge.absolute_clone()]
++        } else {
++            divisions
++                .windows(2)
++                .map(|span| {
++                    work = work.checked_sub(1)?;
++                    let mut segment = curve.clone();
++                    if span[1].0 < end {
++                        let _ = segment.cut(span[1].0);
++                    }
++                    if span[0].0 > start {
++                        segment = segment.cut(span[0].0);
++                    }
++                    let piece = Edge::try_new(&span[0].1, &span[1].1, segment).ok()?;
++                    piece.is_geometric_consistent().then_some(piece)
++                })
++                .collect::<Option<Vec<_>>>()?
++        };
++        replacements.insert(edge.id(), pieces);
++        Some(())
++    })?;
++    let refined = shell
++        .iter()
++        .map(|face| {
++            let wires = face
++                .absolute_boundaries()
++                .iter()
++                .map(|wire| {
++                    wire.iter()
++                        .flat_map(|edge| {
++                            let pieces = replacements
++                                .get(&edge.id())
++                                .map_or_else(|| vec![edge.absolute_clone()], Clone::clone);
++                            if edge.orientation() {
++                                pieces
++                            } else {
++                                pieces
++                                    .into_iter()
++                                    .rev()
++                                    .map(|piece| piece.inverse())
++                                    .collect()
++                            }
++                        })
++                        .collect::<Wire<_, _>>()
++                })
++                .collect::<Vec<_>>();
++            let mut rebuilt = Face::try_new(wires, face.surface()).ok()?;
++            if !face.orientation() {
++                rebuilt.invert();
++            }
++            Some(rebuilt)
++        })
++        .collect::<Option<Shell<_, _, _>>>()?;
++    let sewn = sew_contacts(refined, tol)?;
++    let consistent = sewn.edge_iter().all(|edge| edge.is_geometric_consistent());
++    consistent.then_some(sewn)
+ }
+ 
+ /// Split the combined boundaries into intersection and union boundaries.
+@@ -2046,14 +2178,19 @@
+         let converted = altshell_to_shell(&selected)
+             .ok_or(ShapeOpsError::AltShellConversionFailed { operation: name })?;
+         if contacts {
+-            sew_contacts(converted, tol)
++            sew_contacts(converted.clone(), tol)
++                .or_else(|| refine_open_seams(&converted, tol))
+                 .ok_or(ShapeOpsError::AltShellConversionFailed { operation: name })?
+         } else {
+             converted
+         }
+     };
+     // An empty boundary is a valid empty result; only pipeline failure is an error.
+-    finalize(name, shell)
++    finalize(name, shell.clone()).or_else(|error| {
++        refine_open_seams(&shell, tol)
++            .and_then(|sewn| finalize(name, sewn).ok())
++            .ok_or(error)
++    })
+ }
+ 
+ fn boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(

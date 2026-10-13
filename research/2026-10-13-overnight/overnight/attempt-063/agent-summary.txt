@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate recognizes planar and translational supports from complete rational control nets, cancels oriented internal cap seams, and uses section intersections and winding to establish disjointness or containment while retaining exact input geometry.
+
+The hypothesis applies to certified translational solids, including disconnected sections and cavities. Nested subtraction still requires cap trimming. Rebuilding caps requires an unbounded plane carrier; planarity alone is insufficient.
+
+Unresolved risks include tangencies, differing sweep intervals, nontranslational geometry, and numerical robustness.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings are saved in `/work/scratch/partial.txt`.

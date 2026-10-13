@@ -1,0 +1,215 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -28,20 +28,25 @@
+ //!   only new transverse generators require intersection-curve assembly.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
++//! - Failed assembly can use the De Morgan dual with explicit exterior windings
++//!   for both operands and complete boundary-partition validation.
+ 
+ mod divide_face;
+ mod faces_classification;
+ mod intersection_curve;
+ mod loops_store;
+ 
+-use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
+-use crate::alternative::Alternative;
+ use monstertruck_geometry::prelude::*;
+ use monstertruck_meshing::prelude::*;
+ use monstertruck_topology::*;
+ use rustc_hash::FxHashMap as HashMap;
+ use smallvec::SmallVec;
+ use std::iter;
++
++use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
++use crate::alternative::Alternative;
++use faces_classification::FacesClassification;
++use loops_store::LoopsStore;
+ 
+ type ClassicResult<T> = std::result::Result<T, ShapeOpsError>;
+ 
+@@ -613,6 +618,51 @@
+         .collect()
+ }
+ 
++/// Check that division retained every oriented trim occurrence of an operand.
++///
++/// A missing loop cannot establish an empty Boolean result. The counts include
++/// both directions separately because intersection cuts occur twice, with
++/// opposite orientations, in a complete partition. Counts use absolute wires,
++/// as does the loop store; reversing a shell changes only its material side.
++/// Closure is checked before any cells are discarded by classification.
++fn complete_division<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    classification: &FacesClassification<Point3, AltCurve<C, S>, S>,
++    loops: &LoopsStore<Point3, AltCurve<C, S>>,
++) -> Option<()> {
++    let mut occurrences = HashMap::default();
++    loops
++        .iter()
++        .flat_map(|wires| wires.iter())
++        .for_each(|wire| {
++            wire.edge_iter().for_each(|edge| {
++                *occurrences
++                    .entry((edge.id(), edge.orientation()))
++                    .or_insert(0_usize) += 1;
++            });
++        });
++    let partition = classification
++        .and_or_unknown()
++        .into_iter()
++        .flatten()
++        .collect::<AltCurveShell<C, S>>();
++    partition
++        .iter()
++        .flat_map(|face| face.absolute_boundaries())
++        .flat_map(|wire| wire.iter())
++        .try_for_each(|edge| {
++            let count = occurrences.get_mut(&(edge.id(), edge.orientation()))?;
++            *count = count.checked_sub(1)?;
++            Some(())
++        })?;
++    if occurrences.values().any(|count| *count != 0) {
++        None
++    } else {
++        Solid::try_new(partition.connected_components())
++            .ok()
++            .map(|_| ())
++    }
++}
++
+ /// Split the combined boundaries into intersection and union boundaries.
+ ///
+ /// All shells of an operand participate in the same winding query. They are
+@@ -622,7 +672,7 @@
+     shell0: &Shell<Point3, C, S>,
+     shell1: &Shell<Point3, C, S>,
+     tol: f64,
+-    second_at_infinity: isize,
++    at_infinity: [isize; 2],
+ ) -> Option<([AltCurveShell<C, S>; 2], bool)> {
+     let poly_shell0 = shell0.triangulation(tol);
+     let poly_shell1 = shell1.triangulation(tol);
+@@ -643,6 +693,9 @@
+         (stores.geom_loops_store0, stores.geom_loops_store1)
+     };
+     let mut cls0 = divide_face::divide_faces(&altshell0, &loops_store0, tol)?;
++    if at_infinity[0] != 0 {
++        complete_division(&cls0, &loops_store0)?;
++    }
+     if cls0.and_or_unknown()[2]
+         .connected_components()
+         .iter()
+@@ -651,6 +704,9 @@
+         cls0.integrate_by_component();
+     }
+     let mut cls1 = divide_face::divide_faces(&altshell1, &loops_store1, tol)?;
++    if at_infinity[0] != 0 {
++        complete_division(&cls1, &loops_store1)?;
++    }
+     if cls1.and_or_unknown()[2]
+         .connected_components()
+         .iter()
+@@ -670,7 +726,7 @@
+                 and0.push(face.clone());
+                 or0.push(face);
+             }
+-        } else if inside(point, &poly_shell1, second_at_infinity)? {
++        } else if inside(point, &poly_shell1, at_infinity[1])? {
+             and0.push(face);
+         } else {
+             or0.push(face);
+@@ -682,7 +738,7 @@
+         let (point, normal) = interior_point(&face, tol)?;
+         // The first operand owns coincident patches.
+         if coincident_boundary(&face, point, normal, shell0, &poly_shell0).is_none() {
+-            if inside(point, &poly_shell0, 0)? {
++            if inside(point, &poly_shell0, at_infinity[0])? {
+                 and1.push(face);
+             } else {
+                 or1.push(face);
+@@ -2037,7 +2093,7 @@
+         }
+     } else {
+         let ([and_shell, or_shell], contacts) =
+-            process_one_pair_of_shells(&shell0, &shell1, tol, at_infinity)
++            process_one_pair_of_shells(&shell0, &shell1, tol, [0, at_infinity])
+                 .ok_or(ShapeOpsError::EmptyOutputShell { operation: name })?;
+         let selected = match operation {
+             Operation::Union => or_shell,
+@@ -2054,6 +2110,68 @@
+     };
+     // An empty boundary is a valid empty result; only pipeline failure is an error.
+     finalize(name, shell)
++}
++
++/// Retry failed assembly through the equivalent unbounded De Morgan operation.
++///
++/// The identities are `A | B = !( !A & !B )`, `A & B = !( !A | !B )`,
++/// and `A - B = !( !A | B )`. A complemented operand has exterior winding
++/// one and reversed shells, including its cavities. Reversing the selected
++/// boundary returns to a bounded result without changing any support or trim.
++///
++/// This changes the priority of intersection and union labels during component
++/// propagation. Commutative operations also exchange patch ownership. Complete
++/// partitions and final manifold checks are required; failed construction never
++/// stands for an empty result. Existing successful operations take precedence.
++fn boolean_dual<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    tol: f64,
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
++    let faces0 = solid0.face_iter().count();
++    let faces1 = solid1.face_iter().count();
++    if faces0.checked_mul(faces1)? > 1024
++        || solid0.edge_iter().count() + solid1.edge_iter().count() > 1024
++    {
++        return None;
++    }
++    let (first, second, exterior, name) = match operation {
++        Operation::Union => (solid1, solid0, [1, 1], "or"),
++        Operation::Intersection => (solid1, solid0, [1, 1], "and"),
++        Operation::Difference => (solid0, solid1, [1, 0], "difference"),
++    };
++    let shell0: Shell<Point3, C, S> = first.face_iter().map(|face| face.inverse()).collect();
++    let shell1: Shell<Point3, C, S> = second
++        .face_iter()
++        .map(|face| {
++            if exterior[1] == 1 {
++                face.inverse()
++            } else {
++                face.clone()
++            }
++        })
++        .collect();
++    let ([intersection, union], contacts) =
++        process_one_pair_of_shells(&shell0, &shell1, tol, exterior)?;
++    let mut selected = match operation {
++        Operation::Union => intersection,
++        Operation::Intersection | Operation::Difference => union,
++    };
++    selected.iter_mut().for_each(|face| {
++        face.invert();
++    });
++    // The union of nonempty operands cannot have an empty bounded boundary.
++    if matches!(operation, Operation::Union) && selected.is_empty() {
++        return None;
++    }
++    let converted = altshell_to_shell(&selected)?;
++    let shell = if contacts {
++        sew_contacts(converted, tol)?
++    } else {
++        converted
++    };
++    finalize(name, shell).ok()
+ }
+ 
+ fn boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+@@ -2077,6 +2195,7 @@
+         boolean_classic(solid0, solid1, tol, operation)
+             .or_else(|error| planar_boolean(solid0, solid1, operation, true).ok_or(error))
+             .or_else(|error| sweep_boolean(solid0, solid1, operation, tol).ok_or(error))
++            .or_else(|error| boolean_dual(solid0, solid1, tol, operation).ok_or(error))
+     }
+ }
+ 

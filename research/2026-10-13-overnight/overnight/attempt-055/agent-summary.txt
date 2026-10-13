@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added exact rational section recovery for failed intersection-curve conversion. Fixing one surface parameter yields a rational curve; checking its entire control polygon certifies plane membership. Continuation selects the oriented arc across closed seams.
+
+Expected scope: planar cuts of rational and revolved supports. Earlier classification failures, general non-isoparameter intersections, and touching-union mesh closure remain unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits. Controller evaluation remains pending.

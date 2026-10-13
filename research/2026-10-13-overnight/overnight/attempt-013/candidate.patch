@@ -1,0 +1,236 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,8 @@
+ //!   before marching, retaining the exact input surfaces.
+ //! - Complete positive-weight spline control nets certify separation, including
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
++//! - Certified shell nesting uses convex support planes and oriented containment
++//!   sums to assemble original boundary components, including cavity shells.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -1201,6 +1203,215 @@
+     }
+ }
+ 
++/// Supporting half-spaces of a closed convex shell, independent of its orientation.
++struct ConvexRegion {
++    planes: Vec<(Point3, Vector3)>,
++    winding: isize,
++}
++
++/// A support enclosure and, when certifiable, its exact convex interior.
++struct ShellEnclosure {
++    corners: [Point3; 8],
++    convex: Option<ConvexRegion>,
++}
++
++/// Certify convexity from complete planar domains and their oriented support planes.
++///
++/// A closed shell whose faces all support its vertex hull bounds that convex
++/// hull. Reversing every normal changes its winding, but not the enclosed set.
++fn convex_region<S>(cells: &[PlanarCell<S>], work: &mut usize) -> Option<ConvexRegion> {
++    let origin = *cells.first()?.points.first()?;
++    let count = cells.iter().map(|cell| cell.points.len()).sum::<usize>();
++    *work = work.checked_sub(count.checked_mul(cells.len())?)?;
++    let center = origin
++        + cells
++            .iter()
++            .flat_map(|cell| &cell.points)
++            .map(|point| *point - origin)
++            .sum::<Vector3>()
++            / count as f64;
++    let (distance, error) = plane_distance(center, origin, cells[0].normal);
++    if !distance.is_finite() || distance.abs() <= error {
++        return None;
++    }
++    let winding = if distance < 0.0 { 1 } else { -1 };
++    let planes = cells
++        .iter()
++        .map(|cell| {
++            let origin = cell.points[0];
++            let normal = cell.normal * winding as f64;
++            let (distance, error) = plane_distance(center, origin, normal);
++            if !distance.is_finite() || distance >= -error {
++                return None;
++            }
++            cells
++                .iter()
++                .flat_map(|cell| &cell.points)
++                .all(|point| {
++                    let (distance, error) = plane_distance(*point, origin, normal);
++                    distance.is_finite() && error.is_finite() && distance <= error
++                })
++                .then_some((origin, normal))
++        })
++        .collect::<Option<Vec<_>>>()?;
++    Some(ConvexRegion { planes, winding })
++}
++
++/// Enclose each connected shell without changing its curves, surfaces, or orientation.
++fn shell_enclosure<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: &Shell<Point3, C, S>,
++    work: &mut usize,
++) -> Option<ShellEnclosure> {
++    let solid = Solid::try_new(vec![shell.clone()]).ok()?;
++    let (minimum, maximum) = solid_enclosure(&solid)?;
++    let corners = [0, 1, 2, 3, 4, 5, 6, 7].map(|index| {
++        Point3::new(
++            if index & 1 == 0 { minimum.x } else { maximum.x },
++            if index & 2 == 0 { minimum.y } else { maximum.y },
++            if index & 4 == 0 { minimum.z } else { maximum.z },
++        )
++    });
++    let convex = planar_cells(&solid, work).and_then(|cells| convex_region(&cells, work));
++    Some(ShellEnclosure { corners, convex })
++}
++
++/// Prove strict containment or separation by testing a complete enclosure.
++///
++/// Every corner behind every support proves containment. Every corner beyond
++/// one support proves separation. Boundary contacts and inconclusive hulls
++/// deliberately require the face subdivision pipeline.
++fn enclosed_relation(
++    region: &ConvexRegion,
++    corners: &[Point3; 8],
++    work: &mut usize,
++) -> Option<bool> {
++    *work = work.checked_sub(region.planes.len().checked_mul(corners.len())?)?;
++    let (contained, separated) =
++        region
++            .planes
++            .iter()
++            .fold((true, false), |(contained, separated), (origin, normal)| {
++                let distances = corners.map(|point| plane_distance(point, *origin, *normal));
++                let finite = distances
++                    .iter()
++                    .all(|(distance, error)| distance.is_finite() && error.is_finite());
++                (
++                    contained && finite && distances.iter().all(|(d, e)| *d < -*e),
++                    separated || (finite && distances.iter().all(|(d, e)| *d > *e)),
++                )
++            });
++    if contained {
++        Some(true)
++    } else if separated {
++        Some(false)
++    } else {
++        None
++    }
++}
++
++/// Classify and assemble a certified arrangement of intact oriented shells.
++///
++/// Shells are boundary components, not independent operands. Membership on one
++/// shell is the sum of the windings of all enclosing shells of the other solid.
++/// This preserves cavities and islands when subtracting a nested solid. The
++/// certificate establishes strict separation of every boundary pair, so no
++/// intersection curves or approximate replacement faces are needed.
++fn nested_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
++    let mut work = 262_144_usize;
++    work = work.checked_sub(
++        solid0
++            .boundaries()
++            .len()
++            .checked_mul(solid1.boundaries().len())?,
++    )?;
++    let regions0 = solid0
++        .boundaries()
++        .iter()
++        .map(|shell| shell_enclosure(shell, &mut work))
++        .collect::<Option<Vec<_>>>()?;
++    let regions1 = solid1
++        .boundaries()
++        .iter()
++        .map(|shell| shell_enclosure(shell, &mut work))
++        .collect::<Option<Vec<_>>>()?;
++    let mut winding0 = vec![0_isize; regions0.len()];
++    let mut winding1 = vec![0_isize; regions1.len()];
++    regions0.iter().enumerate().try_for_each(|(i, a)| {
++        regions1.iter().enumerate().try_for_each(|(j, b)| {
++            // Separate components may have overlapping whole-solid enclosures.
++            // These corners enclose complete supports, including curved faces.
++            let gaps = [
++                (a.corners[0].x, b.corners[7].x),
++                (a.corners[0].y, b.corners[7].y),
++                (a.corners[0].z, b.corners[7].z),
++                (b.corners[0].x, a.corners[7].x),
++                (b.corners[0].y, a.corners[7].y),
++                (b.corners[0].z, a.corners[7].z),
++            ];
++            if gaps.iter().any(|(minimum, maximum)| {
++                minimum - maximum > 32.0 * f64::EPSILON * (minimum.abs() + maximum.abs())
++            }) {
++                return Some(());
++            }
++            let a_contains_b = a
++                .convex
++                .as_ref()
++                .and_then(|region| enclosed_relation(region, &b.corners, &mut work));
++            match a_contains_b {
++                Some(true) => winding1[j] += a.convex.as_ref()?.winding,
++                Some(false) => {}
++                None => {
++                    let region = b.convex.as_ref()?;
++                    if enclosed_relation(region, &a.corners, &mut work)? {
++                        winding0[i] += region.winding;
++                    }
++                }
++            }
++            Some(())
++        })
++    })?;
++    if winding0
++        .iter()
++        .chain(&winding1)
++        .any(|winding| !matches!(winding, 0 | 1))
++    {
++        return None;
++    }
++    let select = |first: bool, winding: isize| match operation {
++        Operation::Intersection => winding == 1,
++        Operation::Union => winding == 0,
++        Operation::Difference => (winding == 0) == first,
++    };
++    let boundaries = solid0
++        .boundaries()
++        .iter()
++        .zip(winding0)
++        .filter(|(_, winding)| select(true, *winding))
++        .map(|(shell, _)| shell.clone())
++        .chain(
++            solid1
++                .boundaries()
++                .iter()
++                .zip(winding1)
++                .filter(|(_, winding)| select(false, *winding))
++                .map(|(shell, _)| {
++                    let mut shell = shell.clone();
++                    if matches!(operation, Operation::Difference) {
++                        shell.iter_mut().for_each(|face| {
++                            face.invert();
++                        });
++                    }
++                    shell
++                }),
++        )
++        .collect();
++    Solid::try_new(boundaries).ok()
++}
++
+ fn boolean_classic<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+@@ -1273,6 +1484,8 @@
+         Ok(solid)
+     } else if let Some(solid) = separated_boolean(solid0, solid1, operation) {
+         Ok(solid)
++    } else if let Some(solid) = nested_boolean(solid0, solid1, operation) {
++        Ok(solid)
+     } else {
+         boolean_classic(solid0, solid1, tol, operation)
+     }

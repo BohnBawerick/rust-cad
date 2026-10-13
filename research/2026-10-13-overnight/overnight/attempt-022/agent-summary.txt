@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added a fallback for certified spline sweeps sharing planar caps. It intersects side patches, conserves oriented boundary chains, and reconstructs caps using exact rational rims. This addresses coplanar-cap assembly without primitive recognition and retains cavity orientation.
+
+Existing successful paths retain precedence. Remaining risks include marching failures, parameter inversion, sampled classification, tangencies, and mesh closure.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

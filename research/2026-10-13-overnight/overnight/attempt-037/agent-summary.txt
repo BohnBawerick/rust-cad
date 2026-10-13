@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Reapplied attempt 36’s seam-refinement hypothesis and fixed the reported borrow error. The fallback subdivides unmatched trims before sewing: subdivision preserves the oriented boundary while allowing differently partitioned seams to match. Original curves, surfaces, and cavity orientations remain intact.
+
+Scope: general trimmed solids with mismatched seam subdivisions. Earlier intersection failures, ambiguous contacts, and touching-union mesh closure remain unresolved.
+
+Formatting and whitespace checks completed. No builds, tests, or commits.

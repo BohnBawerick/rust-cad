@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate recovers missing classification meshes through nearest-parameter retries, accepting recovered coordinates only when they evaluate onto the original surface. Signed winding requires a complete oriented boundary; shared edges, shell orientations, and exact B-rep geometry remain intact.
+
+Expected scope: Boolean failures caused by boundary parameter inversion during tessellation or nested-loop reconstruction.
+
+Unresolved risks: periodic charts, intersection construction, touching-union mesh closure, and recovery runtime.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

@@ -1,0 +1,1 @@
+{"a": {"height": 1.2977882363115678, "kind": "cylinder", "origin": [-1.98109070638848, -1.8321489708244283, 2.862307719240812], "radius": 0.7331225062215123}, "boolean_tol": 0.05, "group": "revolve", "id": "sealed-235", "mesh_tol": 0.002, "op": "revolve"}

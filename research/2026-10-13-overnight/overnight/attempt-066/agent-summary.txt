@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added rational intersection recovery after existing fitters fail. Fixing one spline parameter produces an exact curve; checking every homogeneous control against the plane certifies the section. Endpoint and continuation checks select the intersection branch.
+
+Expected scope: plane cuts along constant-parameter sections of general rational surfaces, including suitable revolved patches. Periodic seams, inverse-query robustness, and downstream assembly remain unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

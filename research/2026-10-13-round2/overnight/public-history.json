@@ -1,0 +1,932 @@
+[
+  {
+    "attempt": 1,
+    "lane": "planar",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/faces_classification.rs",
+      "monstertruck-solid/src/transversal/classic/mod.rs",
+      "monstertruck-solid/src/transversal/classic/shell_classification.rs"
+    ],
+    "kept": false,
+    "build_exit": 0,
+    "public_score": 64.20554557497232,
+    "public_passed": 184,
+    "public_regressions": [],
+    "reason": "regression",
+    "hypothesis": "Candidate written in three files under `transversal/classic`:\n\n- `mod.rs`: classify complete boundary sets and handle empty-solid identities.\n- `shell_classification.rs`: use oriented winding counts, account for complemented cutters, and sample face interiors.\n- `faces_classification.rs`: guard closed unknown components against empty-boundary indexing.\n\nThe mathematical correction is membership = winding number plus the material state at infinity. Expected gains cover disjoint subtraction, containment, cavities, and vertex contact without box-specific logic.\n\nEdge/face contact assembly and thin-overlap failures remain unresolved. No builds or tests were run.\n\n[Candidate patch](/workspace/scratch/candidate.patch) \u00b7 [Findings and risks](/workspace/scratch/partial.txt)",
+    "visible_vetoes": [
+      {
+        "case": {
+          "a": {
+            "kind": "box",
+            "origin": [
+              -2.6835639947114696,
+              -2.6931864800690075,
+              0.28159731019198464
+            ],
+            "size": [
+              2.9147649942251577,
+              2.7206916297016037,
+              3.902107275126074
+            ]
+          },
+          "b": {
+            "height": 4.302107275126074,
+            "kind": "cylinder",
+            "origin": [
+              -1.2261814975988907,
+              -1.3328406652182057,
+              0.08159731019198463
+            ],
+            "radius": 0.40810374445524056
+          },
+          "boolean_tol": 0.05,
+          "group": "holes",
+          "id": "public-262",
+          "mesh_tol": 0.002,
+          "op": "hole"
+        },
+        "result": {
+          "reasons": [
+            "geometric_consistency"
+          ],
+          "expected": {
+            "volume": 28.90270823712506,
+            "area": 68.799960009427,
+            "centroid": [
+              -1.226181497598891,
+              -1.3328406652182057,
+              2.232650947755021
+            ],
+            "bodies": 1,
+            "cavities": 0,
+            "euler": 0
+          },
+          "id": "public-262",
+          "group": "holes",
+          "op": "hole",
+          "seconds": 4.1784,
+          "pass": false
+        }
+      }
+    ]
+  },
+  {
+    "attempt": 2,
+    "lane": "planar",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/faces_classification.rs",
+      "monstertruck-solid/src/transversal/classic/mod.rs",
+      "monstertruck-solid/src/transversal/classic/shell_classification.rs"
+    ],
+    "kept": true,
+    "build_exit": 0,
+    "public_score": 64.06309543252218,
+    "public_passed": 183,
+    "public_regressions": [],
+    "reason": "improved_without_regression",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-solid"
+      ],
+      "kernel_tests": {
+        "exit": 0,
+        "seconds": 51.645
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 9.834
+      }
+    },
+    "hypothesis": "Candidate written in `transversal/classic`:\n\n- `mod.rs`: classify complete boundary sets and handle empty-solid identities.\n- `faces_classification.rs`: guard closed components without boundary edges.\n- `shell_classification.rs`: classify uncut closed components using oriented winding counts and face-interior samples.\n\nThe correction accounts for complemented cutters and cavity orientation. It targets disjoint subtraction, containment, cavities, and uncut point contacts. Cut-face classification remains unchanged to avoid repeating the previous through-hole regression.\n\nFace/edge contact assembly and thin overlaps remain unresolved. No builds or tests were run.\n\n[Candidate patch](/workspace/scratch/candidate.patch) \u00b7 [Findings and risks](/workspace/scratch/partial.txt)"
+  },
+  {
+    "attempt": 3,
+    "lane": "planar",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/mod.rs",
+      "monstertruck-solid/src/transversal/classic/planar.rs",
+      "monstertruck-solid/src/transversal/classic/planar/assemble.rs"
+    ],
+    "kept": false,
+    "build_exit": 0,
+    "public_score": 69.01709401709402,
+    "public_passed": 253,
+    "public_regressions": [],
+    "reason": "kernel_tests_failed",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-solid"
+      ],
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 18.485
+      }
+    },
+    "hypothesis": "Candidate written in `classic/mod.rs`, plus new `classic/planar.rs` and `classic/planar/assemble.rs`.\n\nThe repair partitions certified planar faces and selects boundaries using oriented winding on both sides. Angular half-edge pairing separates edge-touching bodies while joining face contacts.\n\nExpected scope includes nonconvex and multi-shell solids composed of convex planar polygon faces. Curved, concave-face, and multiply trimmed inputs retain the existing pipeline. Numerical degeneracies and large arrangements remain risks.\n\nNo builds or tests were run.\n\n[Candidate patch](/workspace/scratch/candidate.patch) \u00b7 [Findings and limitations](/workspace/scratch/partial.txt)",
+    "gate_error": "test transversal::integrate::tests::adjacent_cubes_or ... FAILED\nthread 'transversal::integrate::tests::adjacent_cubes_or' (1443) panicked at monstertruck-solid/src/transversal/integrate/tests.rs:41:5:\ntest result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s\nerror: test failed, to rerun pass `-p monstertruck-solid --lib`\nerror: 1 target failed:\ntest cube_minus_column ... ok\ntest difference_of_overlapping_cubes ... ok\ntest intersection_of_overlapping_cubes ... ok\ntest union_of_overlapping_cubes ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n\n   Doc-tests monstertruck\n\nrunning 1 test\ntest monstertruck/src/lib.rs - (line 94) ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\nall doctests ran in 0.23s; merged doctests compilation took 0.23s\n   Doc-tests monstertruck_solid\n\nrunning 1 test\ntest monstertruck-solid/src/lib.rs - (line 6) ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\nall doctests ran in 3.77s; merged doctests compilation took 3.76s\nerror: 1 target failed:\n    `-p monstertruck-solid --lib`",
+    "visible_vetoes": []
+  },
+  {
+    "attempt": 4,
+    "lane": "planar",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/mod.rs",
+      "monstertruck-solid/src/transversal/classic/planar.rs",
+      "monstertruck-solid/src/transversal/classic/planar/assemble.rs",
+      "monstertruck-solid/src/transversal/classic/planar/coalesce.rs"
+    ],
+    "kept": true,
+    "build_exit": 0,
+    "public_score": 69.01709401709402,
+    "public_passed": 253,
+    "public_regressions": [],
+    "reason": "improved_without_regression",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-solid"
+      ],
+      "kernel_tests": {
+        "exit": 0,
+        "seconds": 15.558
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.565
+      }
+    },
+    "hypothesis": "Candidate written in `classic/mod.rs`, `classic/planar.rs`, `classic/planar/assemble.rs`, and new `classic/planar/coalesce.rs`.\n\nRestores the previous planar-arrangement hypothesis and repairs its face-count failure: fragments retain source identity, and internal subdivision edges cancel within each connected surviving face region. Angular edge pairing still separates bodies touching only along edges or vertices.\n\nExpected scope includes certified polygonal planar solids, containment, cavities, contacts, and thin overlaps. Numerical degeneracies, merged-face meshing, and subsequent booleans involving concave remainders remain unverified.\n\nNo builds or tests were run.\n\n[Candidate patch](/workspace/scratch/candidate.patch) \u00b7 [Findings and risks](/workspace/scratch/partial.txt)"
+  },
+  {
+    "attempt": 5,
+    "lane": "revolve",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-geometry/src/decorators/revolved_curve.rs",
+      "monstertruck-meshing/src/tessellation/triangulation/boundary/projection.rs"
+    ],
+    "kept": true,
+    "build_exit": 0,
+    "public_score": 69.87179487179486,
+    "public_passed": 254,
+    "public_regressions": [],
+    "reason": "improved_without_regression",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-fillet",
+        "monstertruck-geometry",
+        "monstertruck-healing",
+        "monstertruck-io",
+        "monstertruck-meshing",
+        "monstertruck-modeling",
+        "monstertruck-solid",
+        "monstertruck-step"
+      ],
+      "kernel_tests": {
+        "exit": 0,
+        "seconds": 200.18
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 9.684
+      }
+    },
+    "hypothesis": "Candidate written in:\n\n- [revolved_curve.rs](/workspace/kernel/monstertruck-geometry/src/decorators/revolved_curve.rs): avoids Newton seeds at the radial-distance cusp, where roundoff can select the profile\u2019s opposite extension.\n- [projection.rs](/workspace/kernel/monstertruck-meshing/src/tessellation/triangulation/boundary/projection.rs): preserves the pole\u2019s 3D position when duplicating it across angular UV coordinates.\n\nExpected scope: revolved faces meeting the axis, including translated profiles. Complex-profile regressions and all controller gates remain unverified.\n\nNo builds or tests run. [Candidate patch](/workspace/scratch/candidate.patch)."
+  },
+  {
+    "attempt": 6,
+    "lane": "fillet",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-modeling/src/fillet_impl/mod.rs"
+    ],
+    "kept": false,
+    "build_exit": 0,
+    "public_score": 61.202686202686195,
+    "public_passed": 244,
+    "public_regressions": [
+      "public-237",
+      "public-243",
+      "public-249",
+      "public-255",
+      "public-261",
+      "public-267",
+      "public-273",
+      "public-279",
+      "public-285",
+      "public-291",
+      "public-297",
+      "public-309"
+    ],
+    "reason": "regression",
+    "hypothesis": "Modified [fillet_impl/mod.rs](/workspace/kernel/monstertruck-modeling/src/fillet_impl/mod.rs).\n\nThe conversion replaced rational fillet arcs with polyline chords that leave the curved surface. The candidate reconstructs affine UV trims as piecewise rational curves, preserving homogeneous weights. It uses them only when existing inclusion checks accept both carrier surfaces.\n\nExpected scope: straight-edge round fillets ending on planar caps and other exact affine UV intersections. Risks remain around high-degree interpolation and intersections requiring projection.\n\nNo builds or tests run. Tests and tolerances are unchanged.\n\n[Candidate patch](/workspace/scratch/fillet-candidate.patch) \u00b7 [Findings](/workspace/scratch/partial.txt)",
+    "visible_vetoes": [
+      {
+        "case": {
+          "a": {
+            "kind": "box",
+            "origin": [
+              2.330651673093108,
+              1.8027810906766897,
+              -2.721630629629323
+            ],
+            "size": [
+              3.529792641510231,
+              3.784849629827871,
+              2.6228949385928924
+            ]
+          },
+          "boolean_tol": 0.05,
+          "group": "fillet",
+          "id": "public-236",
+          "mesh_tol": 0.002,
+          "op": "fillet",
+          "radius": 0.26228949385928924
+        },
+        "result": {
+          "reasons": [
+            "panic:"
+          ],
+          "id": "public-236",
+          "group": "fillet",
+          "op": "fillet",
+          "seconds": 0.5811,
+          "pass": false
+        }
+      },
+      {
+        "case": {
+          "a": {
+            "kind": "box",
+            "origin": [
+              2.330651673093108,
+              1.8027810906766897,
+              -2.721630629629323
+            ],
+            "size": [
+              3.529792641510231,
+              3.784849629827871,
+              2.6228949385928924
+            ]
+          },
+          "boolean_tol": 0.05,
+          "group": "chamfer",
+          "id": "public-237",
+          "mesh_tol": 0.002,
+          "op": "chamfer",
+          "radius": 0.26228949385928924
+        },
+        "result": {
+          "reasons": [
+            "panic:"
+          ],
+          "id": "public-237",
+          "group": "chamfer",
+          "op": "chamfer",
+          "seconds": 0.11,
+          "pass": false
+        }
+      },
+      {
+        "case": {
+          "a": {
+            "kind": "box",
+            "origin": [
+              1.7061621366482225,
+              -2.962978759371521,
+              0.2869519177609412
+            ],
+            "size": [
+              2.450875730483177,
+              3.0204119054721956,
+              3.1200841451594696
+            ]
+          },
+          "boolean_tol": 0.05,
+          "group": "fillet",
+          "id": "public-242",
+          "mesh_tol": 0.002,
+          "op": "fillet",
+          "radius": 0.24508757304831771
+        },
+        "result": {
+          "reasons": [
+            "panic:"
+          ],
+          "id": "public-242",
+          "group": "fillet",
+          "op": "fillet",
+          "seconds": 0.0644,
+          "pass": false
+        }
+      },
+      {
+        "case": {
+          "a": {
+            "kind": "box",
+            "origin": [
+              1.7061621366482225,
+              -2.962978759371521,
+              0.2869519177609412
+            ],
+            "size": [
+              2.450875730483177,
+              3.0204119054721956,
+              3.1200841451594696
+            ]
+          },
+          "boolean_tol": 0.05,
+          "group": "chamfer",
+          "id": "public-243",
+          "mesh_tol": 0.002,
+          "op": "chamfer",
+          "radius": 0.24508757304831771
+        },
+        "result": {
+          "reasons": [
+            "panic:"
+          ],
+          "id": "public-243",
+          "group": "chamfer",
+          "op": "chamfer",
+          "seconds": 0.0645,
+          "pass": false
+        }
+      },
+      {
+        "case": {
+          "a": {
+            "kind": "box",
+            "origin": [
+              1.8011224572525988,
+              -0.5312932398607106,
+              -1.018279251791336
+            ],
+            "size": [
+              3.7188312694273393,
+              3.9968153020146686,
+              3.824793177729468
+            ]
+          },
+          "boolean_tol": 0.05,
+          "group": "fillet",
+          "id": "public-248",
+          "mesh_tol": 0.002,
+          "op": "fillet",
+          "radius": 0.37188312694273395
+        },
+        "result": {
+          "reasons": [
+            "panic:"
+          ],
+          "id": "public-248",
+          "group": "fillet",
+          "op": "fillet",
+          "seconds": 0.1437,
+          "pass": false
+        }
+      },
+      {
+        "case": {
+          "a": {
+            "kind": "box",
+            "origin": [
+              1.8011224572525988,
+              -0.5312932398607106,
+              -1.018279251791336
+            ],
+            "size": [
+              3.7188312694273393,
+              3.9968153020146686,
+              3.824793177729468
+            ]
+          },
+          "boolean_tol": 0.05,
+          "group": "chamfer",
+          "id": "public-249",
+          "mesh_tol": 0.002,
+          "op": "chamfer",
+          "radius": 0.37188312694273395
+        },
+        "result": {
+          "reasons": [
+            "panic:"
+          ],
+          "id": "public-249",
+          "group": "chamfer",
+          "op": "chamfer",
+          "seconds": 0.1693,
+          "pass": false
+        }
+      },
+      {
+        "case": {
+          "a": {
+            "kind": "box",
+            "origin": [
+              -0.5929183104875921,
+              -0.14208045429622196,
+              -1.0634879676302655
+            ],
+            "size": [
+              2.6236161012543278,
+              2.331882776496738,
+              3.386558728027871
+            ]
+          },
+          "boolean_tol": 0.05,
+          "group": "fillet",
+          "id": "public-254",
+          "mesh_tol": 0.002,
+          "op": "fillet",
+          "radius": 0.2331882776496738
+        },
+        "result": {
+          "reasons": [
+            "panic:"
+          ],
+          "id": "public-254",
+          "group": "fillet",
+          "op": "fillet",
+          "seconds": 0.0643,
+          "pass": false
+        }
+      },
+      {
+        "case": {
+          "a": {
+            "kind": "box",
+            "origin": [
+              -0.5929183104875921,
+              -0.14208045429622196,
+              -1.0634879676302655
+            ],
+            "size": [
+              2.6236161012543278,
+              2.331882776496738,
+              3.386558728027871
+            ]
+          },
+          "boolean_tol": 0.05,
+          "group": "chamfer",
+          "id": "public-255",
+          "mesh_tol": 0.002,
+          "op": "chamfer",
+          "radius": 0.2331882776496738
+        },
+        "result": {
+          "reasons": [
+            "panic:"
+          ],
+          "id": "public-255",
+          "group": "chamfer",
+          "op": "chamfer",
+          "seconds": 0.0645,
+          "pass": false
+        }
+      }
+    ]
+  },
+  {
+    "attempt": 7,
+    "lane": "fillet",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-modeling/src/fillet_impl/mod.rs"
+    ],
+    "kept": true,
+    "build_exit": 0,
+    "public_score": 80.98290598290598,
+    "public_passed": 268,
+    "public_regressions": [],
+    "reason": "improved_without_regression",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-fillet",
+        "monstertruck-geometry",
+        "monstertruck-healing",
+        "monstertruck-io",
+        "monstertruck-meshing",
+        "monstertruck-modeling",
+        "monstertruck-solid",
+        "monstertruck-step"
+      ],
+      "kernel_tests": {
+        "exit": 0,
+        "seconds": 172.629
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 7.681
+      }
+    },
+    "hypothesis": "Modified [fillet_impl/mod.rs](/workspace/kernel/monstertruck-modeling/src/fillet_impl/mod.rs).\n\nConstant-parameter fillet trims now retain exact rational sections extracted from the surface control net instead of straight chords. The conversion requires matching endpoints and acceptance by both existing surface-inclusion checks. Knot normalization is fallible.\n\nExpected scope: round fillets ending on planar caps. General non-isoparametric intersections retain the existing conversion.\n\nFormatted; no builds or tests run. Controller gates remain unverified. Findings saved to [partial.txt](/workspace/scratch/partial.txt)."
+  },
+  {
+    "attempt": 8,
+    "lane": "curved",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/exact_section.rs",
+      "monstertruck-solid/src/transversal/classic/mod.rs"
+    ],
+    "kept": false,
+    "build_exit": 0,
+    "public_score": 86.11111111111111,
+    "public_passed": 274,
+    "public_regressions": [],
+    "reason": "regression",
+    "hypothesis": "Candidate written in `classic/mod.rs` and new `classic/exact_section.rs`.\n\nThe conversion now preserves rational constant-parameter sections instead of replacing circular arcs with chords. Recovery requires matching endpoints, monotone traversal, and containment in the other carrier\u2019s plane.\n\nExpected scope: through-hole rims and other planar rational sections. Cylinder-pair loop-assembly failures remain unresolved; controller gates are unverified.\n\nFormatted only. No builds or tests run.\n\n[Candidate patch](/workspace/scratch/curved-candidate.patch) \u00b7 [Findings](/workspace/scratch/partial.txt)",
+    "visible_vetoes": [
+      {
+        "case": {
+          "a": {
+            "kind": "box",
+            "origin": [
+              1.8011224572525988,
+              -0.5312932398607106,
+              -1.018279251791336
+            ],
+            "size": [
+              3.7188312694273393,
+              3.9968153020146686,
+              3.824793177729468
+            ]
+          },
+          "b": {
+            "height": 4.2247931777294685,
+            "kind": "cylinder",
+            "origin": [
+              3.6605380919662682,
+              1.4671144111466237,
+              -1.218279251791336
+            ],
+            "radius": 0.5578246904141009
+          },
+          "boolean_tol": 0.05,
+          "group": "holes",
+          "id": "public-250",
+          "mesh_tol": 0.002,
+          "op": "hole"
+        },
+        "result": {
+          "reasons": [
+            "timeout"
+          ],
+          "id": "public-250",
+          "group": "holes",
+          "op": "hole",
+          "seconds": 8.0208,
+          "pass": false
+        }
+      }
+    ]
+  },
+  {
+    "attempt": 9,
+    "lane": "curved",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/exact_section.rs",
+      "monstertruck-solid/src/transversal/classic/mod.rs"
+    ],
+    "kept": true,
+    "build_exit": 0,
+    "public_score": 86.96581196581195,
+    "public_passed": 275,
+    "public_regressions": [],
+    "reason": "improved_without_regression",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-fillet",
+        "monstertruck-geometry",
+        "monstertruck-healing",
+        "monstertruck-io",
+        "monstertruck-meshing",
+        "monstertruck-modeling",
+        "monstertruck-solid",
+        "monstertruck-step"
+      ],
+      "kernel_tests": {
+        "exit": 0,
+        "seconds": 146.442
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 6.978
+      }
+    },
+    "hypothesis": "Modified `classic/mod.rs` and added `classic/exact_section.rs`.\n\nThe candidate preserves rational constant-parameter intersection sections instead of chordal leaders. Plane containment, endpoints and monotone traversal validate recovery. It addresses the previous timeout by reusing UV searches, retaining verified UV trims, and converting only the requested boolean boundary.\n\nExpected scope: through-hole rims and other planar isoparametric intersections. Cylinder-pair loop assembly remains unresolved. Runtime improvement and regression gates need controller verification.\n\nFormatted only; no builds or tests run.\n\n[Candidate patch](/workspace/scratch/curved-candidate.patch) \u00b7 [Findings](/workspace/scratch/partial.txt)"
+  },
+  {
+    "attempt": 10,
+    "lane": "curved",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/divide_face.rs"
+    ],
+    "kept": false,
+    "build_exit": 0,
+    "public_score": 92.09401709401709,
+    "public_passed": 281,
+    "public_regressions": [],
+    "reason": "regression",
+    "hypothesis": "Modified [divide_face.rs](/workspace/kernel/monstertruck-solid/src/transversal/classic/divide_face.rs).\n\nReplaced UV-area-based boundary deletion with exact oriented-edge cancellation. UV area depends on parameterization scale, so comparing it with spatial tessellation tolerance can erase valid hole rims and leave open shells. Tolerance values remain unchanged.\n\nExpected scope: small trim regions and through-hole closure. Coincident-cylinder and general cylinder-pair assembly remain unresolved. Geometrically coincident boundaries with distinct edge identities remain a risk.\n\nFormatted only; no builds or tests run.\n\n[Candidate patch](/workspace/scratch/attempt-10.patch) \u00b7 [Findings](/workspace/scratch/partial.txt)",
+    "visible_vetoes": []
+  },
+  {
+    "attempt": 11,
+    "lane": "curved",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/divide_face.rs"
+    ],
+    "kept": false,
+    "build_exit": 0,
+    "public_score": 92.09401709401709,
+    "public_passed": 281,
+    "public_regressions": [],
+    "reason": "regression",
+    "hypothesis": "Modified [divide_face.rs](/workspace/kernel/monstertruck-solid/src/transversal/classic/divide_face.rs).\n\nUV area now determines orientation rather than deleting small boundaries. Cancellation checks opposing edge uses and exact polygonal retraces, including unequal subdivisions.\n\nExpected scope: small hole rims and thin trim regions. Cylinder-pair assembly remains unresolved; curved coincidence between samples remains a risk.\n\nFormatted only; no builds or tests run.\n\n[Candidate patch](/workspace/scratch/attempt-11.patch) \u00b7 [Findings](/workspace/scratch/partial.txt)",
+    "visible_vetoes": []
+  },
+  {
+    "attempt": 12,
+    "lane": "curved",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/polyline_construction/mod.rs"
+    ],
+    "kept": false,
+    "build_exit": 0,
+    "public_score": 86.96581196581195,
+    "public_passed": 275,
+    "public_regressions": [],
+    "reason": "no_gain",
+    "hypothesis": "Modified [polyline_construction/mod.rs](/workspace/kernel/monstertruck-solid/src/transversal/polyline_construction/mod.rs).\n\nThe candidate treats interference segments as a geometric set: weld endpoints across spatial-cell boundaries, split overlapping reports at intermediate endpoints, deduplicate segments, and trace deterministic paths. Repeated triangle incidence should no longer create false retraced loops.\n\nExpected scope: cylinder and hole intersection chains broken by duplicate segments or endpoint hashing. Coplanar caps, tangency classification, small-UV-area deletion, and worst-case splitting cost remain risks.\n\nNo builds or tests run. Existing tests remain unchanged.\n\n[Candidate patch](/workspace/scratch/attempt-12.patch) \u00b7 [Findings](/workspace/scratch/partial.txt)",
+    "visible_vetoes": []
+  },
+  {
+    "attempt": 13,
+    "lane": "curved",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/loops_store.rs"
+    ],
+    "kept": false,
+    "build_exit": 0,
+    "public_score": 86.96581196581195,
+    "public_passed": 275,
+    "public_regressions": [],
+    "reason": "no_gain",
+    "hypothesis": "Modified [loops_store.rs](/workspace/kernel/monstertruck-solid/src/transversal/classic/loops_store.rs:402).\n\nBoundary projection now measures the surface residual at the evaluated curve point. This avoids a singular Newton step when a circular rim already lies in a cap plane, and returns a vertex on the curve being split. Non-finite steps fail explicitly.\n\nExpected scope: curved boundary endpoint refinement. Coplanar face ownership, tangent shell classification, and small-hole UV-area filtering remain unresolved.\n\nNo builds or tests run. Formatting verification was limited by stable rustfmt\u2019s lack of repository-required options.\n\n[Candidate patch](/workspace/scratch/attempt-13.patch) \u00b7 [Findings](/workspace/scratch/partial.txt)",
+    "visible_vetoes": []
+  },
+  {
+    "attempt": 14,
+    "lane": "curved",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/divide_face.rs",
+      "monstertruck-solid/src/transversal/classic/divide_face/interior.rs"
+    ],
+    "kept": false,
+    "build_exit": 101,
+    "reason": "build_failed",
+    "hypothesis": "Modified `classic/divide_face.rs` and added `classic/divide_face/interior.rs`.\n\nThe patch preserves small, paired interior trim loops when their projected boundaries are simple and strictly contained. UV area alone cannot justify deleting a disk\u2013annulus partition. Existing filtering remains elsewhere.\n\nExpected scope: restoring missing through-hole rims. Cylinder-pair marching and coincidence failures remain unresolved. Containment checks use projected polylines, so controller validation is still required.\n\nFormatted only; no builds or tests run.\n\n[Candidate patch](/workspace/scratch/attempt-14.patch) \u00b7 [Findings](/workspace/scratch/partial.txt)",
+    "build_error": "   Compiling monstertruck-geometry v0.4.1 (/workspace/kernel/source/monstertruck-geometry)\n   Compiling monstertruck-meshing v0.4.1 (/workspace/kernel/source/monstertruck-meshing)\n   Compiling monstertruck-fillet v0.4.1 (/workspace/kernel/source/monstertruck-fillet)\n   Compiling monstertruck-solid v0.4.1 (/workspace/kernel/source/monstertruck-solid)\n   Compiling monstertruck-modeling v0.4.1 (/workspace/kernel/source/monstertruck-modeling)\nerror[E0308]: mismatched types\n  --> /workspace/kernel/source/monstertruck-solid/src/transversal/classic/divide_face/interior.rs:74:48\n   |\n74 |     points.dedup_by(|first, second| first.near(second));\n   |                                           ---- ^^^^^^ expected `&&mut Point2<f64>`, found `&mut Point2<f64>`\n   |                                           |\n   |                                           arguments to this method are incorrect\n   |\n   = note:      expected reference `&&mut monstertruck_core::cgmath::Point2<_>`\n           found mutable reference `&mut monstertruck_core::cgmath::Point2<_>`\nnote: method defined here\n  --> /workspace/kernel/source/monstertruck-core/src/tolerance.rs:14:8\n   |\n14 |     fn near(&self, other: &Self) -> bool { self.abs_diff_eq(other, TOLERANCE) }\n   |        ^^^^\n\nFor more information about this error, try `rustc --explain E0308`.\nerror: could not compile `monstertruck-solid` (lib) due to 1 previous error\nwarning: build failed, waiting for other jobs to finish..."
+  },
+  {
+    "attempt": 15,
+    "lane": "curved",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/divide_face.rs",
+      "monstertruck-solid/src/transversal/classic/divide_face/interior.rs"
+    ],
+    "kept": true,
+    "build_exit": 0,
+    "public_score": 91.23931623931624,
+    "public_passed": 280,
+    "public_regressions": [],
+    "reason": "improved_without_regression",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-fillet",
+        "monstertruck-geometry",
+        "monstertruck-healing",
+        "monstertruck-io",
+        "monstertruck-meshing",
+        "monstertruck-modeling",
+        "monstertruck-solid",
+        "monstertruck-step"
+      ],
+      "kernel_tests": {
+        "exit": 0,
+        "seconds": 150.246
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 6.978
+      }
+    },
+    "hypothesis": "Repaired attempt 14\u2019s hypothesis in `classic/divide_face.rs` and new `classic/divide_face/interior.rs`, including the reported `near()` type error.\n\nThe patch preserves paired, simple interior trim loops: small UV area does not invalidate a disk\u2013annulus partition. Expected scope is restoring missing through-hole rims.\n\nCylinder coincidence and cylinder-pair assembly remain unresolved. Containment and regression behavior require controller validation. No builds or tests run.\n\n[Candidate patch](/workspace/scratch/attempt-15.patch)"
+  },
+  {
+    "attempt": 16,
+    "lane": "curved",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/coincident.rs",
+      "monstertruck-solid/src/transversal/classic/mod.rs",
+      "monstertruck-solid/src/transversal/integrate/mod.rs"
+    ],
+    "kept": true,
+    "build_exit": 0,
+    "public_score": 93.37606837606837,
+    "public_passed": 295,
+    "public_regressions": [],
+    "reason": "improved_without_regression",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-fillet",
+        "monstertruck-geometry",
+        "monstertruck-healing",
+        "monstertruck-io",
+        "monstertruck-meshing",
+        "monstertruck-modeling",
+        "monstertruck-solid",
+        "monstertruck-step"
+      ],
+      "kernel_tests": {
+        "exit": 0,
+        "seconds": 223.29
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.866
+      }
+    },
+    "hypothesis": "Candidate written in `classic/coincident.rs`, `classic/mod.rs`, and `integrate/mod.rs`.\n\nExact spline coefficients, oriented trim cycles, and face orientations establish boundary equality before applying `A \u222a A = A`, `A \u2229 A = A`, and `A \u2212 A = \u2205`.\n\nExpected scope: coincident cylinders and other identically represented solids. Noncoincident cylinder intersections and the remaining hole failure remain unresolved. The added `ShapeOpsCurve` conversion bound needs compatibility validation.\n\nNo builds or tests run.\n\n[Candidate patch](/workspace/scratch/attempt-16.patch)"
+  },
+  {
+    "attempt": 17,
+    "lane": "curved",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/circular_extrusion/mod.rs",
+      "monstertruck-solid/src/transversal/classic/circular_extrusion/recognize.rs",
+      "monstertruck-solid/src/transversal/classic/mod.rs"
+    ],
+    "kept": true,
+    "build_exit": 0,
+    "public_score": 95.94017094017094,
+    "public_passed": 313,
+    "public_regressions": [],
+    "reason": "improved_without_regression",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-fillet",
+        "monstertruck-geometry",
+        "monstertruck-healing",
+        "monstertruck-io",
+        "monstertruck-meshing",
+        "monstertruck-modeling",
+        "monstertruck-solid",
+        "monstertruck-step"
+      ],
+      "kernel_tests": {
+        "exit": 0,
+        "seconds": 131.236
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.967
+      }
+    },
+    "hypothesis": "Candidate written in `classic/mod.rs` and new `classic/circular_extrusion/{mod,recognize}.rs`.\n\nThe hypothesis addresses coplanar cap overlap through an exact circular-rim arrangement. It certifies rational circle coefficients, splits existing curves at analytic crossings, and assembles caps and side faces with shared edges.\n\nExpected scope: overlapping cylinders with matching cap planes. Tangency, containment, unequal heights, and the remaining through-hole failure remain unresolved.\n\nNo builds or tests run. Compilation, topology, numerical behavior, and regression gates require controller validation.\n\n[Candidate patch](/workspace/scratch/attempt-17.patch) \u00b7 [Findings](/workspace/scratch/partial.txt)"
+  },
+  {
+    "attempt": 18,
+    "lane": "curved",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/circular_extrusion/mod.rs"
+    ],
+    "kept": true,
+    "build_exit": 0,
+    "public_score": 96.36752136752138,
+    "public_passed": 316,
+    "public_regressions": [],
+    "reason": "improved_without_regression",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-fillet",
+        "monstertruck-geometry",
+        "monstertruck-healing",
+        "monstertruck-io",
+        "monstertruck-meshing",
+        "monstertruck-modeling",
+        "monstertruck-solid",
+        "monstertruck-step"
+      ],
+      "kernel_tests": {
+        "exit": 0,
+        "seconds": 185.818
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.866
+      }
+    },
+    "hypothesis": "Modified [circular_extrusion/mod.rs](/workspace/kernel/monstertruck-solid/src/transversal/classic/circular_extrusion/mod.rs).\n\nThe candidate classifies external tangency as disjoint solid interiors: union preserves two shells, intersection is empty, and difference preserves the first boundary. It uses projected circular-section bounds and the existing coincident-crossing predicate; no tolerances changed.\n\nExpected scope: the three tangent-cylinder failures. The through-hole failure remains unresolved. Very shallow overlaps at the existing crossing-coincidence threshold need controller validation.\n\nFormatted only; no builds or tests run.\n\n[Candidate patch](/workspace/scratch/attempt-18.patch) \u00b7 [Findings](/workspace/scratch/partial.txt)"
+  },
+  {
+    "attempt": 19,
+    "lane": "curved",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/mod.rs",
+      "monstertruck-solid/src/transversal/classic/shell_classification.rs"
+    ],
+    "kept": true,
+    "build_exit": 0,
+    "public_score": 97.22222222222223,
+    "public_passed": 317,
+    "public_regressions": [],
+    "reason": "improved_without_regression",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-fillet",
+        "monstertruck-geometry",
+        "monstertruck-healing",
+        "monstertruck-io",
+        "monstertruck-meshing",
+        "monstertruck-modeling",
+        "monstertruck-solid",
+        "monstertruck-step"
+      ],
+      "kernel_tests": {
+        "exit": 0,
+        "seconds": 128.629
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.715
+      }
+    },
+    "hypothesis": "Modified `classic/mod.rs` and `classic/shell_classification.rs`.\n\nResidual face classification now respects B-rep face orientation and complemented solids. For the failing hole recipe, the lower-cap ray\u2019s correct winding is zero; the previous calculation produced two, incorrectly retaining an exterior cap.\n\nExpected scope: restore the through-hole shell\u2019s closure without changing intersection curves or tolerances. Existing sliver filtering and boundary-sampling ambiguity remain.\n\nNo builds or tests run. Controller validation remains required.\n\n[Candidate patch](/workspace/scratch/attempt-19.patch) \u00b7 [Findings](/workspace/scratch/partial.txt)"
+  },
+  {
+    "attempt": 20,
+    "lane": "step",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-io/src/step/load/convert/assembly_shapes.rs",
+      "monstertruck-io/src/step/load/convert/mod.rs"
+    ],
+    "kept": true,
+    "build_exit": 0,
+    "public_score": 100.0,
+    "public_passed": 318,
+    "public_regressions": [],
+    "reason": "improved_without_regression",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-assembly",
+        "monstertruck-fillet",
+        "monstertruck-healing",
+        "monstertruck-io",
+        "monstertruck-meshing",
+        "monstertruck-modeling",
+        "monstertruck-solid",
+        "monstertruck-step"
+      ],
+      "kernel_tests": {
+        "exit": 0,
+        "seconds": 216.981
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 4.472
+      }
+    },
+    "hypothesis": "Candidate written in [convert/mod.rs](/workspace/kernel/monstertruck-io/src/step/load/convert/mod.rs) and new [assembly_shapes.rs](/workspace/kernel/monstertruck-io/src/step/load/convert/assembly_shapes.rs).\n\nAssembly loading now follows non-transforming representation relationships to collect solid and surface-model IDs. These relationships preserve local coordinates, so existing occurrence transforms place the recovered geometry. Traversal guards cycles, deduplicates IDs, and stops at other product roots.\n\nExpected scope: solids omitted because their B-reps reside in related representations. Existing shell conversion and triangulation can now receive them.\n\nThe NIST fixture is absent locally; compilation, tessellation, and regression verdicts remain unverified. No builds or tests ran. Existing test content is unchanged.\n\n[Candidate patch](/workspace/scratch/attempt-20.patch) \u00b7 [Findings](/workspace/scratch/partial.txt)"
+  }
+]

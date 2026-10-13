@@ -1,0 +1,107 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -114,39 +114,19 @@
+         shell_classification::classify_closed(unknown0, &altshell0, &poly_shell0, &poly_shell1)?;
+     and0.append(&mut closed_and0);
+     or0.append(&mut closed_or0);
+-    unknown0.into_iter().try_for_each(|face| {
+-        let pt = face.boundaries()[0].vertex_iter().next().unwrap().point();
+-        let dir = hash::take_one_unit(pt);
+-        let count = poly_shell1.iter().try_fold(0, |count, face| {
+-            let poly = face.surface()?;
+-            Some(count + poly.signed_crossing_faces(pt, dir))
+-        })?;
+-        if count >= 1 {
+-            and0.push(face);
+-        } else {
+-            or0.push(face);
+-        }
+-        Some(())
+-    })?;
++    let [mut remaining_and0, mut remaining_or0] =
++        shell_classification::classify_remaining(unknown0, &poly_shell1)?;
++    and0.append(&mut remaining_and0);
++    or0.append(&mut remaining_or0);
+     let [mut and1, mut or1, unknown1] = cls1.and_or_unknown();
+     let [mut closed_and1, mut closed_or1, unknown1] =
+         shell_classification::classify_closed(unknown1, &altshell1, &poly_shell1, &poly_shell0)?;
+     and1.append(&mut closed_and1);
+     or1.append(&mut closed_or1);
+-    unknown1.into_iter().try_for_each(|face| {
+-        let pt = face.boundaries()[0].vertex_iter().next().unwrap().point();
+-        let dir = hash::take_one_unit(pt);
+-        let count = poly_shell0.iter().try_fold(0, |count, face| {
+-            let poly = face.surface()?;
+-            Some(count + poly.signed_crossing_faces(pt, dir))
+-        })?;
+-        if count >= 1 {
+-            and1.push(face);
+-        } else {
+-            or1.push(face);
+-        }
+-        Some(())
+-    })?;
++    let [mut remaining_and1, mut remaining_or1] =
++        shell_classification::classify_remaining(unknown1, &poly_shell0)?;
++    and1.append(&mut remaining_and1);
++    or1.append(&mut remaining_or1);
+     and0.append(&mut and1);
+     or0.append(&mut or1);
+     // Recover exact curves only on the boundary the caller will retain.
+--- a/monstertruck-solid/src/transversal/classic/shell_classification.rs
++++ b/monstertruck-solid/src/transversal/classic/shell_classification.rs
+@@ -1,8 +1,8 @@
+-//! Membership of closed, uncut boundary components.
++//! Membership in complete oriented solid boundaries.
+ 
+ use monstertruck_meshing::prelude::{
+     CalcVolume, IncludingPointInDomain, InnerSpace, Invertible, Point3, PolygonMesh, PolylineCurve,
+-    hash,
++    Vector3, hash,
+ };
+ use monstertruck_topology::{Shell, shell::ShellCondition};
+ 
+@@ -37,12 +37,40 @@
+         })
+     }
+ 
++    fn winding(&self, point: Point3, direction: Vector3) -> isize {
++        self.polygon.signed_crossing_faces(point, direction) + isize::from(self.complemented)
++    }
++
+     fn contains(&self, point: Point3) -> Option<bool> {
+         let direction = hash::take_one_unit(point);
+-        let forward = self.polygon.signed_crossing_faces(point, direction);
+-        let backward = self.polygon.signed_crossing_faces(point, -direction);
++        let forward = self.winding(point, direction);
++        let backward = self.winding(point, -direction);
+         // Opposite rays must give the same winding away from the boundary.
+-        (forward == backward).then_some(forward + isize::from(self.complemented) > 0)
++        (forward == backward).then_some(forward > 0)
++    }
++}
++
++/// Classify faces left without a classified neighbour by oriented winding.
++pub(super) fn classify_remaining<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    unknown: AltCurveShell<C, S>,
++    other: &PolyShell,
++) -> Option<[AltCurveShell<C, S>; 2]> {
++    if unknown.is_empty() {
++        Some([Shell::default(), Shell::default()])
++    } else {
++        // A filtered strip can leave an uncut cap without a neighbour.
++        // Mesh surfaces retain their parameter orientation, so summing them
++        // without their face orientations does not give the solid's winding.
++        let boundary = OrientedBoundary::new(other)?;
++        unknown.into_iter().try_fold(
++            [Shell::default(), Shell::default()],
++            |mut classified, face| {
++                let point = face.boundaries().first()?.front_vertex()?.point();
++                let inside = boundary.winding(point, hash::take_one_unit(point)) > 0;
++                classified[usize::from(!inside)].push(face);
++                Some(classified)
++            },
++        )
+     }
+ }
+ 

@@ -1,0 +1,175 @@
+--- /dev/null
++++ b/monstertruck-io/src/step/load/convert/assembly_shapes.rs
+@@ -0,0 +1,71 @@
++//! Geometry reached from a product through non-transforming representations.
++
++use std::collections::{BTreeMap, BTreeSet, HashSet};
++
++use super::{ProductEntity, Table};
++
++/// Completes each product's geometry without traversing assembly placements.
++pub(super) fn complete_shapes(table: &Table, products: &mut [ProductEntity]) {
++    // A relationship without a transformation relates geometry in the same
++    // coordinates. Either endpoint can be the product's representation.
++    let mut neighbors = BTreeMap::<u64, BTreeSet<u64>>::new();
++    table
++        .shape_representation_relationship
++        .values()
++        .filter_map(|relationship| {
++            Some((
++                Table::ref_id(&relationship.rep_1)?,
++                Table::ref_id(&relationship.rep_2)?,
++            ))
++        })
++        .for_each(|(first, second)| {
++            neighbors.entry(first).or_default().insert(second);
++            neighbors.entry(second).or_default().insert(first);
++        });
++
++    if neighbors.is_empty() {
++        return;
++    }
++
++    // A different product's representation is an ownership boundary. Its
++    // geometry must be reached through its assembly occurrence and transform.
++    let roots: HashSet<_> = products
++        .iter()
++        .filter_map(|product| product.attrs.shape_representation)
++        .collect();
++
++    products.iter_mut().for_each(|product| {
++        let Some(root) = product.attrs.shape_representation else {
++            return;
++        };
++        let mut visited = HashSet::from([root]);
++        let mut items: HashSet<_> = product.shape.iter().copied().collect();
++        let mut pending = vec![root];
++
++        while let Some(current) = pending.pop() {
++            if let Some(representation) = table.shape_representation.get(&current) {
++                product.shape.extend(
++                    representation
++                        .items
++                        .iter()
++                        .filter_map(Table::ref_id)
++                        .filter(|id| {
++                            table.manifold_solid_brep.contains_key(id)
++                                || table.shell_based_surface_model.contains_key(id)
++                        })
++                        .filter(|id| items.insert(*id)),
++                );
++            }
++
++            if let Some(adjacent) = neighbors.get(&current) {
++                // Reverse insertion visits sibling representations in ascending
++                // order, independent of hash-map iteration order.
++                pending.extend(adjacent.iter().rev().copied().filter(|id| {
++                    !roots.contains(id)
++                        && table.shape_representation.contains_key(id)
++                        && visited.insert(*id)
++                }));
++            }
++        }
++    });
++}
+--- a/monstertruck-io/src/step/load/convert/mod.rs
++++ b/monstertruck-io/src/step/load/convert/mod.rs
+@@ -7,6 +7,8 @@
+ use super::*;
+ use monstertruck_topology::compress::*;
+ use std::collections::HashSet;
++
++mod assembly_shapes;
+ 
+ /// A compressed shell in the STEP loader's concrete geometry types.
+ ///
+@@ -1063,6 +1065,10 @@
+         Ok((entity, (parent_idx, child_idx)))
+     }
+ 
++    /// Loads the product assembly, including geometry in related representations.
++    ///
++    /// Non-transforming representation links contribute geometry in the part's
++    /// local coordinates. Assembly occurrences retain their own transforms.
+     pub fn step_assy(&self) -> Result<StepAssembly, LoadError> {
+         let mut product_entities = Vec::<ProductEntity>::new();
+         let mut indices_map = HashMap::<u64, usize>::new();
+@@ -1079,6 +1085,8 @@
+             }
+         }
+ 
++        assembly_shapes::complete_shapes(self, &mut product_entities);
++
+         let adjacency = assy_nodes
+             .into_iter()
+             .map(|(entity, (from, to))| {
+@@ -1105,10 +1113,9 @@
+     /// assembly this crate did not load, i.e. one an application or the save
+     /// side built, where the field is `Default`'s `None`.
+     ///
+-    /// **Measured on the two Scania files (`scania_assembly_graphs_now_load_and_walk`):
+-    /// the two routes agree node for node, and the id route reaches the same
+-    /// 832 of 832 and 254 of 254 solids.** A disagreement would be a finding,
+-    /// not a rounding error, and that pin is where it would surface.
++    /// The carried id identifies the original product representation even when
++    /// the node's shape also includes geometry from related representations.
++    /// In that case an exact item-list lookup need not find a match.
+     pub fn shape_representation_of_node(&self, node: &ProductEntity) -> Option<u64> {
+         node.attrs
+             .shape_representation
+@@ -1126,11 +1133,10 @@
+     /// because it answers a question the field cannot: which representation, if
+     /// any, holds an item list a caller constructed itself.
+     ///
+-    /// [`Table::step_assy`] fills a node's `shape` from
+-    /// `shape_definition_representation.used_representation.items`. Before spec
+-    /// 012 it discarded the representation's own id, so a caller holding an
+-    /// assembly node could not ask anything else about that representation, and
+-    /// this inverse was the only bridge.
++    /// [`Table::step_assy`] starts with the direct representation items and
++    /// adds geometry from related representations. Such a combined item list
++    /// need not match any single representation; use the node's carried id
++    /// when identifying its original product representation.
+     ///
+     /// Matching is on the whole id list, not on containment, and that is not
+     /// caution for its own sake: **measured, `coffy.step` lists `#15756` in BOTH
+@@ -1161,22 +1167,12 @@
+     /// The solids a part's representation reaches through the **non-transforming**
+     /// `SHAPE_REPRESENTATION_RELATIONSHIP` hop, plus what the hop lost.
+     ///
+-    /// # Why this is not [`ProductEntity::shape`]
+-    ///
+-    /// `shape` means "the items directly in this node's representation", and on
+-    /// real assemblies that is honestly what it holds: **measured on
+-    /// `Scania-8x4.stp` it is `{AXIS2_PLACEMENT_3D: 695, SHELL_BASED_SURFACE_MODEL:
+-    /// 44}` and on `Scania-Engine-V8-XT-Turbo.step` `{AXIS2_PLACEMENT_3D: 906}` --
+-    /// zero solids.** The solids live in a second representation, an
+-    /// `ADVANCED_BREP_SHAPE_REPRESENTATION`, and this hop is what reaches them:
+-    /// **832 of 832 and 254 of 254**, exactly the 1,086 solids spec 011 T6 found
+-    /// with no placement.
+-    ///
+-    /// Making `shape` chase the relationship silently would make an existing
+-    /// method's answer depend on a hop the caller cannot see -- and `shape` is
+-    /// also what the save side round-trips, where the direct meaning is the
+-    /// right one. So the hop is a separate, visible call. Promoting it to the
+-    /// default later is easy; un-conflating two meanings after the fact is not.
++    /// # Relationship diagnostics
++    ///
++    /// [`Table::step_assy`] includes reachable solid and surface-model items in
++    /// [`ProductEntity::shape`]. This method provides the separate, directed,
++    /// single-hop census of representation links, including unresolved items.
++    /// Its results can therefore overlap geometry already in an assembly node.
+     ///
+     /// # Non-transforming only
+     ///
+@@ -1192,8 +1188,8 @@
+     /// Only the `rep_1 == shape_representation -> rep_2` direction is followed.
+     /// **Measured: the reverse direction carries zero solids on both Scania
+     /// files** (all 188 and 158 relationships have the part's own representation
+-    /// as `rep_1`), so following it would add no reach and would let one part
+-    /// claim another's geometry.
++    /// as `rep_1`). Assembly loading follows either endpoint, with other product
++    /// representations acting as ownership boundaries.
+     ///
+     /// # What the report says
+     ///

@@ -1,0 +1,351 @@
+--- a/monstertruck-solid/src/transversal/polyline_construction/mod.rs
++++ b/monstertruck-solid/src/transversal/polyline_construction/mod.rs
+@@ -1,139 +1,227 @@
+ //! Assemble unordered interference segments into ordered polylines.
+ //!
+-//! Truck-derived marching-SSI support: [`monstertruck_meshing`]'s
+-//! mesh-mesh interference extraction returns an unordered soup of
+-//! `(Point3, Point3)` segments; this stitches them into connected
+-//! [`PolylineCurve`] chains (open or closed) by walking a tolerance-keyed
+-//! adjacency graph. Resurrected from the 0.3.2 published crate (the last
+-//! release that shipped a self-contained boolean backend).
++//! Triangle pairs can report the same intersection segment more than once.
++//! Build the geometric edge set before tracing its maximal nonbranching paths.
++//! Spatial cells accelerate endpoint lookup; the existing geometric tolerance
++//! decides endpoint identity, including across cell boundaries.
+ 
+ use monstertruck_core::{cgmath64::*, tolerance::*};
+ use monstertruck_meshing::prelude::PolylineCurve;
+ use rustc_hash::FxHashMap as HashMap;
+-use std::collections::VecDeque;
++use smallvec::SmallVec;
++use std::{cmp::Ordering, collections::BTreeSet};
+ 
+ pub fn construct_polylines(lines: &[(Point3, Point3)]) -> Vec<PolylineCurve<Point3>> {
+-    let mut graph: Graph = lines.iter().collect();
+-    let mut res = Vec::new();
+-    while !graph.is_empty() {
+-        let (mut idx, node) = graph.first_node();
+-        let mut wire: VecDeque<_> = vec![node.coord].into();
+-        while let Some((idx0, pt)) = graph.next_node(idx) {
+-            idx = idx0;
+-            wire.push_back(pt);
++    let mut graph = Graph::new(lines);
++    let mut result = Vec::new();
++    while let Some(start) = graph.start() {
++        let mut points = vec![graph.nodes[start].coord];
++        let mut current = start;
++        while let Some(next) = graph.take_edge(current) {
++            points.push(graph.nodes[next].coord);
++            if next == start || graph.nodes[next].junction {
++                break;
++            }
++            current = next;
+         }
+-        let mut idx = PointIndex::from(wire[0]);
+-        while let Some((idx0, pt)) = graph.next_node(idx) {
+-            idx = idx0;
+-            wire.push_front(pt);
+-        }
+-        res.push(PolylineCurve(wire.into()));
+-    }
+-    res
+-}
+-
+-#[derive(Clone, Debug, Copy, Hash, PartialEq, Eq)]
+-struct PointIndex([i64; 3]);
+-
+-impl From<Point3> for PointIndex {
+-    #[inline(always)]
+-    fn from(pt: Point3) -> PointIndex {
+-        let idx = pt.add_element_wise(TOLERANCE) / (2.0 * TOLERANCE);
+-        // SAFETY: point coordinates are finite, so the cast to `i64` always succeeds.
+-        PointIndex(idx.cast::<i64>().unwrap().into())
++        result.push(PolylineCurve(points));
++    }
++    result
++}
++
++fn point_order(left: &Point3, right: &Point3) -> Ordering {
++    left.x
++        .total_cmp(&right.x)
++        .then_with(|| left.y.total_cmp(&right.y))
++        .then_with(|| left.z.total_cmp(&right.z))
++}
++
++fn finite(point: Point3) -> bool {
++    point.x.is_finite() && point.y.is_finite() && point.z.is_finite()
++}
++
++#[derive(Clone, Copy, Hash, PartialEq, Eq)]
++struct Cell([i64; 3]);
++
++impl From<Point3> for Cell {
++    fn from(point: Point3) -> Self {
++        Self([point.x, point.y, point.z].map(|x| (x / (2.0 * TOLERANCE)).floor() as i64))
++    }
++}
++
++impl Cell {
++    fn neighbors(self) -> impl Iterator<Item = Self> {
++        (-1..=1).flat_map(move |x| {
++            (-1..=1).flat_map(move |y| {
++                (-1..=1).map(move |z| {
++                    Self([
++                        self.0[0].saturating_add(x),
++                        self.0[1].saturating_add(y),
++                        self.0[2].saturating_add(z),
++                    ])
++                })
++            })
++        })
+     }
+ }
+ 
+ struct Node {
+     coord: Point3,
+-    adjacency: HashMap<PointIndex, usize>,
+-}
+-
+-impl Node {
+-    #[inline(always)]
+-    fn new(coord: Point3, adjacency: HashMap<PointIndex, usize>) -> Node {
+-        Node { coord, adjacency }
+-    }
+-
+-    fn pop_one_adjacency(&mut self) -> PointIndex {
+-        // SAFETY: nodes are removed from the graph when their adjacency set becomes empty.
+-        let idx = *self.adjacency.keys().next().unwrap();
+-        let mut remove = false;
+-        if let Some(count) = self.adjacency.get_mut(&idx) {
+-            *count -= 1;
+-            remove = *count == 0;
++    adjacency: SmallVec<[usize; 2]>,
++    junction: bool,
++}
++
++struct Graph {
++    nodes: Vec<Node>,
++    active: BTreeSet<usize>,
++}
++
++impl Graph {
++    fn new(lines: &[(Point3, Point3)]) -> Self {
++        // Canonical insertion order makes welding and traversal independent
++        // of the triangle-pair enumeration order and segment orientation.
++        let mut lines: Vec<_> = lines
++            .iter()
++            .copied()
++            .filter(|&(a, b)| finite(a) && finite(b) && !a.near(&b))
++            .map(|(a, b)| {
++                if point_order(&a, &b).is_gt() {
++                    (b, a)
++                } else {
++                    (a, b)
++                }
++            })
++            .collect();
++        lines
++            .sort_unstable_by(|a, b| point_order(&a.0, &b.0).then_with(|| point_order(&a.1, &b.1)));
++        let mut nodes = Vec::new();
++        let mut cells = HashMap::<Cell, SmallVec<[usize; 1]>>::default();
++        let edges: BTreeSet<_> = lines
++            .into_iter()
++            .filter_map(|(a, b)| {
++                let a = Self::insert_point(&mut nodes, &mut cells, a);
++                let b = Self::insert_point(&mut nodes, &mut cells, b);
++                (a != b).then_some((a.min(b), a.max(b)))
++            })
++            .collect();
++        Self::insert_segments(&mut nodes, edges);
++        nodes.iter_mut().for_each(|node| {
++            node.adjacency.sort_unstable();
++            // Multiplicity comes from mesh incidence, not from distinct
++            // geometric branches. Each undirected segment is walked once.
++            node.adjacency.dedup();
++            node.junction = node.adjacency.len() != 2;
++        });
++        let active = nodes
++            .iter()
++            .enumerate()
++            .filter_map(|(index, node)| (!node.adjacency.is_empty()).then_some(index))
++            .collect();
++        Self { nodes, active }
++    }
++
++    fn insert_segments(nodes: &mut [Node], edges: BTreeSet<(usize, usize)>) {
++        // A triangle edge may overlap several shorter interference segments.
++        // Split at their endpoints before deduplication, otherwise the long
++        // edge and the short chain form a spurious retraced cycle.
++        let sorted = [0, 1, 2].map(|axis| {
++            let mut indices: Vec<_> = (0..nodes.len()).collect();
++            indices.sort_unstable_by(|&a, &b| {
++                nodes[a].coord[axis]
++                    .total_cmp(&nodes[b].coord[axis])
++                    .then_with(|| a.cmp(&b))
++            });
++            indices
++        });
++        edges.into_iter().for_each(|(a, b)| {
++            let front = nodes[a].coord;
++            let back = nodes[b].coord;
++            let direction = back - front;
++            let axis = if direction.x.abs() >= direction.y.abs()
++                && direction.x.abs() >= direction.z.abs()
++            {
++                0
++            } else if direction.y.abs() >= direction.z.abs() {
++                1
++            } else {
++                2
++            };
++            let lower = front[axis].min(back[axis]);
++            let upper = front[axis].max(back[axis]);
++            let indices = &sorted[axis];
++            let start = indices.partition_point(|&i| nodes[i].coord[axis] < lower);
++            let end = indices.partition_point(|&i| nodes[i].coord[axis] <= upper);
++            let length2 = direction.magnitude2();
++            let mut splits: SmallVec<[(f64, usize); 4]> = indices[start..end]
++                .iter()
++                .copied()
++                .filter(|&i| i != a && i != b)
++                .filter_map(|i| {
++                    let point = nodes[i].coord;
++                    let parameter = (point - front).dot(direction) / length2;
++                    (0.0 < parameter
++                        && parameter < 1.0
++                        && point.near(&(front + parameter * direction)))
++                    .then_some((parameter, i))
++                })
++                .chain([(0.0, a), (1.0, b)])
++                .collect();
++            splits.sort_unstable_by(|a, b| a.0.total_cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
++            splits.windows(2).for_each(|pair| {
++                let (a, b) = (pair[0].1, pair[1].1);
++                nodes[a].adjacency.push(b);
++                nodes[b].adjacency.push(a);
++            });
++        });
++    }
++
++    fn insert_point(
++        nodes: &mut Vec<Node>,
++        cells: &mut HashMap<Cell, SmallVec<[usize; 1]>>,
++        point: Point3,
++    ) -> usize {
++        let cell = Cell::from(point);
++        let existing = cell
++            .neighbors()
++            .filter_map(|neighbor| cells.get(&neighbor))
++            .flatten()
++            .copied()
++            .filter(|&index| nodes[index].coord.near(&point))
++            .min();
++        if let Some(index) = existing {
++            index
++        } else {
++            let index = nodes.len();
++            nodes.push(Node {
++                coord: point,
++                adjacency: SmallVec::new(),
++                junction: false,
++            });
++            cells.entry(cell).or_default().push(index);
++            index
+         }
+-        if remove {
+-            self.adjacency.remove(&idx);
+-        }
+-        idx
+-    }
+-}
+-
+-struct Graph(HashMap<PointIndex, Node>);
+-
+-impl std::ops::Deref for Graph {
+-    type Target = HashMap<PointIndex, Node>;
+-    #[inline(always)]
+-    fn deref(&self) -> &Self::Target { &self.0 }
+-}
+-
+-impl std::ops::DerefMut for Graph {
+-    #[inline(always)]
+-    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+-}
+-
+-impl Graph {
+-    fn add_half_edge(&mut self, pt0: Point3, pt1: Point3) {
+-        let idx0 = pt0.into();
+-        let idx1 = pt1.into();
+-        if let Some(node) = self.get_mut(&idx0) {
+-            *node.adjacency.entry(idx1).or_insert(0) += 1;
+-        } else {
+-            self.insert(idx0, Node::new(pt0, HashMap::from_iter([(idx1, 1)])));
+-        }
+-    }
+-
+-    fn add_edge(&mut self, line: (Point3, Point3)) {
+-        if !line.0.near(&line.1) {
+-            self.add_half_edge(line.0, line.1);
+-            self.add_half_edge(line.1, line.0);
+-        }
+-    }
+-
+-    #[inline(always)]
+-    fn first_node(&self) -> (PointIndex, &Node) {
+-        // SAFETY: only called inside `while !graph.is_empty()`.
+-        let (idx, node) = self.iter().next().unwrap();
+-        (*idx, node)
+-    }
+-
+-    fn next_node(&mut self, idx: PointIndex) -> Option<(PointIndex, Point3)> {
+-        let node = self.get_mut(&idx)?;
+-        let idx0 = node.pop_one_adjacency();
+-        if node.adjacency.is_empty() {
+-            self.remove(&idx);
+-        }
+-        let node = self.get_mut(&idx0)?;
+-        let count = node.adjacency.get_mut(&idx)?;
+-        *count -= 1;
+-        let remove = *count == 0;
+-        if remove {
+-            node.adjacency.remove(&idx);
+-        }
+-        let pt = node.coord;
+-        if node.adjacency.is_empty() {
+-            self.remove(&idx0);
+-        }
+-        Some((idx0, pt))
+-    }
+-}
+-
+-impl<'a> FromIterator<&'a (Point3, Point3)> for Graph {
+-    fn from_iter<I: IntoIterator<Item = &'a (Point3, Point3)>>(iter: I) -> Graph {
+-        let mut res = Graph(HashMap::default());
+-        iter.into_iter().for_each(|line| res.add_edge(*line));
+-        res
++    }
++
++    fn start(&self) -> Option<usize> {
++        // Start open paths at their endpoints or junctions, then trace the
++        // remaining degree-two components as closed cycles.
++        self.active
++            .iter()
++            .find(|&&index| self.nodes[index].junction)
++            .or_else(|| self.active.first())
++            .copied()
++    }
++
++    fn take_edge(&mut self, start: usize) -> Option<usize> {
++        let next = *self.nodes[start].adjacency.first()?;
++        self.nodes[start].adjacency.remove(0);
++        self.nodes[next].adjacency.retain(|index| *index != start);
++        [start, next].into_iter().for_each(|index| {
++            if self.nodes[index].adjacency.is_empty() {
++                self.active.remove(&index);
++            }
++        });
++        Some(next)
+     }
+ }
+ 

@@ -1,0 +1,29 @@
+--- a/monstertruck-solid/src/transversal/classic/loops_store.rs
++++ b/monstertruck-solid/src/transversal/classic/loops_store.rs
+@@ -402,14 +402,23 @@
+     }
+     let t = curve.search_nearest_parameter(point, curve_hint, 10)?;
+     let pt0 = curve.evaluate(t);
+-    let (u, v) = surface.search_nearest_parameter(point, surface_hint, 10)?;
++    // Measure the curve-to-surface residual at the current curve point.
++    // The seed can lie on a tessellation chord rather than on the curve.
++    // In particular, a rim contained in a cap plane already solves the
++    // intersection constraint even when the seed is off the rim.
++    let (u, v) = surface.search_nearest_parameter(pt0, surface_hint, 10)?;
+     let pt1 = surface.evaluate(u, v);
+-    if point.near(&pt0) && point.near(&pt1) && pt0.near(&pt1) {
+-        Some((point, t, Point2::new(u, v)))
++    if pt0.near(&pt1) {
++        Some((pt0, t, Point2::new(u, v)))
+     } else {
+         let l = curve.derivative(t);
+         let n = surface.normal(u, v);
+         let t0 = (pt1 - pt0).dot(n) / l.dot(n);
++        // A singular, unsatisfied constraint does not define a Newton step.
++        // Do not pass non-finite points into subsequent parameter searches.
++        if !t0.is_finite() {
++            return None;
++        }
+         curve_surface_projection(
+             curve,
+             Some(t),

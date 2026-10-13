@@ -1,0 +1,44 @@
+{
+  "original_id": "public-317",
+  "group": "step",
+  "op": "step_import",
+  "recipe": {
+    "a": {
+      "kind": "box",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        1,
+        1,
+        1
+      ]
+    },
+    "boolean_tol": 0.05,
+    "fixture": "nist_ctc_01_asme1_ap242-e1.stp",
+    "mesh_tol": 0.002,
+    "op": "step_import",
+    "regression": "engine-path empty-success assembly traversal"
+  },
+  "steps": [],
+  "result": {
+    "pass": false,
+    "reasons": [
+      "empty_success"
+    ],
+    "actual": {
+      "volume": null,
+      "area": null,
+      "centroid": null,
+      "mesh_closed": null,
+      "index_closed": null,
+      "degenerate_triangles": null,
+      "bodies": null,
+      "cavities": null,
+      "triangles": null,
+      "shells": []
+    }
+  }
+}

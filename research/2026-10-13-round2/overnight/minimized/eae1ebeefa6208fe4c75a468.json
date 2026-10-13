@@ -1,0 +1,70 @@
+{
+  "original_id": "public-248",
+  "group": "fillet",
+  "op": "fillet",
+  "recipe": {
+    "a": {
+      "kind": "box",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "size": [
+        3.7,
+        4.0,
+        3.8
+      ]
+    },
+    "boolean_tol": 0.05,
+    "mesh_tol": 0.002,
+    "op": "fillet",
+    "radius": 0.37
+  },
+  "steps": [
+    "move_to_origin",
+    "round_dimensions"
+  ],
+  "result": {
+    "pass": false,
+    "reasons": [
+      "geometric_consistency"
+    ],
+    "expected": {
+      "volume": 56.12835983256262,
+      "area": 87.45778165261186,
+      "centroid": [
+        1.853515293903639,
+        2.003813646201222,
+        1.8999999999999997
+      ],
+      "bodies": 1,
+      "cavities": 0,
+      "euler": 2
+    },
+    "actual": {
+      "volume": 56.12813289586023,
+      "area": 87.45607533292302,
+      "centroid": [
+        1.8535222524909654,
+        2.003821212473297,
+        1.8999999999999924
+      ],
+      "mesh_closed": true,
+      "index_closed": true,
+      "degenerate_triangles": 0,
+      "bodies": 1,
+      "cavities": 0,
+      "triangles": 1966,
+      "shells": [
+        {
+          "signed_volume": 56.12813289586023,
+          "closed": true,
+          "subdivision_closed": true,
+          "degenerate_triangles": 0,
+          "bad_segments": []
+        }
+      ]
+    }
+  }
+}

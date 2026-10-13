@@ -1,0 +1,69 @@
+   Compiling monstertruck-solid v0.4.1 (/workspace/kernel/source/monstertruck-solid)
+   Compiling monstertruck v0.4.1 (/workspace/kernel/source/monstertruck)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 13.67s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck-278f4496ef07694c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck_solid-0a7d23ba4b34b2bc)
+
+running 9 tests
+test transversal::integrate::tests::adjacent_cubes_or ... FAILED
+test transversal::integrate::tests::boolean_matrix_and_crossing_cubes ... ok
+test transversal::integrate::tests::cube_clip_high_z ... ok
+test transversal::integrate::tests::cube_clip_high_z_flip ... ok
+test transversal::integrate::tests::punched_cube ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive0 ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive1 ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive2 ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive3 ... ok
+
+failures:
+
+---- transversal::integrate::tests::adjacent_cubes_or stdout ----
+
+thread 'transversal::integrate::tests::adjacent_cubes_or' (1443) panicked at monstertruck-solid/src/transversal/integrate/tests.rs:41:5:
+assertion `left == right` failed
+  left: 30
+ right: 12
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    transversal::integrate::tests::adjacent_cubes_or
+
+test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s
+
+error: test failed, to rerun pass `-p monstertruck-solid --lib`
+     Running tests/boolean_smoke.rs (/target/debug/deps/boolean_smoke-f8d470717b806e58)
+
+running 4 tests
+test cube_minus_column ... ok
+test difference_of_overlapping_cubes ... ok
+test intersection_of_overlapping_cubes ... ok
+test union_of_overlapping_cubes ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+   Doc-tests monstertruck
+
+running 1 test
+test monstertruck/src/lib.rs - (line 94) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.23s; merged doctests compilation took 0.23s
+   Doc-tests monstertruck_solid
+
+running 1 test
+test monstertruck-solid/src/lib.rs - (line 6) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+all doctests ran in 3.77s; merged doctests compilation took 3.76s
+error: 1 target failed:
+    `-p monstertruck-solid --lib`

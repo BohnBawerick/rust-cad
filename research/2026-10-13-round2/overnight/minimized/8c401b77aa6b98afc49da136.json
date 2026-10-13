@@ -1,0 +1,48 @@
+{
+  "original_id": "public-043",
+  "group": "boxes",
+  "op": "union",
+  "recipe": {
+    "a": {
+      "kind": "box",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "size": [
+        3.9,
+        2.4,
+        3.7
+      ]
+    },
+    "b": {
+      "kind": "box",
+      "origin": [
+        3.9,
+        0.0,
+        0.0
+      ],
+      "size": [
+        3.9,
+        2.4,
+        3.7
+      ]
+    },
+    "boolean_tol": 0.05,
+    "mesh_tol": 0.002,
+    "op": "union",
+    "relation": "touch_face",
+    "rotation": 0
+  },
+  "steps": [
+    "move_to_origin",
+    "round_dimensions"
+  ],
+  "result": {
+    "pass": false,
+    "reasons": [
+      "error:invalid output shell for `or`: no boundary shells."
+    ]
+  }
+}

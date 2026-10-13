@@ -1,0 +1,188 @@
+--- a/monstertruck-solid/src/transversal/classic/divide_face.rs
++++ b/monstertruck-solid/src/transversal/classic/divide_face.rs
+@@ -13,6 +13,8 @@
+ use monstertruck_topology::*;
+ use rustc_hash::FxHashMap as HashMap;
+ use std::ops::Deref;
++
++mod interior;
+ 
+ fn create_parameter_boundary<P, C, S>(
+     face: &Face<P, C, S>,
+@@ -53,6 +55,7 @@
+ struct WireChunk<'a, C> {
+     poly: PolylineCurve<Point2>,
+     wire: &'a BoundaryWire<Point3, C>,
++    interior: bool,
+ }
+ 
+ type FaceWithShapesOpStatus<C, S> = (Face<Point3, C, S>, ShapesOpStatus);
+@@ -67,27 +70,53 @@
+ {
+     let (mut pre_faces, mut negative_wires) = (Vec::new(), Vec::new());
+     let mut map = HashMap::default();
++    let mut original_boundaries = None;
+     loops.iter().try_for_each(|wire| {
+         let poly = create_parameter_boundary(face, wire, &mut map, tol)?;
+         let area = poly.area();
+-        if area.abs() < tol {
++        // A paired interior loop partitions the face into a disk and an
++        // annulus. Its UV area cannot decide whether that partition exists.
++        // Keep the sliver filter for loops attached to the original boundary.
++        let interior = area.abs() < tol
++            && area != 0.0
++            && wire.status() != ShapesOpStatus::Unknown
++            && loops.iter().any(|other| interior::opposite(wire, other))
++            && original_boundaries
++                .get_or_insert_with(|| {
++                    face.absolute_boundaries()
++                        .iter()
++                        .map(|boundary| create_parameter_boundary(face, boundary, &mut map, tol))
++                        .collect::<Option<Vec<_>>>()
++                })
++                .as_ref()
++                .is_some_and(|boundaries| interior::strictly_inside(&poly, boundaries));
++        if area.abs() < tol && !interior {
+             return Some(());
+         }
++        let chunk = WireChunk {
++            poly,
++            wire,
++            interior,
++        };
+         match area > 0.0 {
+-            true => pre_faces.push(vec![WireChunk { poly, wire }]),
+-            false => negative_wires.push(WireChunk { poly, wire }),
++            true => pre_faces.push(vec![chunk]),
++            false => negative_wires.push(chunk),
+         }
+         Some(())
+     })?;
+     negative_wires.into_iter().try_for_each(|chunk| {
+         let pt = chunk.poly.front();
+-        let idx = pre_faces.iter().position(|face| face[0].poly.include(pt));
++        let idx = pre_faces
++            .iter()
++            .position(|face| face.first().is_some_and(|outer| outer.poly.include(pt)));
+         if let Some(i) = idx {
+             let outer_area = pre_faces[i][0].poly.area();
+             let chunk_area = chunk.poly.area();
+             // If the sum of areas is zero, the face is canceled.
+             // This happens when an intersection loop exactly matches the face boundary.
+-            if (outer_area + chunk_area).abs() < tol {
++            if (outer_area + chunk_area).abs() < tol
++                && (!chunk.interior || interior::opposite(pre_faces[i][0].wire, chunk.wire))
++            {
+                 pre_faces[i].clear();
+             } else {
+                 pre_faces[i].push(chunk);
+--- /dev/null
++++ b/monstertruck-solid/src/transversal/classic/divide_face/interior.rs
+@@ -0,0 +1,107 @@
++//! Recognize closed interior partitions before filtering small UV loops.
++
++use monstertruck_meshing::prelude::*;
++use monstertruck_topology::Wire;
++
++/// Compare opposite edge cycles, allowing a different starting edge.
++pub(super) fn opposite<C>(first: &Wire<Point3, C>, second: &Wire<Point3, C>) -> bool {
++    first.len() == second.len()
++        && first.front().is_some_and(|edge| {
++            second
++                .iter()
++                .rev()
++                .position(|other| other.id() == edge.id())
++                .is_some_and(|offset| {
++                    first
++                        .iter()
++                        .zip(second.iter().rev().cycle().skip(offset))
++                        .all(|(left, right)| {
++                            left.id() == right.id() && left.orientation() != right.orientation()
++                        })
++                })
++        })
++}
++
++fn sides(points: &[Point2]) -> impl Iterator<Item = (Point2, Point2)> + '_ {
++    points
++        .iter()
++        .copied()
++        .zip(points.iter().copied().cycle().skip(1))
++        .take(points.len())
++}
++
++fn determinant(a: Point2, b: Point2, c: Point2) -> f64 {
++    let first = b - a;
++    let second = c - a;
++    first.x * second.y - first.y * second.x
++}
++
++/// Include contacts and collinear overlap in the segment intersection test.
++fn touches((a, b): (Point2, Point2), (c, d): (Point2, Point2)) -> bool {
++    a.x.min(b.x) <= c.x.max(d.x)
++        && c.x.min(d.x) <= a.x.max(b.x)
++        && a.y.min(b.y) <= c.y.max(d.y)
++        && c.y.min(d.y) <= a.y.max(b.y)
++        && determinant(a, b, c) * determinant(a, b, d) <= 0.0
++        && determinant(c, d, a) * determinant(c, d, b) <= 0.0
++}
++
++fn winding(points: &[Point2], point: Point2) -> i32 {
++    sides(points)
++        .map(|(a, b)| {
++            if a.y <= point.y && b.y > point.y && determinant(a, b, point) > 0.0 {
++                1
++            } else if b.y <= point.y && a.y > point.y && determinant(a, b, point) < 0.0 {
++                -1
++            } else {
++                0
++            }
++        })
++        .sum()
++}
++
++/// Normalize only the validation polygon, leaving the actual trim untouched.
++fn polygon(poly: &PolylineCurve<Point2>) -> Option<Vec<Point2>> {
++    let mut points = poly.as_slice().to_vec();
++    if !points
++        .iter()
++        .all(|point| point.x.is_finite() && point.y.is_finite())
++        || !points.first()?.near(points.last()?)
++    {
++        return None;
++    }
++    points.truncate(points.len() - 1);
++    points.dedup_by(|first, second| first.near(second));
++    (points.len() >= 3).then_some(points)
++}
++
++/// Require a simple cycle strictly inside the original trimmed domain.
++/// A loop enclosing an existing hole is not an independent disk partition.
++pub(super) fn strictly_inside(
++    poly: &PolylineCurve<Point2>,
++    boundaries: &[PolylineCurve<Point2>],
++) -> bool {
++    let Some(points) = polygon(poly) else {
++        return false;
++    };
++    let simple = sides(&points).enumerate().all(|(index, side)| {
++        sides(&points)
++            .enumerate()
++            .skip(index + 1)
++            .all(|(next, other)| {
++                next == index + 1
++                    || (index == 0 && next + 1 == points.len())
++                    || !touches(side, other)
++            })
++    });
++    if !simple {
++        return false;
++    }
++    boundaries.iter().try_fold(0, |total, boundary| {
++        let original = polygon(boundary)?;
++        let separate =
++            sides(&points).all(|side| sides(&original).all(|other| !touches(side, other)));
++        (separate && winding(&points, original[0]) == 0)
++            .then_some(total + winding(&original, points[0]))
++    }) == Some(1)
++}

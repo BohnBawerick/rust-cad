@@ -1,0 +1,72 @@
+--- a/monstertruck-modeling/src/fillet_impl/mod.rs
++++ b/monstertruck-modeling/src/fillet_impl/mod.rs
+@@ -50,13 +50,64 @@
+ }
+ 
+ impl From<FilletIntersectionCurve> for Curve {
+-    // Convert-back path only: these are intersection curves the fillet
+-    // algorithm itself creates between its generated NURBS strips (never
+-    // boolean seam input), and they have no exact closed form.
+     fn from(c: FilletIntersectionCurve) -> Self {
+-        let range = c.range_tuple();
+-        Curve::NurbsCurve(sample_to_nurbs(range, |t| c.subs(t), 16))
++        // An affine UV trim has an exact piecewise rational representation.
++        // When it already lies on both carriers, preserve that representation:
++        // chords between samples would leave the curved fillet surface.
++        let exact = linear_trim_to_nurbs(c.leader())
++            .filter(|curve| c.surface0().include(curve) && c.surface1().include(curve));
++        Curve::NurbsCurve(exact.unwrap_or_else(|| {
++            let range = c.range_tuple();
++            sample_to_nurbs(range, |t| c.subs(t), 16)
++        }))
+     }
++}
++
++/// Restrict a homogeneous tensor-product surface to an affine UV line.
++fn linear_trim_to_nurbs(curve: &ParameterCurveLinear) -> Option<NurbsCurve<Vector4>> {
++    let (line, surface) = (curve.curve(), curve.surface());
++    let direction = line.1 - line.0;
++    let crossings = [
++        (surface.knot_vector_u(), line.0.x, direction.x),
++        (surface.knot_vector_v(), line.0.y, direction.y),
++    ]
++    .into_iter()
++    .filter(|(_, _, delta)| *delta != 0.0)
++    .flat_map(|(knots, start, delta)| knots.iter().map(move |knot| (knot - start) / delta))
++    .filter(|t| 0.0 < *t && *t < 1.0);
++    let mut breaks: Vec<_> = [0.0, 1.0].into_iter().chain(crossings).collect();
++    breaks.sort_by(f64::total_cmp);
++    breaks.dedup();
++
++    // Within each knot rectangle, substitution into homogeneous coordinates
++    // gives a polynomial of degree at most `udegree + vdegree`. Interpolating
++    // that polynomial retains the rational weights and is not a chord fit.
++    let degree = (surface.udegree() + surface.vdegree()).max(1);
++    let mut pieces = breaks.windows(2).map(|span| {
++        let (start, end) = (span[0], span[1]);
++        let points: Vec<_> = (0..=degree)
++            .map(|i| {
++                let t = i as f64 / degree as f64;
++                let uv = line.subs(start * (1.0 - t) + end * t);
++                (t, surface.non_rationalized().subs(uv.x, uv.y))
++            })
++            .collect();
++        let piece = BsplineCurve::try_interpolate(KnotVector::bezier_knot(degree), points).ok()?;
++        // Reuse the exact break values so adjacent knot intervals meet even
++        // when computing `start + (end - start)` would round differently.
++        let knots = [start, end]
++            .into_iter()
++            .flat_map(|t| std::iter::repeat_n(t, degree + 1))
++            .collect::<Vec<_>>();
++        Some(BsplineCurve::new(
++            KnotVector::from(knots),
++            piece.destruct().1,
++        ))
++    });
++    let first = pieces.next()??;
++    pieces
++        .try_fold(first, |curve, piece| curve.try_concat(&piece?).ok())
++        .map(NurbsCurve::new)
+ }
+ 
+ /// Sample a parametric curve into a degree-1 NURBS polyline approximation.

@@ -1,0 +1,41 @@
+{
+  "original_id": "public-178",
+  "group": "cylinders",
+  "op": "union",
+  "recipe": {
+    "a": {
+      "height": 1.2,
+      "kind": "cylinder",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "radius": 0.9
+    },
+    "b": {
+      "height": 1.2,
+      "kind": "cylinder",
+      "origin": [
+        1.8,
+        0.0,
+        0.0
+      ],
+      "radius": 0.9
+    },
+    "boolean_tol": 0.05,
+    "mesh_tol": 0.002,
+    "op": "union",
+    "relation": "d/r=2.0"
+  },
+  "steps": [
+    "move_to_origin",
+    "round_dimensions"
+  ],
+  "result": {
+    "pass": false,
+    "reasons": [
+      "error:invalid output shell for `or`: This shell is not oriented and closed.."
+    ]
+  }
+}

@@ -1,0 +1,281 @@
+--- a/monstertruck-solid/src/transversal/classic/faces_classification.rs
++++ b/monstertruck-solid/src/transversal/classic/faces_classification.rs
+@@ -51,10 +51,15 @@
+         let components = unknown.connected_components();
+         for comp in components {
+             let boundary = comp.extract_boundaries();
++            // A closed unknown component has no classified neighbour; membership
++            // must be determined against the other solid's complete boundary.
++            let Some(first_edge) = boundary.iter().flatten().next() else {
++                continue;
++            };
+             if and_boundary
+                 .iter()
+                 .flatten()
+-                .any(|edge| edge.id() == boundary[0][0].id())
++                .any(|edge| edge.id() == first_edge.id())
+             {
+                 comp.iter().for_each(|face| {
+                     // SAFETY: face originated from `self.shell` via `and_or_unknown()`.
+@@ -63,7 +68,7 @@
+             } else if or_boundary
+                 .iter()
+                 .flatten()
+-                .any(|edge| edge.id() == boundary[0][0].id())
++                .any(|edge| edge.id() == first_edge.id())
+             {
+                 comp.iter().for_each(|face| {
+                     // SAFETY: face originated from `self.shell` via `and_or_unknown()`.
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,7 @@
+ mod faces_classification;
+ mod intersection_curve;
+ mod loops_store;
++mod shell_classification;
+ 
+ use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
+ use crate::alternative::Alternative;
+@@ -29,6 +30,8 @@
+ use monstertruck_meshing::prelude::*;
+ use monstertruck_topology::*;
+ use std::iter;
++
++use shell_classification::OrientedBoundary;
+ 
+ type ClassicResult<T> = std::result::Result<T, ShapeOpsError>;
+ 
+@@ -76,7 +79,7 @@
+     )
+ }
+ 
+-/// Split one pair of shells into `[and_shell, or_shell]` (0.3.2 verbatim): build
++/// Split two complete oriented boundaries into `[and_shell, or_shell]`: build
+ /// intersection loops, divide faces, classify each divided face as `and`/`or`,
+ /// then ray-cast the remaining `unknown` faces against the other shell.
+ fn process_one_pair_of_shells<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+@@ -103,35 +106,17 @@
+     let mut cls1 = divide_face::divide_faces(&altshell1, &loops_store1, tol)?;
+     cls1.integrate_by_component();
+     let [mut and0, mut or0, unknown0] = cls0.and_or_unknown();
+-    unknown0.into_iter().try_for_each(|face| {
+-        let pt = face.boundaries()[0].vertex_iter().next().unwrap().point();
+-        let dir = hash::take_one_unit(pt);
+-        let count = poly_shell1.iter().try_fold(0, |count, face| {
+-            let poly = face.surface()?;
+-            Some(count + poly.signed_crossing_faces(pt, dir))
+-        })?;
+-        if count >= 1 {
+-            and0.push(face);
+-        } else {
+-            or0.push(face);
+-        }
+-        Some(())
+-    })?;
++    let boundary0 = OrientedBoundary::new(&poly_shell0)?;
++    let boundary1 = OrientedBoundary::new(&poly_shell1)?;
++    let [mut inside0, mut outside0] =
++        boundary1.classify(unknown0, &altshell0, &poly_shell0, tol)?;
++    and0.append(&mut inside0);
++    or0.append(&mut outside0);
+     let [mut and1, mut or1, unknown1] = cls1.and_or_unknown();
+-    unknown1.into_iter().try_for_each(|face| {
+-        let pt = face.boundaries()[0].vertex_iter().next().unwrap().point();
+-        let dir = hash::take_one_unit(pt);
+-        let count = poly_shell0.iter().try_fold(0, |count, face| {
+-            let poly = face.surface()?;
+-            Some(count + poly.signed_crossing_faces(pt, dir))
+-        })?;
+-        if count >= 1 {
+-            and1.push(face);
+-        } else {
+-            or1.push(face);
+-        }
+-        Some(())
+-    })?;
++    let [mut inside1, mut outside1] =
++        boundary0.classify(unknown1, &altshell1, &poly_shell1, tol)?;
++    and1.append(&mut inside1);
++    or1.append(&mut outside1);
+     and0.append(&mut and1);
+     or0.append(&mut or1);
+     Some([altshell_to_shell(&and0)?, altshell_to_shell(&or0)?])
+@@ -153,22 +138,19 @@
+     tol: f64,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+     let operation = "and";
++    if tol <= 0.0 {
++        return Err(ShapeOpsError::EmptyOutputShell { operation });
++    }
+     let pair = |a: &Shell<Point3, C, S>, b: &Shell<Point3, C, S>| {
+         process_one_pair_of_shells(a, b, tol).ok_or(ShapeOpsError::EmptyOutputShell { operation })
+     };
+-    let mut iter0 = solid0.boundaries().iter();
+-    let mut iter1 = solid1.boundaries().iter();
+-    let shell0 = iter0.next().unwrap();
+-    let shell1 = iter1.next().unwrap();
+-    let [mut and_shell, _] = pair(shell0, shell1)?;
+-    for shell in iter0 {
+-        let [res, _] = pair(&and_shell, shell)?;
+-        and_shell = res;
+-    }
+-    for shell in iter1 {
+-        let [res, _] = pair(&and_shell, shell)?;
+-        and_shell = res;
+-    }
++    if solid0.boundaries().is_empty() || solid1.boundaries().is_empty() {
++        return finalize(operation, Shell::default());
++    }
++    // Membership is defined by all boundary components together, including cavities.
++    let shell0 = solid0.face_iter().cloned().collect();
++    let shell1 = solid1.face_iter().cloned().collect();
++    let [and_shell, _] = pair(&shell0, &shell1)?;
+     finalize(operation, and_shell)
+ }
+ 
+@@ -179,22 +161,21 @@
+     tol: f64,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+     let operation = "or";
++    if tol <= 0.0 {
++        return Err(ShapeOpsError::EmptyOutputShell { operation });
++    }
+     let pair = |a: &Shell<Point3, C, S>, b: &Shell<Point3, C, S>| {
+         process_one_pair_of_shells(a, b, tol).ok_or(ShapeOpsError::EmptyOutputShell { operation })
+     };
+-    let mut iter0 = solid0.boundaries().iter();
+-    let mut iter1 = solid1.boundaries().iter();
+-    let shell0 = iter0.next().unwrap();
+-    let shell1 = iter1.next().unwrap();
+-    let [_, mut or_shell] = pair(shell0, shell1)?;
+-    for shell in iter0 {
+-        let [_, res] = pair(&or_shell, shell)?;
+-        or_shell = res;
+-    }
+-    for shell in iter1 {
+-        let [_, res] = pair(&or_shell, shell)?;
+-        or_shell = res;
+-    }
++    if solid0.boundaries().is_empty() {
++        return Ok(solid1.clone());
++    }
++    if solid1.boundaries().is_empty() {
++        return Ok(solid0.clone());
++    }
++    let shell0 = solid0.face_iter().cloned().collect();
++    let shell1 = solid1.face_iter().cloned().collect();
++    let [_, or_shell] = pair(&shell0, &shell1)?;
+     finalize(operation, or_shell)
+ }
+ 
+@@ -204,6 +185,12 @@
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
++    if tol <= 0.0 {
++        return Err(ShapeOpsError::EmptyOutputShell { operation: "and" });
++    }
++    if solid0.boundaries().is_empty() || solid1.boundaries().is_empty() {
++        return Ok(solid0.clone());
++    }
+     let mut neg = solid1.clone();
+     neg.not();
+     and(solid0, &neg, tol)
+--- /dev/null
++++ b/monstertruck-solid/src/transversal/classic/shell_classification.rs
+@@ -0,0 +1,95 @@
++//! Membership queries against a complete oriented solid boundary.
++
++use monstertruck_meshing::prelude::{
++    CalcVolume, IncludingPointInDomain, InnerSpace, Invertible, MeshableShape, Point3, PolygonMesh,
++    PolylineCurve, hash,
++};
++use monstertruck_topology::Shell;
++
++use super::{AltCurveShell, ShapeOpsCurve, ShapeOpsSurface};
++
++/// The winding number is relative to the material state at infinity.
++#[derive(Debug)]
++pub(super) struct OrientedBoundary {
++    polygon: PolygonMesh,
++    complemented: bool,
++}
++
++impl OrientedBoundary {
++    pub(super) fn new(
++        shell: &Shell<Point3, PolylineCurve<Point3>, Option<PolygonMesh>>,
++    ) -> Option<Self> {
++        let polygon = shell
++            .iter()
++            .try_fold(PolygonMesh::default(), |mut mesh, face| {
++                let mut polygon = face.surface()?;
++                if !face.orientation() {
++                    polygon.invert();
++                }
++                mesh.merge(polygon);
++                Some(mesh)
++            })?;
++        // A reversed finite solid has negative signed volume and material at infinity.
++        // Cavity shells contribute with the opposite sign to their enclosing shells.
++        let complemented = polygon.volume() < 0.0;
++        Some(Self {
++            polygon,
++            complemented,
++        })
++    }
++
++    fn contains(&self, point: Point3) -> bool {
++        let direction = hash::take_one_unit(point);
++        let winding = self.polygon.signed_crossing_faces(point, direction);
++        winding + isize::from(self.complemented) > 0
++    }
++
++    pub(super) fn classify<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++        &self,
++        unknown: AltCurveShell<C, S>,
++        original: &AltCurveShell<C, S>,
++        meshed: &Shell<Point3, PolylineCurve<Point3>, Option<PolygonMesh>>,
++        tol: f64,
++    ) -> Option<[AltCurveShell<C, S>; 2]> {
++        unknown.into_iter().try_fold(
++            [Shell::default(), Shell::default()],
++            |mut classified, face| {
++                // Boundary vertices can lie on the other solid even when the face
++                // interiors are disjoint. Sample inside the trimmed parameter domain.
++                let source = original
++                    .iter()
++                    .zip(meshed)
++                    .find(|(source, _)| source.id() == face.id());
++                let polygon = if let Some((_, source)) = source {
++                    source.surface()?
++                } else {
++                    let shell: AltCurveShell<C, S> = [face.clone()].into_iter().collect();
++                    shell.triangulation(tol).first()?.surface()?
++                };
++                let point = interior_point(&face.surface(), &polygon)?;
++                let index = usize::from(!self.contains(point));
++                classified[index].push(face);
++                Some(classified)
++            },
++        )
++    }
++}
++
++/// Evaluate a triangle's interior in the original surface parameterization.
++fn interior_point<S: ShapeOpsSurface>(surface: &S, polygon: &PolygonMesh) -> Option<Point3> {
++    polygon
++        .tri_faces()
++        .iter()
++        .filter_map(|triangle| {
++            let [first, second, third] = *triangle;
++            let points = polygon.positions();
++            let area = (points[second.pos] - points[first.pos])
++                .cross(points[third.pos] - points[first.pos])
++                .magnitude2();
++            let parameters = polygon.uv_coords();
++            let uv = (parameters[first.uv?] + parameters[second.uv?] + parameters[third.uv?]) / 3.0;
++            (area > 0.0).then_some((area, uv))
++        })
++        .max_by(|(area0, _), (area1, _)| area0.total_cmp(area1))
++        .map(|(_, uv)| surface.evaluate(uv.x, uv.y))
++}

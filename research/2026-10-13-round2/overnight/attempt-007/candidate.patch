@@ -1,0 +1,86 @@
+--- a/monstertruck-modeling/src/fillet_impl/mod.rs
++++ b/monstertruck-modeling/src/fillet_impl/mod.rs
+@@ -50,12 +50,78 @@
+ }
+ 
+ impl From<FilletIntersectionCurve> for Curve {
+-    // Convert-back path only: these are intersection curves the fillet
+-    // algorithm itself creates between its generated NURBS strips (never
+-    // boolean seam input), and they have no exact closed form.
+     fn from(c: FilletIntersectionCurve) -> Self {
+-        let range = c.range_tuple();
+-        Curve::NurbsCurve(sample_to_nurbs(range, |t| c.subs(t), 16))
++        // A constant-parameter section preserves the rational fillet arc.
++        // Chords between samples leave the surface even when their endpoints
++        // are exact. Keep the section only if both carriers include it.
++        let section = isoparametric_section(c.leader())
++            .filter(|curve| c.surface0().include(curve) && c.surface1().include(curve));
++        Curve::NurbsCurve(section.unwrap_or_else(|| {
++            let range = c.range_tuple();
++            sample_to_nurbs(range, |t| c.subs(t), 16)
++        }))
++    }
++}
++
++/// Extracts a constant-parameter section in homogeneous coordinates.
++fn isoparametric_section(curve: &ParameterCurveLinear) -> Option<NurbsCurve<Vector4>> {
++    let (line, surface) = (curve.curve(), curve.surface());
++    let homogeneous = surface.non_rationalized();
++    let ((u0, u1), (v0, v1)) = surface.range_tuple();
++    let (mut section, start, end) = if line.0.y.near(&line.1.y) {
++        let v = section_parameter((line.0.y + line.1.y) * 0.5, (v0, v1))?;
++        let points = (0..surface.control_points().len())
++            .map(|i| homogeneous.curve_v(i).subs(v))
++            .collect();
++        (
++            BsplineCurve::new(surface.knot_vector_u().clone(), points),
++            section_parameter(line.0.x, (u0, u1))?,
++            section_parameter(line.1.x, (u0, u1))?,
++        )
++    } else if line.0.x.near(&line.1.x) {
++        let u = section_parameter((line.0.x + line.1.x) * 0.5, (u0, u1))?;
++        let points = (0..surface.control_points().first()?.len())
++            .map(|i| homogeneous.curve_u(i).subs(u))
++            .collect();
++        (
++            BsplineCurve::new(surface.knot_vector_v().clone(), points),
++            section_parameter(line.0.y, (v0, v1))?,
++            section_parameter(line.1.y, (v0, v1))?,
++        )
++    } else {
++        return None;
++    };
++    if start.near(&end) {
++        return None;
++    }
++    let (low, high) = (start.min(end), start.max(end));
++    let (first, last) = section.range_tuple();
++    if !low.near(&first) {
++        section = section.cut(low);
++    }
++    if !high.near(&last) {
++        section.cut(high);
++    }
++    let (mut knots, points) = section.destruct();
++    knots.try_normalize().ok()?;
++    let mut section = BsplineCurve::try_new(knots, points).ok()?;
++    if start > end {
++        section.invert();
++    }
++    let section = NurbsCurve::new(section);
++    // Parameter searches may leave roundoff in the nominally fixed coordinate.
++    // Require the extracted section to retain the original trim endpoints.
++    (section.front().near(&curve.front()) && section.back().near(&curve.back())).then_some(section)
++}
++
++/// Snaps parameter-search roundoff at the ends of a section's domain.
++fn section_parameter(value: f64, (start, end): (f64, f64)) -> Option<f64> {
++    if value.near(&start) {
++        Some(start)
++    } else if value.near(&end) {
++        Some(end)
++    } else {
++        (start < value && value < end).then_some(value)
+     }
+ }
+ 

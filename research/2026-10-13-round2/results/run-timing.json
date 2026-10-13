@@ -1,0 +1,21 @@
+{
+  "started": "2026-10-13T07:19:12.421278+00:00",
+  "finished": "2026-10-13T11:03:43.224282+00:00",
+  "planned_deadline": "2026-10-13T12:49:12.421290+00:00",
+  "planned_hours": 5.5,
+  "elapsed_seconds": 13470.803004,
+  "attempt_window_seconds": 13068.16221,
+  "stop_reason": "no_visible_headroom",
+  "gate_baseline": {
+    "packages": "workspace",
+    "kernel_tests": {
+      "exit": 0,
+      "seconds": 320.701
+    },
+    "release_check": {
+      "exit": 0,
+      "seconds": 30.581
+    }
+  },
+  "mid_run_config_changes": 0
+}

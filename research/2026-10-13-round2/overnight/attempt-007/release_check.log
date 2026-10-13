@@ -1,0 +1,12 @@
+    Checking monstertruck-geometry v0.4.1 (/workspace/kernel/source/monstertruck-geometry)
+    Checking monstertruck-meshing v0.4.1 (/workspace/kernel/source/monstertruck-meshing)
+    Checking monstertruck-modeling v0.4.1 (/workspace/kernel/source/monstertruck-modeling)
+    Checking monstertruck-io v0.4.1 (/workspace/kernel/source/monstertruck-io)
+    Checking monstertruck-fillet v0.4.1 (/workspace/kernel/source/monstertruck-fillet)
+    Checking monstertruck-healing v0.4.1 (/workspace/kernel/source/monstertruck-healing)
+    Checking monstertruck-solid v0.4.1 (/workspace/kernel/source/monstertruck-solid)
+    Checking monstertruck v0.4.1 (/workspace/kernel/source/monstertruck)
+    Checking monstertruck-step v0.4.1 (/workspace/kernel/source/monstertruck-step)
+    Finished `release` profile [optimized] target(s) in 7.63s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`

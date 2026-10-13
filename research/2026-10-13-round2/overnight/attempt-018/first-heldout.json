@@ -1,0 +1,5158 @@
+{
+  "score": 100.0,
+  "passed": 102,
+  "total": 102,
+  "groups": {
+    "boxes": {
+      "passed": 51,
+      "total": 51
+    },
+    "cylinders": {
+      "passed": 24,
+      "total": 24
+    },
+    "extrude": {
+      "passed": 4,
+      "total": 4
+    },
+    "revolve": {
+      "passed": 4,
+      "total": 4
+    },
+    "fillet": {
+      "passed": 4,
+      "total": 4
+    },
+    "chamfer": {
+      "passed": 4,
+      "total": 4
+    },
+    "holes": {
+      "passed": 4,
+      "total": 4
+    },
+    "patterns": {
+      "passed": 4,
+      "total": 4
+    },
+    "step": {
+      "passed": 3,
+      "total": 3
+    }
+  },
+  "split": "heldout",
+  "evaluator": "oracle-v2",
+  "rows": [
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 405.20844272770603,
+        "area": 332.31142777815876,
+        "centroid": [
+          4.360332400016347,
+          2.489718758897784,
+          0.3385576886242503
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 405.20844272770614,
+        "area": 332.3114277781588,
+        "centroid": [
+          4.360332400016349,
+          2.489718758897786,
+          0.33855768862425073
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 405.20844272770614
+          }
+        ]
+      },
+      "id": "heldout-000",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.039,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 810.4168854554121,
+        "area": 664.6228555563175,
+        "centroid": [
+          12.0028039587067,
+          1.0408856972834002,
+          0.3385576886242503
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 810.4168854554124,
+        "area": 664.6228555563177,
+        "centroid": [
+          12.0028039587067,
+          1.0408856972834002,
+          0.3385576886242512
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 24,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 405.2084427277062
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 405.2084427277062
+          }
+        ]
+      },
+      "id": "heldout-001",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0724,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-002",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0343,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 696.6294266551961,
+        "area": 475.0806753226415,
+        "centroid": [
+          5.312266360989069,
+          6.572166908654448,
+          6.163351823044906
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 696.6294266551961,
+        "area": 475.08067532264147,
+        "centroid": [
+          5.31226636098907,
+          6.572166908654449,
+          6.1633518230449065
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 696.6294266551961
+          }
+        ]
+      },
+      "id": "heldout-003",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0697,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1393.2588533103922,
+        "area": 764.0175986524323,
+        "centroid": [
+          -6.572166908654445,
+          9.054693486246283,
+          6.163351823044906
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 1393.2588533103917,
+        "area": 764.0175986524323,
+        "centroid": [
+          -6.572166908654447,
+          9.054693486246283,
+          6.163351823044907
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 12,
+        "triangles": 20,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 12,
+            "triangles": 20,
+            "signed_volume": 1393.2588533103917
+          }
+        ]
+      },
+      "id": "heldout-004",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0702,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-005",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0369,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 2.9166101377013134,
+        "area": 12.406653691921314,
+        "centroid": [
+          3.5238844383865757,
+          -1.032186339620642,
+          -3.5607908293573964
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 2.9166101377013134,
+        "area": 12.406653691921314,
+        "centroid": [
+          3.523884438386575,
+          -1.0321863396206417,
+          -3.5607908293573964
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 2.9166101377013134
+          }
+        ]
+      },
+      "id": "heldout-006",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0716,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 5.833220275402627,
+        "area": 24.81330738384263,
+        "centroid": [
+          3.735162019475112,
+          -1.4625675934862115,
+          -3.5607908293573964
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 5.8332202754026286,
+        "area": 24.81330738384263,
+        "centroid": [
+          3.735162019475112,
+          -1.4625675934862112,
+          -3.5607908293573964
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 24,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 2.9166101377013134
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 2.9166101377013143
+          }
+        ]
+      },
+      "id": "heldout-007",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0716,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-008",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0326,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 479.58600607466167,
+        "area": 380.2034715809759,
+        "centroid": [
+          -5.820905519474739,
+          -2.0577578965888192,
+          6.7103141692084645
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 479.5860060746617,
+        "area": 380.2034715809759,
+        "centroid": [
+          -5.820905519474739,
+          -2.0577578965888197,
+          6.710314169208463
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 479.5860060746617
+          }
+        ]
+      },
+      "id": "heldout-009",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0381,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 959.1720121493233,
+        "area": 760.4069431619517,
+        "centroid": [
+          -2.6107969423854143,
+          10.395466684278155,
+          11.193533347117633
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 959.1720121493232,
+        "area": 760.4069431619517,
+        "centroid": [
+          -2.610796942385414,
+          10.395466684278155,
+          11.193533347117633
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 24,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 479.5860060746616
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 479.5860060746617
+          }
+        ]
+      },
+      "id": "heldout-010",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.071,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-011",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0347,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.18058858931532656,
+        "area": 2.5208199616341194,
+        "centroid": [
+          -0.3845276527338164,
+          1.1730923137280644,
+          0.07840830061146503
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.18058858931532656,
+        "area": 2.52081996163412,
+        "centroid": [
+          -0.3845276527338164,
+          1.1730923137280644,
+          0.07840830061146503
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 0.18058858931532656
+          }
+        ]
+      },
+      "id": "heldout-012",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0345,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.632060062603643,
+        "area": 4.458118859350534,
+        "centroid": [
+          -0.9070432572853157,
+          0.7545054869653373,
+          0.07840830061146503
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.6320600626036428,
+        "area": 4.458118859350533,
+        "centroid": [
+          -0.9070432572853155,
+          0.7545054869653373,
+          0.07840830061146509
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 28,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 16,
+            "triangles": 28,
+            "signed_volume": 0.6320600626036428
+          }
+        ]
+      },
+      "id": "heldout-013",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0361,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.2708828839729899,
+        "area": 2.908279741177403,
+        "centroid": [
+          -0.12593817498952709,
+          1.1730923137280644,
+          0.07840830061146503
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.2708828839729899,
+        "area": 2.9082797411774024,
+        "centroid": [
+          -0.12593817498952706,
+          1.1730923137280644,
+          0.07840830061146503
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 0.2708828839729899
+          }
+        ]
+      },
+      "id": "heldout-014",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.036,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.7475241441045855,
+        "area": 14.173863341323605,
+        "centroid": [
+          0.3087299272509285,
+          3.7758259274466113,
+          0.8009859252244599
+        ],
+        "bodies": 1,
+        "cavities": 1,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 1.7475241441045852,
+        "area": 14.173863341323592,
+        "centroid": [
+          0.3087299272509282,
+          3.7758259274466113,
+          0.8009859252244595
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 1,
+        "mesh_vertices": 40,
+        "triangles": 72,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 32,
+            "triangles": 60,
+            "signed_volume": 2.22898487768442
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": -0.4814607335798346
+          }
+        ]
+      },
+      "id": "heldout-015",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0758,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 2.2289848776844203,
+        "area": 10.42195833920853,
+        "centroid": [
+          2.8501259918200583,
+          2.4957879383293258,
+          0.8009859252244598
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 2.228984877684419,
+        "area": 10.42195833920853,
+        "centroid": [
+          2.8501259918200588,
+          2.4957879383293267,
+          0.8009859252244597
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 32,
+        "triangles": 60,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 32,
+            "triangles": 60,
+            "signed_volume": 2.228984877684419
+          }
+        ]
+      },
+      "id": "heldout-016",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0753,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.4814607335798348,
+        "area": 3.7519050021150697,
+        "centroid": [
+          -2.495787938329326,
+          2.850125991820059,
+          0.8009859252244598
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.4814607335798348,
+        "area": 3.75190500211507,
+        "centroid": [
+          -2.495787938329326,
+          2.850125991820059,
+          0.8009859252244598
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 0.4814607335798348
+          }
+        ]
+      },
+      "id": "heldout-017",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0343,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-018",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0406,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 532.234266428648,
+        "area": 397.1500542189037,
+        "centroid": [
+          -4.817918394250904,
+          2.9345500658740367,
+          0.7284862070509693
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 532.2342664286479,
+        "area": 397.1500542189036,
+        "centroid": [
+          -4.817918394250901,
+          2.9345500658740375,
+          0.7284862070509694
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 32,
+        "triangles": 60,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 32,
+            "triangles": 60,
+            "signed_volume": 532.2342664286479
+          }
+        ]
+      },
+      "id": "heldout-019",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0717,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 193.96292508332652,
+        "area": 202.627578683114,
+        "centroid": [
+          -4.8179183942509045,
+          2.9345500658740384,
+          0.7284862070509703
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 193.96292508332652,
+        "area": 202.62757868311405,
+        "centroid": [
+          -4.8179183942509045,
+          2.9345500658740384,
+          0.7284862070509699
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 193.96292508332652
+          }
+        ]
+      },
+      "id": "heldout-020",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0719,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-021",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0328,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.366038850856829,
+        "area": 3.074558904712268,
+        "centroid": [
+          2.3786777528858742,
+          -4.6016280054168135,
+          -2.787795013965239
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.366038850856829,
+        "area": 3.074558904712268,
+        "centroid": [
+          2.3786777528858742,
+          -4.6016280054168135,
+          -2.787795013965239
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 0.366038850856829
+          }
+        ]
+      },
+      "id": "heldout-022",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0393,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.366038850856829,
+        "area": 3.074558904712268,
+        "centroid": [
+          3.669061040765947,
+          -3.656648633850949,
+          -2.787795013965239
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.36603885085682886,
+        "area": 3.0745589047122674,
+        "centroid": [
+          3.669061040765947,
+          -3.65664863385095,
+          -2.787795013965239
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 0.36603885085682886
+          }
+        ]
+      },
+      "id": "heldout-023",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0372,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 27.750444440154464,
+        "area": 55.7583110569081,
+        "centroid": [
+          -3.5269301657157053,
+          6.48784879132352,
+          -2.334608918030321
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 27.750444440154464,
+        "area": 55.7583110569081,
+        "centroid": [
+          -3.5269301657157053,
+          6.48784879132352,
+          -2.334608918030322
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 27.750444440154464
+          }
+        ]
+      },
+      "id": "heldout-024",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.037,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 55.50088888030893,
+        "area": 111.51662211381617,
+        "centroid": [
+          -2.308744152144839,
+          6.48784879132352,
+          -2.334608918030321
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 55.500888880308935,
+        "area": 111.51662211381614,
+        "centroid": [
+          -2.3087441521448384,
+          6.48784879132352,
+          -2.3346089180303222
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 24,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 27.750444440154464
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 27.750444440154464
+          }
+        ]
+      },
+      "id": "heldout-025",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0364,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-026",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0335,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 19.66880547979687,
+        "area": 45.00093534554457,
+        "centroid": [
+          1.6290138262276432,
+          7.514352920791351,
+          3.535310774064316
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 19.668805479796866,
+        "area": 45.00093534554457,
+        "centroid": [
+          1.629013826227643,
+          7.514352920791351,
+          3.5353107740643157
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 19.668805479796866
+          }
+        ]
+      },
+      "id": "heldout-027",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0703,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 39.33909982023576,
+        "area": 75.11554367023965,
+        "centroid": [
+          -0.9278229447407749,
+          8.376161287698352,
+          3.535310774064316
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 39.339099820235745,
+        "area": 75.11554367023967,
+        "centroid": [
+          -0.9278229447407753,
+          8.376161287698354,
+          3.5353107740643166
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 28,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 16,
+            "triangles": 28,
+            "signed_volume": 39.339099820235745
+          }
+        ]
+      },
+      "id": "heldout-028",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0702,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0014888606420177565,
+        "area": 14.89088581944279,
+        "centroid": [
+          -6.659225805861843,
+          5.1648470452538735,
+          3.535310774064316
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0014888606420177565,
+        "area": 14.89088581944279,
+        "centroid": [
+          -6.659225805861844,
+          5.164847045253874,
+          3.535310774064316
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 0.0014888606420177565
+          }
+        ]
+      },
+      "id": "heldout-029",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0375,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 401.7700118279421,
+        "area": 328.75244073858005,
+        "centroid": [
+          0.372422529790327,
+          7.4505089156762505,
+          0.7800555325174106
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 401.770011827942,
+        "area": 328.75244073858005,
+        "centroid": [
+          0.37242252979032653,
+          7.4505089156762505,
+          0.780055532517411
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 401.770011827942
+          }
+        ]
+      },
+      "id": "heldout-030",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0726,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 803.5400236558842,
+        "area": 657.50488147716,
+        "centroid": [
+          0.372422529790327,
+          -5.073574147721932,
+          0.7800555325174106
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 803.5400236558842,
+        "area": 657.5048814771601,
+        "centroid": [
+          0.37242252979032564,
+          -5.073574147721935,
+          0.7800555325174106
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 24,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 401.770011827942
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 401.770011827942
+          }
+        ]
+      },
+      "id": "heldout-031",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0732,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-032",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0332,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 518.0422006684978,
+        "area": 509.6279414490023,
+        "centroid": [
+          3.896956156565081,
+          2.3875228088083014,
+          6.064575243181666
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 518.0422006684978,
+        "area": 509.6279414490023,
+        "centroid": [
+          3.896956156565082,
+          2.387522808808301,
+          6.064575243181668
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 23,
+        "triangles": 42,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 23,
+            "triangles": 42,
+            "signed_volume": 518.0422006684978
+          }
+        ]
+      },
+      "id": "heldout-033",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0387,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1298.22623781985,
+        "area": 769.2809769048274,
+        "centroid": [
+          5.984110449407296,
+          4.938059577935189,
+          7.566429993670708
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 1298.2262378198507,
+        "area": 769.2809769048276,
+        "centroid": [
+          5.984110449407292,
+          4.938059577935187,
+          7.566429993670704
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 38,
+        "triangles": 72,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 38,
+            "triangles": 72,
+            "signed_volume": 1298.2262378198507
+          }
+        ]
+      },
+      "id": "heldout-034",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.075,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 262.1418364828542,
+        "area": 249.9749059931774,
+        "centroid": [
+          5.984110449407295,
+          4.9380595779351895,
+          7.566429993670709
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 262.1418364828543,
+        "area": 249.97490599317746,
+        "centroid": [
+          5.984110449407295,
+          4.938059577935189,
+          7.56642999367071
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 262.1418364828543
+          }
+        ]
+      },
+      "id": "heldout-035",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0741,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 589.6385879055684,
+        "area": 424.334334816322,
+        "centroid": [
+          3.5064292419191347,
+          2.71148470020362,
+          2.7230980947906045
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 589.6385879055683,
+        "area": 424.33433481632187,
+        "centroid": [
+          3.506429241919135,
+          2.7114847002036195,
+          2.7230980947906045
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 589.6385879055683
+          }
+        ]
+      },
+      "id": "heldout-036",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0341,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 590.4005262723847,
+        "area": 424.68574769760016,
+        "centroid": [
+          -1.5125713809101382,
+          4.171452102889882,
+          2.7230980947906045
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 590.4005262723847,
+        "area": 424.6857476976002,
+        "centroid": [
+          -1.5125713809101358,
+          4.171452102889882,
+          2.723098094790606
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 28,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 16,
+            "triangles": 28,
+            "signed_volume": 590.4005262723847
+          }
+        ]
+      },
+      "id": "heldout-037",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.04,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.3809691834080986,
+        "area": 152.56337980390884,
+        "centroid": [
+          8.03828467351032,
+          1.5125713809101384,
+          2.723098094790605
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.380969183408234,
+        "area": 152.56337980390884,
+        "centroid": [
+          8.038284673510322,
+          1.5125713809101375,
+          2.7230980947906045
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 0.380969183408234
+          }
+        ]
+      },
+      "id": "heldout-038",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0363,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 246.16108332433004,
+        "area": 239.52446761458975,
+        "centroid": [
+          2.0797585136458316,
+          1.9508173952776255,
+          6.155607185668218
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 246.16108332433004,
+        "area": 239.52446761458975,
+        "centroid": [
+          2.0797585136458316,
+          1.950817395277626,
+          6.155607185668218
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 246.16108332433004
+          }
+        ]
+      },
+      "id": "heldout-039",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0364,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 492.3221666486601,
+        "area": 479.0489352291795,
+        "centroid": [
+          7.549994009088867,
+          4.466930923538643,
+          6.155607185668218
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 492.32216664866,
+        "area": 479.0489352291794,
+        "centroid": [
+          7.549994009088868,
+          4.466930923538644,
+          6.155607185668219
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 24,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 246.16108332433
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 246.16108332433004
+          }
+        ]
+      },
+      "id": "heldout-040",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0697,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-041",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0342,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 20.37118602376669,
+        "area": 45.29483125081011,
+        "centroid": [
+          0.6190735597770602,
+          3.823495499310054,
+          -3.133364965228834
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 20.371186023766686,
+        "area": 45.29483125081011,
+        "centroid": [
+          0.6190735597770607,
+          3.823495499310054,
+          -3.133364965228834
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 20.371186023766686
+          }
+        ]
+      },
+      "id": "heldout-042",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0342,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 40.74237204753338,
+        "area": 78.23821254939833,
+        "centroid": [
+          3.4052499679796475,
+          3.4523893822961234,
+          -3.133364965228834
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 40.74237204753338,
+        "area": 78.23821254939833,
+        "centroid": [
+          3.4052499679796484,
+          3.4523893822961234,
+          -3.133364965228834
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 12,
+        "triangles": 20,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 12,
+            "triangles": 20,
+            "signed_volume": 40.74237204753338
+          }
+        ]
+      },
+      "id": "heldout-043",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0706,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-044",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0336,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.5603965258022087,
+        "area": 4.142299201573975,
+        "centroid": [
+          -2.714356064381046,
+          3.312788391379459,
+          1.0364427429769538
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.560396525802209,
+        "area": 4.142299201573977,
+        "centroid": [
+          -2.714356064381046,
+          3.312788391379459,
+          1.0364427429769538
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 0.560396525802209
+          }
+        ]
+      },
+      "id": "heldout-045",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0701,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.1207930516044173,
+        "area": 8.28459840314795,
+        "centroid": [
+          -3.1821967518026995,
+          3.6354281617909283,
+          1.0364427429769538
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 1.1207930516044178,
+        "area": 8.284598403147955,
+        "centroid": [
+          -3.1821967518027,
+          3.6354281617909283,
+          1.0364427429769538
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 24,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 0.560396525802209
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 0.5603965258022089
+          }
+        ]
+      },
+      "id": "heldout-046",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0374,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-047",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0359,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 25.133837147424877,
+        "area": 52.36494830555799,
+        "centroid": [
+          1.5887833060396486,
+          5.597822835725719,
+          4.764072907780658
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 25.133837147424885,
+        "area": 52.36494830555799,
+        "centroid": [
+          1.588783306039649,
+          5.597822835725719,
+          4.764072907780658
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 25.133837147424885
+          }
+        ]
+      },
+      "id": "heldout-048",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0664,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 50.267674294849755,
+        "area": 104.72989661111598,
+        "centroid": [
+          6.31577603628123,
+          4.197159601838982,
+          6.677514211763087
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 50.26767429484976,
+        "area": 104.729896611116,
+        "centroid": [
+          6.315776036281229,
+          4.197159601838982,
+          6.6775142117630875
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 24,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 25.133837147424885
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 25.13383714742488
+          }
+        ]
+      },
+      "id": "heldout-049",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.035,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-050",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0331,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.7702776553713204,
+        "area": 8.220631263371557,
+        "centroid": [
+          -0.33703002756740474,
+          -0.8867429290961542,
+          0.7716808811841107
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 1.7695174537834035,
+        "area": 8.214623628768015,
+        "centroid": [
+          -0.3370300275674093,
+          -0.8867429290961538,
+          0.7716808811841188
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3972,
+        "triangles": 7940,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3972,
+            "triangles": 7940,
+            "signed_volume": 1.7695174537834035
+          }
+        ]
+      },
+      "id": "heldout-051",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 2.0009,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 3.540555310742641,
+        "area": 16.441262526743113,
+        "centroid": [
+          0.40134122083132834,
+          -0.8867429290961542,
+          0.7716808811841107
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 3.5390349075668563,
+        "area": 16.42924725753615,
+        "centroid": [
+          0.40134122083133694,
+          -0.8867429290961543,
+          0.7716808811841129
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 7944,
+        "triangles": 15880,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3972,
+            "triangles": 7940,
+            "signed_volume": 1.7695174537834035
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3972,
+            "triangles": 7940,
+            "signed_volume": 1.7695174537834062
+          }
+        ]
+      },
+      "id": "heldout-052",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 4.0598,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-053",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.0336,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.6356943305503611,
+        "area": 4.149393452075939,
+        "centroid": [
+          0.9340565172765718,
+          -1.6955699639552262,
+          -1.2153337458799822
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.6354213474745136,
+        "area": 4.146377256107587,
+        "centroid": [
+          0.9340565172765759,
+          -1.6955699639552262,
+          -1.2153337458799904
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3972,
+        "triangles": 7940,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3972,
+            "triangles": 7940,
+            "signed_volume": 0.6354213474745136
+          }
+        ]
+      },
+      "id": "heldout-054",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 2.4688,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.2713886611007221,
+        "area": 8.298786904151878,
+        "centroid": [
+          1.4569559214033914,
+          -1.6955699639552262,
+          -1.2153337458799822
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 1.2708426949490659,
+        "area": 8.292754512215057,
+        "centroid": [
+          1.4569559214033896,
+          -1.695569963955226,
+          -1.215333745880002
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 7944,
+        "triangles": 15880,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3972,
+            "triangles": 7940,
+            "signed_volume": 0.6354213474745136
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3972,
+            "triangles": 7940,
+            "signed_volume": 0.6354213474745105
+          }
+        ]
+      },
+      "id": "heldout-055",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 3.7272,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-056",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.1045,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-057",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.1114,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.11419049296326005,
+        "area": 1.373613187367325,
+        "centroid": [
+          1.9330601805313092,
+          -0.37727283934468225,
+          -0.39096845101852173
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.1140680620608187,
+        "area": 1.3716010269860268,
+        "centroid": [
+          1.9330601805313081,
+          -0.37727283934468225,
+          -0.39096845101851735
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 2544,
+        "triangles": 5084,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 2544,
+            "triangles": 5084,
+            "signed_volume": 0.1140680620608187
+          }
+        ]
+      },
+      "id": "heldout-058",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 1.4067,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.11419049296326005,
+        "area": 1.373613187367325,
+        "centroid": [
+          1.9330601805313092,
+          -0.37727283934468225,
+          -0.39096845101852173
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.1140680620608187,
+        "area": 1.3716010269860268,
+        "centroid": [
+          1.9330601805313081,
+          -0.37727283934468225,
+          -0.39096845101851735
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 2544,
+        "triangles": 5084,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 2544,
+            "triangles": 5084,
+            "signed_volume": 0.1140680620608187
+          }
+        ]
+      },
+      "id": "heldout-059",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 1.5078,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 4.440892098500626e-16,
+        "area": 0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-060",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.1166,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 2.2657620160866174,
+        "area": 9.640910912353934,
+        "centroid": [
+          1.6414451082781032,
+          -1.921648506551342,
+          -0.026839604907334502
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 2.2647890410975657,
+        "area": 9.635938883641002,
+        "centroid": [
+          1.6414451082781043,
+          -1.9216485065513425,
+          -0.026839604907343828
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3972,
+        "triangles": 7940,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3972,
+            "triangles": 7940,
+            "signed_volume": 2.2647890410975657
+          }
+        ]
+      },
+      "id": "heldout-061",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 1.6783,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 2.2657620160866165,
+        "area": 9.640910912353933,
+        "centroid": [
+          1.641445108278103,
+          -1.921648506551342,
+          -0.026839604907334502
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 2.2647890410975657,
+        "area": 9.635938883641002,
+        "centroid": [
+          1.6414451082781043,
+          -1.9216485065513425,
+          -0.026839604907343828
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3972,
+        "triangles": 7940,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3972,
+            "triangles": 7940,
+            "signed_volume": 2.2647890410975657
+          }
+        ]
+      },
+      "id": "heldout-062",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 2.09,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.196646681221855,
+        "area": 7.883977322823364,
+        "centroid": [
+          -2.07148042333028,
+          -0.5802113543216182,
+          1.5714529767536758
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 1.1963254422149887,
+        "area": 7.882706171543937,
+        "centroid": [
+          -2.071388520589267,
+          -0.5802113543216111,
+          1.571452976753657
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 5134,
+        "triangles": 10264,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 5134,
+            "triangles": 10264,
+            "signed_volume": 1.1963254422149887
+          }
+        ]
+      },
+      "id": "heldout-063",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 2.4699,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 3.1615909198855863,
+        "area": 12.357208263143892,
+        "centroid": [
+          -1.573099682504992,
+          -0.5802113543216182,
+          1.5714529767536756
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 3.160625079596071,
+        "area": 12.350473739471104,
+        "centroid": [
+          -1.5730996825049928,
+          -0.5802113543216343,
+          1.5714529767536856
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 6360,
+        "triangles": 12716,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 6360,
+            "triangles": 12716,
+            "signed_volume": 3.160625079596071
+          }
+        ]
+      },
+      "id": "heldout-064",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 3.1463,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.7682975574418762,
+        "area": 5.221265022862101,
+        "centroid": [
+          -1.573099682504992,
+          -0.5802113543216181,
+          1.5714529767536756
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.7679741951662012,
+        "area": 5.216596476356572,
+        "centroid": [
+          -1.573099682504994,
+          -0.5802113543216177,
+          1.5714529767536716
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3908,
+        "triangles": 7812,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3908,
+            "triangles": 7812,
+            "signed_volume": 0.7679741951662012
+          }
+        ]
+      },
+      "id": "heldout-065",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 1.9435,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.4341833160518482,
+        "area": 3.7814928160438517,
+        "centroid": [
+          0.5224048726234332,
+          -1.440062402172725,
+          1.830183391248274
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.43406811190823186,
+        "area": 3.7806287743105753,
+        "centroid": [
+          0.5225013374218037,
+          -1.4400624021727189,
+          1.8301833912482701
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 5196,
+        "triangles": 10388,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 5196,
+            "triangles": 10388,
+            "signed_volume": 0.43406811190823186
+          }
+        ]
+      },
+      "id": "heldout-066",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 1.7556,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.1471306034908397,
+        "area": 7.0267235581159895,
+        "centroid": [
+          1.039280504751372,
+          -1.4400624021727249,
+          1.8301833912482737
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 1.14678286858807,
+        "area": 7.0201764842241925,
+        "centroid": [
+          1.0392805047513716,
+          -1.440062402172705,
+          1.8301833912482643
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 6484,
+        "triangles": 12964,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 6484,
+            "triangles": 12964,
+            "signed_volume": 1.14678286858807
+          }
+        ]
+      },
+      "id": "heldout-067",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 2.6788,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.2787639713871433,
+        "area": 2.4836506318120097,
+        "centroid": [
+          1.039280504751372,
+          -1.440062402172725,
+          1.830183391248274
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.27864664477158296,
+        "area": 2.4789390064825376,
+        "centroid": [
+          1.0392805047513793,
+          -1.440062402172725,
+          1.8301833912482648
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3908,
+        "triangles": 7812,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3908,
+            "triangles": 7812,
+            "signed_volume": 0.27864664477158296
+          }
+        ]
+      },
+      "id": "heldout-068",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 1.6105,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-069",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.2905579498730518,
+        "area": 2.6764091407638606,
+        "centroid": [
+          -0.3136550318109572,
+          0.15601860858902894,
+          -0.03783950010442083
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.29033782539595043,
+        "area": 2.673314070229334,
+        "centroid": [
+          -0.31365503181095744,
+          0.15601860858902883,
+          -0.03783950010442472
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3164,
+        "triangles": 6324,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3164,
+            "triangles": 6324,
+            "signed_volume": 0.29033782539595043
+          }
+        ]
+      },
+      "id": "heldout-070",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 1.3842,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.2905579498730518,
+        "area": 2.6764091407638606,
+        "centroid": [
+          -0.3136550318109572,
+          0.15601860858902894,
+          -0.03783950010442083
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.29033782539595043,
+        "area": 2.673314070229334,
+        "centroid": [
+          -0.31365503181095744,
+          0.15601860858902883,
+          -0.03783950010442472
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3164,
+        "triangles": 6324,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3164,
+            "triangles": 6324,
+            "signed_volume": 0.29033782539595043
+          }
+        ]
+      },
+      "id": "heldout-071",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 1.1786,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 2.6013316088099145,
+        "area": 10.600587346245556,
+        "centroid": [
+          1.8845733113482488,
+          -1.5544353758236893,
+          2.141487538075805
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 2.6002145318284753,
+        "area": 10.59525039108477,
+        "centroid": [
+          1.884573311348257,
+          -1.5544353758236895,
+          2.1414875380757934
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3972,
+        "triangles": 7940,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3972,
+            "triangles": 7940,
+            "signed_volume": 2.6002145318284753
+          }
+        ]
+      },
+      "id": "heldout-072",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 1.3799,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 5.202663217619829,
+        "area": 21.20117469249111,
+        "centroid": [
+          2.5500289786087342,
+          -1.5544353758236893,
+          2.141487538075805
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 5.200429063657205,
+        "area": 21.190500782168463,
+        "centroid": [
+          2.5500289786087347,
+          -1.5544353758236895,
+          2.1414875380757454
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 7944,
+        "triangles": 15880,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3972,
+            "triangles": 7940,
+            "signed_volume": 2.6002145318284753
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3972,
+            "triangles": 7940,
+            "signed_volume": 2.600214531828471
+          }
+        ]
+      },
+      "id": "heldout-073",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 2.7153,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "bodies": 0,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": false,
+        "index_closed": false,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 0,
+        "cavities": 0,
+        "mesh_vertices": 0,
+        "triangles": 0,
+        "shells": [
+          {
+            "closed": false,
+            "subdivision_closed": false,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 0,
+            "triangles": 0,
+            "signed_volume": 0.0
+          }
+        ]
+      },
+      "id": "heldout-074",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.1194,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 38.259355275390675,
+        "area": 69.42079978904903,
+        "centroid": [
+          -0.0572581658205078,
+          2.4074475317031165,
+          -0.9746777161984168
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 38.25935527539066,
+        "area": 69.42079978904904,
+        "centroid": [
+          -0.0572581658205078,
+          2.407447531703116,
+          -0.9746777161984168
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 38.25935527539066
+          }
+        ]
+      },
+      "id": "heldout-075",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.1257,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.0438912236938342,
+        "area": 5.741449049888599,
+        "centroid": [
+          -1.347074977815338,
+          0.5420144620929355,
+          -2.304208751564742
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 1.0434442041053176,
+        "area": 5.738442951267826,
+        "centroid": [
+          -1.347074977815338,
+          0.5420144620929355,
+          -2.304208751564813
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 8,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3974,
+        "triangles": 7952,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 8,
+            "bad_segments": [],
+            "vertices": 3974,
+            "triangles": 7944,
+            "signed_volume": 1.0434442041053176
+          }
+        ]
+      },
+      "id": "heldout-076",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 1.7999,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 38.202585203575566,
+        "area": 68.95209781048644,
+        "centroid": [
+          -0.05542708923591219,
+          2.410133989569074,
+          -0.9746777161984169
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 38.20244290495766,
+        "area": 68.95114554062631,
+        "centroid": [
+          -0.0554226219306444,
+          2.410140604148487,
+          -0.974677716198467
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 1599,
+        "triangles": 3194,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 1599,
+            "triangles": 3194,
+            "signed_volume": 38.20244290495766
+          }
+        ]
+      },
+      "id": "heldout-077",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 1.1307,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 38.127086901750786,
+        "area": 68.75354133027884,
+        "centroid": [
+          -0.05308190898700785,
+          2.41362068450802,
+          -0.9746777161984168
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 38.12708690175077,
+        "area": 68.75354133027885,
+        "centroid": [
+          -0.05308190898700804,
+          2.41362068450802,
+          -0.9746777161984166
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 10,
+        "triangles": 16,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 10,
+            "triangles": 16,
+            "signed_volume": 38.12708690175077
+          }
+        ]
+      },
+      "id": "heldout-078",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3944,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 36.38945519620858,
+        "area": 78.14497943493876,
+        "centroid": [
+          -0.05725816582050781,
+          2.4074475317031165,
+          -0.9746777161984169
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 0
+      },
+      "actual": {
+        "volume": 36.39034244731477,
+        "area": 78.14893046638613,
+        "centroid": [
+          -0.057258062730495274,
+          2.4074476730507586,
+          -0.9746790022019003
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 7741,
+        "triangles": 15482,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 7741,
+            "triangles": 15482,
+            "signed_volume": 36.39034244731477
+          }
+        ]
+      },
+      "id": "heldout-079",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 4.5087,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 76.51871055078135,
+        "area": 138.84159957809806,
+        "centroid": [
+          1.4825586461743223,
+          2.4074475317031165,
+          -0.9746777161984168
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 76.51871055078132,
+        "area": 138.84159957809806,
+        "centroid": [
+          1.4825586461743223,
+          2.407447531703116,
+          -0.9746777161984168
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 24,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 38.25935527539066
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 38.259355275390654
+          }
+        ]
+      },
+      "id": "heldout-080",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.1402,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 6.391867583035352,
+        "area": 21.545129250363427,
+        "centroid": [
+          -2.124305479151035,
+          -2.065987566646191,
+          3.2105352924638497
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 6.391867583035352,
+        "area": 21.545129250363424,
+        "centroid": [
+          -2.1243054791510354,
+          -2.0659875666461915,
+          3.2105352924638497
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 6.391867583035352
+          }
+        ]
+      },
+      "id": "heldout-081",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0354,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.0940640349669537,
+        "area": 5.9582056189790515,
+        "centroid": [
+          -2.9809147612938807,
+          -2.7426424032690204,
+          2.540833133829304
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 1.0935955301608642,
+        "area": 5.955238209435887,
+        "centroid": [
+          -2.980914761295288,
+          -2.742642403268878,
+          2.5408331338292482
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 8,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3974,
+        "triangles": 7952,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 8,
+            "bad_segments": [],
+            "vertices": 3974,
+            "triangles": 7944,
+            "signed_volume": 1.0935955301608642
+          }
+        ]
+      },
+      "id": "heldout-082",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 1.0305,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 6.381032166325305,
+        "area": 21.377136501711547,
+        "centroid": [
+          -2.1229022298291516,
+          -2.064889891932805,
+          3.2105352924638497
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 6.380946687657103,
+        "area": 21.376632539965293,
+        "centroid": [
+          -2.122891385180832,
+          -2.064881462033756,
+          3.2105352924638675
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 843,
+        "triangles": 1682,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 843,
+            "triangles": 1682,
+            "signed_volume": 6.380946687657103
+          }
+        ]
+      },
+      "id": "heldout-083",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.5781,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 6.366622186999635,
+        "area": 21.308263018691726,
+        "centroid": [
+          -2.121087664112149,
+          -2.0634833201389537,
+          3.2105352924638493
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 6.366622186999633,
+        "area": 21.30826301869172,
+        "centroid": [
+          -2.1210876641121494,
+          -2.063483320138954,
+          3.210535292463849
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 10,
+        "triangles": 16,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 10,
+            "triangles": 16,
+            "signed_volume": 6.366622186999633
+          }
+        ]
+      },
+      "id": "heldout-084",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.2812,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 6.034969204782866,
+        "area": 24.8025161751066,
+        "centroid": [
+          -2.124305479151035,
+          -2.065987566646191,
+          3.2105352924638493
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 0
+      },
+      "actual": {
+        "volume": 6.035361436555088,
+        "area": 24.803217326025045,
+        "centroid": [
+          -2.124305479151035,
+          -2.065987566646191,
+          3.2105352924638497
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 4860,
+        "triangles": 9720,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 4860,
+            "triangles": 9720,
+            "signed_volume": 6.035361436555088
+          }
+        ]
+      },
+      "id": "heldout-085",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 3.0912,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 12.783735166070704,
+        "area": 43.090258500726854,
+        "centroid": [
+          -1.0176961970081895,
+          -2.065987566646191,
+          3.2105352924638497
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 12.783735166070704,
+        "area": 43.09025850072684,
+        "centroid": [
+          -1.0176961970081901,
+          -2.0659875666461915,
+          3.2105352924638493
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 24,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 6.391867583035352
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 6.391867583035352
+          }
+        ]
+      },
+      "id": "heldout-086",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0338,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 7.4669425062466,
+        "area": 26.080619091641836,
+        "centroid": [
+          2.7464155569068174,
+          0.5452403899481849,
+          0.13719258241642085
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 7.466942506246601,
+        "area": 26.080619091641836,
+        "centroid": [
+          2.7464155569068174,
+          0.5452403899481848,
+          0.13719258241642085
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 7.466942506246601
+          }
+        ]
+      },
+      "id": "heldout-087",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0332,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.2944023016493849,
+        "area": 6.575237434465608,
+        "centroid": [
+          1.8851873763446845,
+          -0.0022552177315819932,
+          -1.2591134013753056
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 1.2938480071285268,
+        "area": 6.571197746565762,
+        "centroid": [
+          1.8851873763446843,
+          -0.00225521773158165,
+          -1.2591134013753102
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 8,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3974,
+        "triangles": 7952,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 8,
+            "bad_segments": [],
+            "vertices": 3974,
+            "triangles": 7944,
+            "signed_volume": 1.2938480071285268
+          }
+        ]
+      },
+      "id": "heldout-088",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 1.3982,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 7.456755685853034,
+        "area": 25.889410775728784,
+        "centroid": [
+          2.747558684274462,
+          0.5459549210862886,
+          0.13719258241642085
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 7.4566273635084785,
+        "area": 25.88866239995335,
+        "centroid": [
+          2.747572852321677,
+          0.5459636764346673,
+          0.1371927251354388
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 1293,
+        "triangles": 2582,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 1293,
+            "triangles": 2582,
+            "signed_volume": 7.4566273635084785
+          }
+        ]
+      },
+      "id": "heldout-089",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 1.7795,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 7.4432082722930675,
+        "area": 25.814687410340007,
+        "centroid": [
+          2.7490453769816217,
+          0.5468698077755666,
+          0.13719258241642085
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 7.443208272293067,
+        "area": 25.81468741034,
+        "centroid": [
+          2.749045376981621,
+          0.5468698077755667,
+          0.1371925824164213
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 10,
+        "triangles": 16,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 10,
+            "triangles": 16,
+            "signed_volume": 7.443208272293067
+          }
+        ]
+      },
+      "id": "heldout-090",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3605,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 7.131407678625103,
+        "area": 29.99680642443499,
+        "centroid": [
+          2.7464155569068174,
+          0.5452403899481849,
+          0.13719258241642085
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 0
+      },
+      "actual": {
+        "volume": 7.131907625957527,
+        "area": 29.996362217739307,
+        "centroid": [
+          2.7464155569068174,
+          0.5452403899481847,
+          0.13719258241642018
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 4104,
+        "triangles": 8208,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 4104,
+            "triangles": 8208,
+            "signed_volume": 7.131907625957527
+          }
+        ]
+      },
+      "id": "heldout-091",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 2.1316,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 22.4008275187398,
+        "area": 78.24185727492551,
+        "centroid": [
+          4.968871918031083,
+          0.5452403899481849,
+          0.13719258241642085
+        ],
+        "bodies": 3,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 22.400827518739796,
+        "area": 78.24185727492552,
+        "centroid": [
+          4.968871918031085,
+          0.5452403899481849,
+          0.13719258241642218
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 3,
+        "cavities": 0,
+        "mesh_vertices": 24,
+        "triangles": 36,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 7.466942506246601
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 7.466942506246601
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 7.466942506246603
+          }
+        ]
+      },
+      "id": "heldout-092",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0351,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 16.040071670104144,
+        "area": 38.98857979094838,
+        "centroid": [
+          0.7011473328348679,
+          1.7497505493726109,
+          -1.2922970698688006
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 16.040071670104144,
+        "area": 38.98857979094838,
+        "centroid": [
+          0.7011473328348679,
+          1.7497505493726107,
+          -1.2922970698688006
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 16.040071670104144
+          }
+        ]
+      },
+      "id": "heldout-093",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0343,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.5331358974817306,
+        "area": 7.576167230171463,
+        "centroid": [
+          -0.8040543364436186,
+          0.8011978451576622,
+          -1.8084572347668448
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 1.5324793714352118,
+        "area": 7.572746395403078,
+        "centroid": [
+          -0.8040543364436186,
+          0.8011978451576623,
+          -1.8084572347669752
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 8,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3974,
+        "triangles": 7952,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 8,
+            "bad_segments": [],
+            "vertices": 3974,
+            "triangles": 7944,
+            "signed_volume": 1.5324793714352118
+          }
+        ]
+      },
+      "id": "heldout-094",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 1.4793,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 16.018379324546668,
+        "area": 38.744443832390516,
+        "centroid": [
+          0.7031283157720519,
+          1.750977709375544,
+          -1.2922970698688006
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 16.018283324092316,
+        "area": 38.74382468860579,
+        "centroid": [
+          0.7031369415882684,
+          1.7509829945765063,
+          -1.2922970698687914
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 1158,
+        "triangles": 2312,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 1158,
+            "triangles": 2312,
+            "signed_volume": 16.018283324092316
+          }
+        ]
+      },
+      "id": "heldout-095",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 1.034,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 15.98953075698593,
+        "area": 38.640470181889164,
+        "centroid": [
+          0.705705203851383,
+          1.752548922414595,
+          -1.2922970698688008
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 15.98953075698593,
+        "area": 38.64047018188916,
+        "centroid": [
+          0.7057052038513827,
+          1.752548922414595,
+          -1.2922970698688008
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 10,
+        "triangles": 16,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 10,
+            "triangles": 16,
+            "signed_volume": 15.98953075698593
+          }
+        ]
+      },
+      "id": "heldout-096",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3669,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 15.325566343993591,
+        "area": 43.50150479453668,
+        "centroid": [
+          0.701147332834868,
+          1.749750549372611,
+          -1.2922970698688008
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 0
+      },
+      "actual": {
+        "volume": 15.326049343019776,
+        "area": 43.503913545718845,
+        "centroid": [
+          0.7011473328348674,
+          1.7497505493726107,
+          -1.2922970698688003
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 3420,
+        "triangles": 6840,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 3420,
+            "triangles": 6840,
+            "signed_volume": 15.326049343019776
+          }
+        ]
+      },
+      "id": "heldout-097",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 1.6413,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 32.08014334020829,
+        "area": 77.97715958189676,
+        "centroid": [
+          2.4563490021133543,
+          1.7497505493726109,
+          -1.2922970698688006
+        ],
+        "bodies": 2,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 32.08014334020829,
+        "area": 77.97715958189674,
+        "centroid": [
+          2.456349002113354,
+          1.7497505493726107,
+          -1.2922970698688006
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 2,
+        "cavities": 0,
+        "mesh_vertices": 16,
+        "triangles": 24,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 16.040071670104144
+          },
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 16.040071670104144
+          }
+        ]
+      },
+      "id": "heldout-098",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.1275,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 6,
+        "area": 22,
+        "centroid": [
+          0.5,
+          1.0,
+          1.5
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 6.0,
+        "area": 22.0,
+        "centroid": [
+          0.5,
+          1.0,
+          1.5
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 6.0
+          }
+        ]
+      },
+      "roundtrip": {
+        "volume": 6.0,
+        "area": 22.0,
+        "centroid": [
+          0.5,
+          1.0,
+          1.5
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 6.0
+          }
+        ]
+      },
+      "id": "heldout-099",
+      "group": "step",
+      "op": "step_roundtrip",
+      "seconds": 0.1527,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 12,
+        "area": 32,
+        "centroid": [
+          2.0,
+          0.0,
+          1.5
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 12.0,
+        "area": 32.0,
+        "centroid": [
+          2.0,
+          0.0,
+          1.5
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 12.0
+          }
+        ]
+      },
+      "roundtrip": {
+        "volume": 12.0,
+        "area": 32.0,
+        "centroid": [
+          2.0,
+          0.0,
+          1.5
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 12.0
+          }
+        ]
+      },
+      "id": "heldout-100",
+      "group": "step",
+      "op": "step_roundtrip",
+      "seconds": 0.0819,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 18,
+        "area": 42,
+        "centroid": [
+          3.5,
+          -1.0,
+          1.5
+        ],
+        "bodies": 1,
+        "cavities": 0,
+        "euler": 2
+      },
+      "actual": {
+        "volume": 18.0,
+        "area": 42.0,
+        "centroid": [
+          3.5,
+          -1.0,
+          1.5
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 18.0
+          }
+        ]
+      },
+      "roundtrip": {
+        "volume": 18.0,
+        "area": 42.0,
+        "centroid": [
+          3.5,
+          -1.0,
+          1.5
+        ],
+        "mesh_closed": true,
+        "index_closed": true,
+        "subdivided_edges": 0,
+        "degenerate_triangles": 0,
+        "bodies": 1,
+        "cavities": 0,
+        "mesh_vertices": 8,
+        "triangles": 12,
+        "shells": [
+          {
+            "closed": true,
+            "subdivision_closed": true,
+            "subdivided_edges": 0,
+            "degenerate_triangles": 0,
+            "bad_segments": [],
+            "vertices": 8,
+            "triangles": 12,
+            "signed_volume": 18.0
+          }
+        ]
+      },
+      "id": "heldout-101",
+      "group": "step",
+      "op": "step_roundtrip",
+      "seconds": 0.0681,
+      "pass": true
+    }
+  ]
+}

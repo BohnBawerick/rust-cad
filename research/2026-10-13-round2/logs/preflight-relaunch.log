@@ -1,0 +1,23 @@
+{"score": 58.742537245721955, "passed": 122, "total": 318, "groups": {"boxes": {"passed": 40, "total": 157}, "cylinders": {"passed": 28, "total": 78}, "extrude": {"passed": 13, "total": 13}, "revolve": {"passed": 12, "total": 13}, "fillet": {"passed": 0, "total": 14}, "chamfer": {"passed": 13, "total": 13}, "holes": {"passed": 0, "total": 13}, "patterns": {"passed": 13, "total": 13}, "step": {"passed": 3, "total": 4}}, "split": "public", "evaluator": "oracle-v2"}
+public: baseline 122/318 score 58.7425372457; current 122/318 score 58.7425372457
+  boxes        40/157  (baseline 40)
+  cylinders    28/78   (baseline 28)
+  extrude      13/13   (baseline 13)
+  revolve      12/13   (baseline 12)
+  fillet        0/14   (baseline 0)
+  chamfer      13/13   (baseline 13)
+  holes         0/13   (baseline 0)
+  patterns     13/13   (baseline 13)
+  step          3/4    (baseline 3)
+{"score": 60.64814814814814, "passed": 39, "total": 102, "groups": {"boxes": {"passed": 17, "total": 51}, "cylinders": {"passed": 3, "total": 24}, "extrude": {"passed": 4, "total": 4}, "revolve": {"passed": 4, "total": 4}, "fillet": {"passed": 0, "total": 4}, "chamfer": {"passed": 4, "total": 4}, "holes": {"passed": 0, "total": 4}, "patterns": {"passed": 4, "total": 4}, "step": {"passed": 3, "total": 3}}, "split": "heldout", "evaluator": "oracle-v2"}
+heldout: baseline 39/102 score 60.6481481481; current 39/102 score 60.6481481481
+  boxes        17/51   (baseline 17)
+  cylinders     3/24   (baseline 3)
+  extrude       4/4    (baseline 4)
+  revolve       4/4    (baseline 4)
+  fillet        0/4    (baseline 0)
+  chamfer       4/4    (baseline 4)
+  holes         0/4    (baseline 0)
+  patterns      4/4    (baseline 4)
+  step          3/3    (baseline 3)
+PREFLIGHT RELAUNCH PASSED

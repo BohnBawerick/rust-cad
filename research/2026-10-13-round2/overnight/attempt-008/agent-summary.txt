@@ -1,0 +1,9 @@
+Candidate written in `classic/mod.rs` and new `classic/exact_section.rs`.
+
+The conversion now preserves rational constant-parameter sections instead of replacing circular arcs with chords. Recovery requires matching endpoints, monotone traversal, and containment in the other carrier’s plane.
+
+Expected scope: through-hole rims and other planar rational sections. Cylinder-pair loop-assembly failures remain unresolved; controller gates are unverified.
+
+Formatted only. No builds or tests run.
+
+[Candidate patch](/workspace/scratch/curved-candidate.patch) · [Findings](/workspace/scratch/partial.txt)

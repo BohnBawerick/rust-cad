@@ -1,0 +1,265 @@
+--- a/monstertruck-solid/src/transversal/classic/faces_classification.rs
++++ b/monstertruck-solid/src/transversal/classic/faces_classification.rs
+@@ -51,10 +51,14 @@
+         let components = unknown.connected_components();
+         for comp in components {
+             let boundary = comp.extract_boundaries();
++            // Closed components have no classified neighbour to propagate from.
++            let Some(first_edge) = boundary.iter().flatten().next() else {
++                continue;
++            };
+             if and_boundary
+                 .iter()
+                 .flatten()
+-                .any(|edge| edge.id() == boundary[0][0].id())
++                .any(|edge| edge.id() == first_edge.id())
+             {
+                 comp.iter().for_each(|face| {
+                     // SAFETY: face originated from `self.shell` via `and_or_unknown()`.
+@@ -63,7 +67,7 @@
+             } else if or_boundary
+                 .iter()
+                 .flatten()
+-                .any(|edge| edge.id() == boundary[0][0].id())
++                .any(|edge| edge.id() == first_edge.id())
+             {
+                 comp.iter().for_each(|face| {
+                     // SAFETY: face originated from `self.shell` via `and_or_unknown()`.
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,7 @@
+ mod faces_classification;
+ mod intersection_curve;
+ mod loops_store;
++mod shell_classification;
+ 
+ use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
+ use crate::alternative::Alternative;
+@@ -76,7 +77,7 @@
+     )
+ }
+ 
+-/// Split one pair of shells into `[and_shell, or_shell]` (0.3.2 verbatim): build
++/// Split two complete oriented boundaries into `[and_shell, or_shell]`: build
+ /// intersection loops, divide faces, classify each divided face as `and`/`or`,
+ /// then ray-cast the remaining `unknown` faces against the other shell.
+ fn process_one_pair_of_shells<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+@@ -103,6 +104,10 @@
+     let mut cls1 = divide_face::divide_faces(&altshell1, &loops_store1, tol)?;
+     cls1.integrate_by_component();
+     let [mut and0, mut or0, unknown0] = cls0.and_or_unknown();
++    let [mut closed_and0, mut closed_or0, unknown0] =
++        shell_classification::classify_closed(unknown0, &altshell0, &poly_shell0, &poly_shell1)?;
++    and0.append(&mut closed_and0);
++    or0.append(&mut closed_or0);
+     unknown0.into_iter().try_for_each(|face| {
+         let pt = face.boundaries()[0].vertex_iter().next().unwrap().point();
+         let dir = hash::take_one_unit(pt);
+@@ -118,6 +123,10 @@
+         Some(())
+     })?;
+     let [mut and1, mut or1, unknown1] = cls1.and_or_unknown();
++    let [mut closed_and1, mut closed_or1, unknown1] =
++        shell_classification::classify_closed(unknown1, &altshell1, &poly_shell1, &poly_shell0)?;
++    and1.append(&mut closed_and1);
++    or1.append(&mut closed_or1);
+     unknown1.into_iter().try_for_each(|face| {
+         let pt = face.boundaries()[0].vertex_iter().next().unwrap().point();
+         let dir = hash::take_one_unit(pt);
+@@ -153,22 +162,19 @@
+     tol: f64,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+     let operation = "and";
++    if tol <= 0.0 {
++        return Err(ShapeOpsError::EmptyOutputShell { operation });
++    }
++    if solid0.boundaries().is_empty() || solid1.boundaries().is_empty() {
++        return finalize(operation, Shell::default());
++    }
+     let pair = |a: &Shell<Point3, C, S>, b: &Shell<Point3, C, S>| {
+         process_one_pair_of_shells(a, b, tol).ok_or(ShapeOpsError::EmptyOutputShell { operation })
+     };
+-    let mut iter0 = solid0.boundaries().iter();
+-    let mut iter1 = solid1.boundaries().iter();
+-    let shell0 = iter0.next().unwrap();
+-    let shell1 = iter1.next().unwrap();
+-    let [mut and_shell, _] = pair(shell0, shell1)?;
+-    for shell in iter0 {
+-        let [res, _] = pair(&and_shell, shell)?;
+-        and_shell = res;
+-    }
+-    for shell in iter1 {
+-        let [res, _] = pair(&and_shell, shell)?;
+-        and_shell = res;
+-    }
++    // Cavity and body shells together define one winding field per operand.
++    let shell0 = solid0.face_iter().cloned().collect();
++    let shell1 = solid1.face_iter().cloned().collect();
++    let [and_shell, _] = pair(&shell0, &shell1)?;
+     finalize(operation, and_shell)
+ }
+ 
+@@ -179,22 +185,21 @@
+     tol: f64,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+     let operation = "or";
++    if tol <= 0.0 {
++        return Err(ShapeOpsError::EmptyOutputShell { operation });
++    }
++    if solid0.boundaries().is_empty() {
++        return Ok(solid1.clone());
++    }
++    if solid1.boundaries().is_empty() {
++        return Ok(solid0.clone());
++    }
+     let pair = |a: &Shell<Point3, C, S>, b: &Shell<Point3, C, S>| {
+         process_one_pair_of_shells(a, b, tol).ok_or(ShapeOpsError::EmptyOutputShell { operation })
+     };
+-    let mut iter0 = solid0.boundaries().iter();
+-    let mut iter1 = solid1.boundaries().iter();
+-    let shell0 = iter0.next().unwrap();
+-    let shell1 = iter1.next().unwrap();
+-    let [_, mut or_shell] = pair(shell0, shell1)?;
+-    for shell in iter0 {
+-        let [_, res] = pair(&or_shell, shell)?;
+-        or_shell = res;
+-    }
+-    for shell in iter1 {
+-        let [_, res] = pair(&or_shell, shell)?;
+-        or_shell = res;
+-    }
++    let shell0 = solid0.face_iter().cloned().collect();
++    let shell1 = solid1.face_iter().cloned().collect();
++    let [_, or_shell] = pair(&shell0, &shell1)?;
+     finalize(operation, or_shell)
+ }
+ 
+@@ -204,6 +209,12 @@
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
++    if tol <= 0.0 {
++        return Err(ShapeOpsError::EmptyOutputShell { operation: "and" });
++    }
++    if solid0.boundaries().is_empty() || solid1.boundaries().is_empty() {
++        return Ok(solid0.clone());
++    }
+     let mut neg = solid1.clone();
+     neg.not();
+     and(solid0, &neg, tol)
+--- /dev/null
++++ b/monstertruck-solid/src/transversal/classic/shell_classification.rs
+@@ -0,0 +1,113 @@
++//! Membership of closed, uncut boundary components.
++
++use monstertruck_meshing::prelude::{
++    CalcVolume, IncludingPointInDomain, InnerSpace, Invertible, Point3, PolygonMesh, PolylineCurve,
++    hash,
++};
++use monstertruck_topology::{Shell, shell::ShellCondition};
++
++use super::{AltCurveShell, ShapeOpsCurve, ShapeOpsSurface};
++
++type PolyShell = Shell<Point3, PolylineCurve<Point3>, Option<PolygonMesh>>;
++
++/// An oriented winding field, including the material state at infinity.
++struct OrientedBoundary {
++    polygon: PolygonMesh,
++    complemented: bool,
++}
++
++impl OrientedBoundary {
++    fn new(shell: &PolyShell) -> Option<Self> {
++        let polygon = shell
++            .iter()
++            .try_fold(PolygonMesh::default(), |mut mesh, face| {
++                let mut polygon = face.surface()?;
++                if !face.orientation() {
++                    polygon.invert();
++                }
++                mesh.merge(polygon);
++                Some(mesh)
++            })?;
++        // For a valid finite solid, cavity contributions subtract from its volume.
++        // Reversing the complete boundary changes the sign and fills infinity.
++        let complemented = polygon.volume() < 0.0;
++        Some(Self {
++            polygon,
++            complemented,
++        })
++    }
++
++    fn contains(&self, point: Point3) -> Option<bool> {
++        let direction = hash::take_one_unit(point);
++        let forward = self.polygon.signed_crossing_faces(point, direction);
++        let backward = self.polygon.signed_crossing_faces(point, -direction);
++        // Opposite rays must give the same winding away from the boundary.
++        (forward == backward).then_some(forward + isize::from(self.complemented) > 0)
++    }
++}
++
++/// Separate closed original components from faces that still need local classification.
++pub(super) fn classify_closed<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    unknown: AltCurveShell<C, S>,
++    original: &AltCurveShell<C, S>,
++    meshed: &PolyShell,
++    other: &PolyShell,
++) -> Option<[AltCurveShell<C, S>; 3]> {
++    let mut boundary = None;
++    unknown.connected_components().into_iter().try_fold(
++        [Shell::default(), Shell::default(), Shell::default()],
++        |mut classified, mut component| {
++            // A cut component is classified by intersection-side propagation.
++            // Only whole original faces with closed incidence belong here.
++            let uncut = component.shell_condition() == ShellCondition::Closed
++                && component
++                    .iter()
++                    .all(|face| original.iter().any(|source| source.id() == face.id()));
++            let index = if uncut {
++                if boundary.is_none() {
++                    boundary = Some(OrientedBoundary::new(other)?);
++                }
++                let boundary = boundary.as_ref()?;
++                let mut membership = None;
++                component.iter().try_for_each(|face| {
++                    let (_, polygon) = original
++                        .iter()
++                        .zip(meshed)
++                        .find(|(source, _)| source.id() == face.id())?;
++                    let point = interior_point(&face.surface(), &polygon.surface()?)?;
++                    let inside = boundary.contains(point)?;
++                    if membership.is_some_and(|previous| previous != inside) {
++                        None
++                    } else {
++                        membership = Some(inside);
++                        Some(())
++                    }
++                })?;
++                usize::from(!membership?)
++            } else {
++                2
++            };
++            classified[index].append(&mut component);
++            Some(classified)
++        },
++    )
++}
++
++/// Sample the trimmed face interior on its original surface, away from shared vertices.
++fn interior_point<S: ShapeOpsSurface>(surface: &S, polygon: &PolygonMesh) -> Option<Point3> {
++    polygon
++        .tri_faces()
++        .iter()
++        .filter_map(|triangle| {
++            let [first, second, third] = *triangle;
++            let points = polygon.positions();
++            let area = (points[second.pos] - points[first.pos])
++                .cross(points[third.pos] - points[first.pos])
++                .magnitude2();
++            let parameters = polygon.uv_coords();
++            let uv = (parameters[first.uv?] + parameters[second.uv?] + parameters[third.uv?]) / 3.0;
++            (area > 0.0).then_some((area, uv))
++        })
++        .max_by(|(area0, _), (area1, _)| area0.total_cmp(area1))
++        .map(|(_, uv)| surface.evaluate(uv.x, uv.y))
++}

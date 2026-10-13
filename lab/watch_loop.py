@@ -19,7 +19,8 @@ while True:
     fresh=datetime.datetime.fromisoformat(state['at']).timestamp()>=started
     terminal=fresh and state['state'] in ['finished','failed','stopped']
     if now>=next_check or terminal or not live:
-        records=(RUN/'experiments.jsonl').read_text().splitlines()
+        records_path=RUN/'experiments.jsonl'
+        records=records_path.read_text().splitlines() if records_path.exists() else []
         row=dict(at=datetime.datetime.now(datetime.timezone.utc).isoformat(),pid=pid,live=live,state=state,completed_attempts=len(records),keeps=sum(json.loads(r)['kept'] for r in records))
         with (RUN/'independent-health-checks.jsonl').open('a') as f:
             f.write(json.dumps(row)+'\n');f.flush();os.fsync(f.fileno())

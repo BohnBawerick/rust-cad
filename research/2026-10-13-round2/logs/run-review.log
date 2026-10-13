@@ -1,0 +1,55 @@
+{
+  "attempts": 20,
+  "keeps": 11,
+  "kept_attempts": [
+    2,
+    4,
+    5,
+    7,
+    9,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "lanes": {
+    "planar": 4,
+    "revolve": 1,
+    "fillet": 2,
+    "curved": 12,
+    "step": 1
+  },
+  "dispositions": {
+    "regression": 5,
+    "improved_without_regression": 11,
+    "kernel_tests_failed": 1,
+    "no_gain": 2,
+    "build_failed": 1
+  },
+  "files_changed": [
+    "monstertruck-geometry/src/decorators/revolved_curve.rs",
+    "monstertruck-io/src/step/load/convert/assembly_shapes.rs",
+    "monstertruck-io/src/step/load/convert/mod.rs",
+    "monstertruck-meshing/src/tessellation/triangulation/boundary/projection.rs",
+    "monstertruck-modeling/src/fillet_impl/mod.rs",
+    "monstertruck-solid/src/transversal/classic/circular_extrusion/mod.rs",
+    "monstertruck-solid/src/transversal/classic/circular_extrusion/recognize.rs",
+    "monstertruck-solid/src/transversal/classic/coincident.rs",
+    "monstertruck-solid/src/transversal/classic/divide_face.rs",
+    "monstertruck-solid/src/transversal/classic/divide_face/interior.rs",
+    "monstertruck-solid/src/transversal/classic/exact_section.rs",
+    "monstertruck-solid/src/transversal/classic/faces_classification.rs",
+    "monstertruck-solid/src/transversal/classic/mod.rs",
+    "monstertruck-solid/src/transversal/classic/planar.rs",
+    "monstertruck-solid/src/transversal/classic/planar/assemble.rs",
+    "monstertruck-solid/src/transversal/classic/planar/coalesce.rs",
+    "monstertruck-solid/src/transversal/classic/shell_classification.rs",
+    "monstertruck-solid/src/transversal/integrate/mod.rs"
+  ],
+  "patch_replay_matches": true,
+  "final_patch_sha256": "e0e5f9479e91197f8ac9accb94cbb75393f70af23999647b50dbb410665e9db3",
+  "kept_public_regressions": [],
+  "kept_private_regressions": []
+}

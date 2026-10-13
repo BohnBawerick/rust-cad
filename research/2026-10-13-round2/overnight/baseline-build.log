@@ -1,0 +1,101 @@
+   Compiling syn v3.0.9
+   Compiling syn v2.0.119
+   Compiling serde_core v1.0.229
+   Compiling cgmath v0.18.0
+   Compiling crossbeam-utils v0.8.23
+   Compiling approx v0.4.0
+   Compiling proc-macro-error-attr v1.0.4
+   Compiling syn v1.0.109
+   Compiling crossbeam-epoch v0.9.21
+   Compiling num-complex v0.4.6
+   Compiling proc-macro-error v1.0.4
+   Compiling crossbeam-deque v0.8.8
+   Compiling equivalent v1.0.2
+   Compiling getrandom v0.4.3
+   Compiling rand_core v0.10.1
+   Compiling either v1.19.0
+   Compiling thiserror v2.0.21
+   Compiling xxhash-rust v0.8.19
+   Compiling cpufeatures v0.3.1
+   Compiling rayon-core v1.13.0
+   Compiling rustc-hash v2.1.3
+   Compiling chacha20 v0.10.2
+   Compiling memchr v2.8.3
+   Compiling smallvec v1.16.3
+   Compiling parking_lot_core v0.9.12
+   Compiling rand v0.10.3
+   Compiling branches v0.5.1
+   Compiling unicode-segmentation v1.13.3
+   Compiling scopeguard v1.2.0
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.21
+   Compiling lock_api v0.4.14
+   Compiling convert_case v0.10.0
+   Compiling katexit v0.1.5
+   Compiling monstertruck-derive v0.4.1 (/workspace/kernel/source/monstertruck-derive)
+   Compiling rayon v1.12.0
+   Compiling unicode-xid v0.2.6
+   Compiling derive_more-impl v2.1.1
+   Compiling parking_lot v0.12.5
+   Compiling bytemuck_derive v1.12.1
+   Compiling allocator-api2 v0.2.21
+   Compiling getrandom v0.3.4
+   Compiling serde v1.0.229
+   Compiling zerocopy v0.8.62
+   Compiling foldhash v0.2.0
+   Compiling hashbrown v0.16.1
+   Compiling bytemuck v1.25.2
+   Compiling rclite v0.4.2
+   Compiling aho-corasick v1.1.5
+   Compiling itertools v0.14.0
+   Compiling matext4cgmath v0.1.0
+   Compiling monstertruck-core v0.4.1 (/workspace/kernel/source/monstertruck-core)
+   Compiling ahash v0.8.12
+   Compiling robust v1.2.0
+   Compiling regex-syntax v0.8.11
+   Compiling monstertruck-traits v0.4.1 (/workspace/kernel/source/monstertruck-traits)
+   Compiling winnow v1.0.4
+   Compiling hashbrown v0.17.1
+   Compiling derive_more v2.1.1
+   Compiling array-macro v2.1.8
+   Compiling monstertruck-mesh v0.4.1 (/workspace/kernel/source/monstertruck-mesh)
+   Compiling indexmap v2.14.2
+   Compiling toml_parser v1.1.5+spec-1.1.0
+   Compiling regex-automata v0.4.18
+   Compiling monstertruck-topology v0.4.1 (/workspace/kernel/source/monstertruck-topology)
+   Compiling monstertruck-geometry v0.4.1 (/workspace/kernel/source/monstertruck-geometry)
+   Compiling spade v2.15.1
+   Compiling once_cell v1.21.4
+   Compiling toml_datetime v1.1.2+spec-1.1.0
+   Compiling web-time v1.1.0
+   Compiling log v0.4.34
+   Compiling toml_edit v0.25.17+spec-1.1.0
+   Compiling regex v1.13.1
+   Compiling proc-macro-error-attr2 v2.0.0
+   Compiling monstertruck-meshing v0.4.1 (/workspace/kernel/source/monstertruck-meshing)
+   Compiling lazy_static v1.5.1
+   Compiling Inflector v0.11.4
+   Compiling proc-macro-error2 v2.0.1
+   Compiling proc-macro-crate v3.5.0
+   Compiling nom v8.0.0
+   Compiling zmij v1.0.23
+   Compiling step-p21-derive v0.1.1
+   Compiling monstertruck-fillet v0.4.1 (/workspace/kernel/source/monstertruck-fillet)
+   Compiling derive-new v0.7.0
+   Compiling itertools v0.15.0
+   Compiling nom-language v0.1.0
+   Compiling serde_json v1.0.154
+   Compiling iana-time-zone v0.1.65
+   Compiling chrono v0.4.45
+   Compiling monstertruck-modeling v0.4.1 (/workspace/kernel/source/monstertruck-modeling)
+   Compiling step-p21 v0.1.1
+   Compiling monstertruck-assembly v0.4.1 (/workspace/kernel/source/monstertruck-assembly)
+   Compiling itoa v1.0.18
+   Compiling monstertruck-io v0.4.1 (/workspace/kernel/source/monstertruck-io)
+   Compiling monstertruck-solid v0.4.1 (/workspace/kernel/source/monstertruck-solid)
+   Compiling kernel-probe v0.1.0 (/workspace/probe)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 49.09s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`
+     Running `/target/debug/kernel-probe /missing-input.json`
+{"error":"No such file or directory (os error 2)","status":"error"}

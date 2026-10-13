@@ -1,0 +1,61 @@
+{
+  "started": "2026-10-13T07:19:12.421278+00:00",
+  "deadline": "2026-10-13T12:49:12.421290+00:00",
+  "revision": "v4-round2",
+  "evaluator": "oracle-v2",
+  "agent": {
+    "harness": "codex",
+    "model": "gpt-6-astra",
+    "effort": "high",
+    "seconds": 900,
+    "max_tool_calls": 40
+  },
+  "kernel_commit": "18f75b81d2c6fc3d60f268848d3305226bc63a34",
+  "lanes": {
+    "current": "step",
+    "planar": {
+      "attempts": 4,
+      "kept": 2,
+      "since_keep": 0,
+      "stalls": 0
+    },
+    "revolve": {
+      "attempts": 1,
+      "kept": 1,
+      "since_keep": 0,
+      "stalls": 0
+    },
+    "fillet": {
+      "attempts": 2,
+      "kept": 1,
+      "since_keep": 0,
+      "stalls": 0
+    },
+    "curved": {
+      "attempts": 12,
+      "kept": 6,
+      "since_keep": 0,
+      "stalls": 0
+    },
+    "step": {
+      "attempts": 1,
+      "kept": 1,
+      "since_keep": 0,
+      "stalls": 0
+    }
+  },
+  "rate_limit_hits": 0,
+  "rate_limit_wait": 0,
+  "gate_baseline": {
+    "packages": "workspace",
+    "kernel_tests": {
+      "exit": 0,
+      "seconds": 320.701
+    },
+    "release_check": {
+      "exit": 0,
+      "seconds": 30.581
+    }
+  },
+  "probe_sha256": "5122c944196ab1391209003b446f977b467b82d146ac14f1dc388adbb79367b6"
+}

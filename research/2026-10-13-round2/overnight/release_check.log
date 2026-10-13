@@ -1,0 +1,105 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling version_check v0.9.5
+   Compiling autocfg v1.5.1
+   Compiling serde_core v1.0.229
+   Compiling libc v0.2.190
+   Compiling serde v1.0.229
+   Compiling num-traits v0.2.19
+    Checking cfg-if v1.0.5
+   Compiling syn v1.0.109
+   Compiling syn v3.0.9
+   Compiling syn v2.0.119
+   Compiling proc-macro-error-attr v1.0.4
+   Compiling proc-macro-error v1.0.4
+   Compiling crossbeam-utils v0.8.23
+   Compiling cgmath v0.18.0
+    Checking approx v0.4.0
+   Compiling crossbeam-epoch v0.9.21
+    Checking num-complex v0.4.6
+    Checking either v1.19.0
+   Compiling crossbeam-deque v0.8.8
+   Compiling thiserror v2.0.21
+    Checking rand_core v0.10.1
+   Compiling getrandom v0.4.3
+   Compiling rayon-core v1.13.0
+    Checking cpufeatures v0.3.1
+    Checking rustc-hash v2.1.3
+    Checking xxhash-rust v0.8.19
+    Checking chacha20 v0.10.2
+    Checking smallvec v1.16.3
+   Compiling parking_lot_core v0.9.12
+    Checking rand v0.10.3
+    Checking scopeguard v1.2.0
+   Compiling unicode-segmentation v1.13.3
+   Compiling branches v0.5.1
+   Compiling convert_case v0.10.0
+    Checking lock_api v0.4.14
+    Checking rayon v1.12.0
+   Compiling unicode-xid v0.2.6
+    Checking parking_lot v0.12.5
+    Checking rclite v0.4.2
+    Checking itertools v0.14.0
+   Compiling serde_derive v1.0.229
+   Compiling katexit v0.1.5
+   Compiling thiserror-impl v2.0.21
+   Compiling monstertruck-derive v0.4.1 (/workspace/kernel/source/monstertruck-derive)
+   Compiling derive_more-impl v2.1.1
+   Compiling bytemuck_derive v1.12.1
+    Checking array-macro v2.1.8
+    Checking memchr v2.8.3
+    Checking bytemuck v1.25.2
+    Checking web-time v1.1.0
+    Checking equivalent v1.0.2
+   Compiling hashbrown v0.17.1
+   Compiling aho-corasick v1.1.5
+    Checking allocator-api2 v0.2.21
+   Compiling regex-syntax v0.8.11
+    Checking matext4cgmath v0.1.0
+    Checking monstertruck-core v0.4.1 (/workspace/kernel/source/monstertruck-core)
+    Checking foldhash v0.2.0
+   Compiling indexmap v2.14.2
+    Checking monstertruck-traits v0.4.1 (/workspace/kernel/source/monstertruck-traits)
+    Checking monstertruck-topology v0.4.1 (/workspace/kernel/source/monstertruck-topology)
+    Checking monstertruck-geometry v0.4.1 (/workspace/kernel/source/monstertruck-geometry)
+    Checking monstertruck-mesh v0.4.1 (/workspace/kernel/source/monstertruck-mesh)
+    Checking derive_more v2.1.1
+    Checking hashbrown v0.16.1
+   Compiling regex-automata v0.4.18
+   Compiling getrandom v0.3.4
+   Compiling winnow v0.7.15
+   Compiling zerocopy v0.8.62
+    Checking robust v1.2.0
+   Compiling toml_datetime v0.6.11
+   Compiling toml_edit v0.22.27
+   Compiling regex v1.13.1
+    Checking spade v2.15.1
+   Compiling proc-macro-error-attr2 v2.0.0
+   Compiling ahash v0.8.12
+    Checking log v0.4.34
+   Compiling lazy_static v1.5.1
+   Compiling Inflector v0.11.4
+    Checking monstertruck-meshing v0.4.1 (/workspace/kernel/source/monstertruck-meshing)
+   Compiling proc-macro-error2 v2.0.1
+   Compiling proc-macro-crate v3.3.0
+    Checking nom v8.0.0
+    Checking once_cell v1.21.4
+   Compiling step-p21-derive v0.1.1
+    Checking monstertruck-modeling v0.4.1 (/workspace/kernel/source/monstertruck-modeling)
+   Compiling derive-new v0.7.0
+    Checking itertools v0.15.0
+    Checking iana-time-zone v0.1.65
+    Checking chrono v0.4.45
+    Checking nom-language v0.1.0
+    Checking step-p21 v0.1.1
+    Checking monstertruck-assembly v0.4.1 (/workspace/kernel/source/monstertruck-assembly)
+    Checking monstertruck v0.4.1 (/workspace/kernel/source/monstertruck)
+    Checking monstertruck-fillet v0.4.1 (/workspace/kernel/source/monstertruck-fillet)
+    Checking monstertruck-solid v0.4.1 (/workspace/kernel/source/monstertruck-solid)
+    Checking monstertruck-io v0.4.1 (/workspace/kernel/source/monstertruck-io)
+    Checking monstertruck-healing v0.4.1 (/workspace/kernel/source/monstertruck-healing)
+    Checking monstertruck-step v0.4.1 (/workspace/kernel/source/monstertruck-step)
+    Finished `release` profile [optimized] target(s) in 30.49s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`

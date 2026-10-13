@@ -1,0 +1,9 @@
+Candidate written in [convert/mod.rs](/workspace/kernel/monstertruck-io/src/step/load/convert/mod.rs) and new [assembly_shapes.rs](/workspace/kernel/monstertruck-io/src/step/load/convert/assembly_shapes.rs).
+
+Assembly loading now follows non-transforming representation relationships to collect solid and surface-model IDs. These relationships preserve local coordinates, so existing occurrence transforms place the recovered geometry. Traversal guards cycles, deduplicates IDs, and stops at other product roots.
+
+Expected scope: solids omitted because their B-reps reside in related representations. Existing shell conversion and triangulation can now receive them.
+
+The NIST fixture is absent locally; compilation, tessellation, and regression verdicts remain unverified. No builds or tests ran. Existing test content is unchanged.
+
+[Candidate patch](/workspace/scratch/attempt-20.patch) · [Findings](/workspace/scratch/partial.txt)

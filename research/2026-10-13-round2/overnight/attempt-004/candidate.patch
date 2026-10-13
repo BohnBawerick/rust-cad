@@ -1,0 +1,593 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,7 @@
+ mod faces_classification;
+ mod intersection_curve;
+ mod loops_store;
++mod planar;
+ mod shell_classification;
+ 
+ use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
+@@ -160,7 +161,11 @@
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+-) -> ClassicResult<Solid<Point3, C, S>> {
++) -> ClassicResult<Solid<Point3, C, S>>
++where
++    Plane: IncludeCurve<C>,
++    Line<Point3>: ToSameGeometry<C>,
++{
+     let operation = "and";
+     if tol <= 0.0 {
+         return Err(ShapeOpsError::EmptyOutputShell { operation });
+@@ -174,6 +179,9 @@
+     // Cavity and body shells together define one winding field per operand.
+     let shell0 = solid0.face_iter().cloned().collect();
+     let shell1 = solid1.face_iter().cloned().collect();
++    if let Some(shell) = planar::boolean(&shell0, &shell1, false) {
++        return finalize(operation, shell);
++    }
+     let [and_shell, _] = pair(&shell0, &shell1)?;
+     finalize(operation, and_shell)
+ }
+@@ -183,7 +191,11 @@
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+-) -> ClassicResult<Solid<Point3, C, S>> {
++) -> ClassicResult<Solid<Point3, C, S>>
++where
++    Plane: IncludeCurve<C>,
++    Line<Point3>: ToSameGeometry<C>,
++{
+     let operation = "or";
+     if tol <= 0.0 {
+         return Err(ShapeOpsError::EmptyOutputShell { operation });
+@@ -199,6 +211,9 @@
+     };
+     let shell0 = solid0.face_iter().cloned().collect();
+     let shell1 = solid1.face_iter().cloned().collect();
++    if let Some(shell) = planar::boolean(&shell0, &shell1, true) {
++        return finalize(operation, shell);
++    }
+     let [_, or_shell] = pair(&shell0, &shell1)?;
+     finalize(operation, or_shell)
+ }
+@@ -208,7 +223,11 @@
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+-) -> ClassicResult<Solid<Point3, C, S>> {
++) -> ClassicResult<Solid<Point3, C, S>>
++where
++    Plane: IncludeCurve<C>,
++    Line<Point3>: ToSameGeometry<C>,
++{
+     if tol <= 0.0 {
+         return Err(ShapeOpsError::EmptyOutputShell { operation: "and" });
+     }
+@@ -225,7 +244,11 @@
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+-) -> ClassicResult<Solid<Point3, C, S>> {
++) -> ClassicResult<Solid<Point3, C, S>>
++where
++    Plane: IncludeCurve<C>,
++    Line<Point3>: ToSameGeometry<C>,
++{
+     let d0 = difference(solid0, solid1, tol)?;
+     let d1 = difference(solid1, solid0, tol)?;
+     or(&d0, &d1, tol)
+--- /dev/null
++++ b/monstertruck-solid/src/transversal/classic/planar.rs
+@@ -0,0 +1,287 @@
++//! Regularized boundary selection in an arrangement of planar faces.
++
++use monstertruck_geometry::prelude::*;
++use monstertruck_topology::{Edge, Face, Shell, Solid, Vertex, Wire};
++use std::{collections::BTreeMap, f64::consts::PI, iter};
++
++use super::{ShapeOpsCurve, ShapeOpsSurface};
++
++mod assemble;
++mod coalesce;
++
++#[derive(Clone)]
++struct Patch<S> {
++    points: Vec<Point3>,
++    surface: S,
++    normal: Vector3,
++    source: usize,
++}
++
++#[derive(Clone, Copy)]
++struct Divider {
++    origin: Point3,
++    normal: Vector3,
++}
++
++impl Divider {
++    fn distance(self, point: Point3) -> f64 {
++        (point - self.origin).dot(self.normal)
++    }
++}
++
++fn sides(points: &[Point3]) -> impl Iterator<Item = (Point3, Point3)> + '_ {
++    points
++        .iter()
++        .copied()
++        .zip(points.iter().copied().cycle().skip(1))
++        .take(points.len())
++}
++
++/// Certify straight boundaries through inclusion in two independent planes.
++/// Convexity is required of each face, not of the solid or its components.
++fn patches<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: &Shell<Point3, C, S>,
++    offset: usize,
++) -> Option<Vec<Patch<S>>>
++where
++    Plane: IncludeCurve<C>,
++{
++    shell
++        .iter()
++        .enumerate()
++        .map(|(index, face)| {
++            let surface = face.oriented_surface();
++            let AnalyticSurfaceKind::Plane(plane) = surface.try_into_analytic_surface_kind()?
++            else {
++                return None;
++            };
++            let boundaries = face.boundaries();
++            if boundaries.len() != 1 {
++                return None;
++            }
++            let wire = &boundaries[0];
++            let points: Vec<_> = wire.iter().map(|edge| edge.front().point()).collect();
++            let origin = *points.first()?;
++            let area = sides(&points)
++                .map(|(front, back)| (front - origin).cross(back - origin))
++                .sum::<Vector3>();
++            if area.magnitude2() == 0.0 {
++                return None;
++            }
++            // Analytic recognition need not preserve the surface parameter orientation.
++            // The oriented trim supplies the outward normal of this boundary patch.
++            let normal = area.normalize();
++            if points.len() < 3
++                || !wire.iter().all(|edge| {
++                    let front = edge.front().point();
++                    let back = edge.back().point();
++                    !front.near(&back)
++                        && plane.include(&edge.curve())
++                        && Plane::new(front, back, front + normal).include(&edge.curve())
++                })
++            {
++                return None;
++            }
++            let convex = sides(&points).all(|(front, back)| {
++                let inward = normal.cross(back - front).normalize();
++                points
++                    .iter()
++                    .all(|point| (*point - front).dot(inward) >= -TOLERANCE)
++            });
++            convex.then_some(Patch {
++                points,
++                surface,
++                normal,
++                source: offset + index,
++            })
++        })
++        .collect()
++}
++
++fn split(points: Vec<Point3>, divider: Divider) -> Vec<Vec<Point3>> {
++    let distances: Vec<_> = points
++        .iter()
++        .map(|point| divider.distance(*point))
++        .collect();
++    if !distances.iter().any(|distance| *distance > TOLERANCE)
++        || !distances.iter().any(|distance| *distance < -TOLERANCE)
++    {
++        return vec![points];
++    }
++    [1.0, -1.0]
++        .into_iter()
++        .map(|sign| {
++            sides(&points)
++                .enumerate()
++                .flat_map(|(index, (front, back))| {
++                    let first = distances[index];
++                    let second = distances[(index + 1) % points.len()];
++                    let crossing = (first > TOLERANCE && second < -TOLERANCE)
++                        || (first < -TOLERANCE && second > TOLERANCE);
++                    let start = (sign * first >= -TOLERANCE).then_some(front);
++                    let cut = crossing.then(|| front + (back - front) * (first / (first - second)));
++                    start.into_iter().chain(cut)
++                })
++                .collect()
++        })
++        .collect()
++}
++
++fn partition<S>(patch: &Patch<S>, all: &[Patch<S>]) -> Vec<Vec<Point3>> {
++    let dividers = all.iter().flat_map(|other| {
++        let plane = Divider {
++            origin: other.points[0],
++            normal: other.normal,
++        };
++        let coplanar = patch.normal.cross(other.normal).so_small()
++            && patch
++                .points
++                .iter()
++                .all(|point| plane.distance(*point).abs() <= TOLERANCE);
++        let edges = sides(&other.points)
++            .filter(move |_| coplanar)
++            .map(move |(front, back)| Divider {
++                origin: front,
++                normal: other.normal.cross(back - front).normalize(),
++            });
++        iter::once(plane).chain(edges)
++    });
++    dividers.fold(vec![patch.points.clone()], |pieces, divider| {
++        pieces
++            .into_iter()
++            .flat_map(|points| split(points, divider))
++            .collect()
++    })
++}
++
++/// The solid angle is the exact winding contribution of a planar polygon.
++/// Triangles here integrate a face; they do not replace its boundary geometry.
++fn winding<S>(patches: &[Patch<S>], point: Point3) -> f64 {
++    patches
++        .iter()
++        .map(|patch| {
++            let first = patch.points[0] - point;
++            patch.points[1..]
++                .windows(2)
++                .map(|pair| {
++                    let second = pair[0] - point;
++                    let third = pair[1] - point;
++                    let numerator = first.dot(second.cross(third));
++                    let denominator = first.magnitude() * second.magnitude() * third.magnitude()
++                        + first.dot(second) * third.magnitude()
++                        + second.dot(third) * first.magnitude()
++                        + third.dot(first) * second.magnitude();
++                    2.0 * numerator.atan2(denominator)
++                })
++                .sum::<f64>()
++        })
++        .sum::<f64>()
++        / (4.0 * PI)
++}
++
++fn complemented<S>(patches: &[Patch<S>]) -> bool {
++    let origin = patches[0].points[0];
++    patches
++        .iter()
++        .map(|patch| {
++            let first = patch.points[0] - origin;
++            patch.points[1..]
++                .windows(2)
++                .map(|pair| first.dot((pair[0] - origin).cross(pair[1] - origin)))
++                .sum::<f64>()
++        })
++        .sum::<f64>()
++        < 0.0
++}
++
++fn membership<S>(patches: &[Patch<S>], inverted: bool, point: Point3) -> Option<bool> {
++    let value = winding(patches, point) + if inverted { 1.0 } else { 0.0 };
++    // A nonintegral winding means the sample or input is numerically ambiguous.
++    ((value - value.round()).abs() < TOLERANCE).then_some(value > 0.5)
++}
++
++fn select<S: ShapeOpsSurface>(
++    all: &[Patch<S>],
++    split_index: usize,
++    union: bool,
++) -> Option<Vec<Patch<S>>> {
++    let (first, second) = all.split_at(split_index);
++    let inverted = [complemented(first), complemented(second)];
++    all.iter().try_fold(Vec::new(), |mut result, source| {
++        partition(source, all).into_iter().try_for_each(|points| {
++            let center = Point3::from_vec(
++                points.iter().map(|point| point.to_vec()).sum::<Vector3>() / points.len() as f64,
++            );
++            // Stay inside the arrangement cell on either side of this face.
++            // The offset follows local clearance, independently of meshing tolerance.
++            let edge_clearance = sides(&points)
++                .map(|(front, back)| {
++                    (center - front)
++                        .cross((back - front).normalize())
++                        .magnitude()
++                })
++                .fold(f64::INFINITY, f64::min);
++            let clearance = all
++                .iter()
++                .map(|patch| (center - patch.points[0]).dot(patch.normal).abs())
++                .filter(|distance| *distance > TOLERANCE)
++                .fold(edge_clearance, f64::min);
++            if !clearance.is_finite() || clearance <= 0.0 {
++                return None;
++            }
++            let state = |side| {
++                let point = center + source.normal * (side * clearance / 4.0);
++                let inside0 = membership(first, inverted[0], point)?;
++                let inside1 = membership(second, inverted[1], point)?;
++                Some(if union {
++                    inside0 || inside1
++                } else {
++                    inside0 && inside1
++                })
++            };
++            let states = [state(-1.0)?, state(1.0)?];
++            if states[0] != states[1] {
++                let mut patch = Patch {
++                    points,
++                    surface: source.surface.clone(),
++                    normal: source.normal,
++                    source: source.source,
++                };
++                if states[1] {
++                    patch.points.reverse();
++                    patch.surface.invert();
++                    patch.normal = -patch.normal;
++                    // Oppositely oriented pieces must remain distinct faces.
++                    patch.source += all.len();
++                }
++                result.push(patch);
++            }
++            Some(())
++        })?;
++        Some(result)
++    })
++}
++
++/// Use the analytic path only when every boundary face is certified polygonal.
++/// Assembly failure leaves the existing general surface pipeline available.
++pub(super) fn boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    first: &Shell<Point3, C, S>,
++    second: &Shell<Point3, C, S>,
++    union: bool,
++) -> Option<Shell<Point3, C, S>>
++where
++    Plane: IncludeCurve<C>,
++    Line<Point3>: ToSameGeometry<C>,
++{
++    let mut all = patches(first, 0)?;
++    let split_index = all.len();
++    all.extend(patches(second, split_index)?);
++    if split_index == 0 || split_index == all.len() {
++        return None;
++    }
++    let selected = select(&all, split_index, union)?;
++    let shell = assemble::assemble(selected)?;
++    // Validate individual components, including their vertex links.
++    Solid::try_new(shell.connected_components()).ok()?;
++    Some(shell)
++}
+--- /dev/null
++++ b/monstertruck-solid/src/transversal/classic/planar/assemble.rs
+@@ -0,0 +1,142 @@
++//! Pair boundary half-edges around material sectors before creating topology.
++
++use super::*;
++
++type EdgeUses = BTreeMap<(usize, usize), Vec<(usize, usize, bool)>>;
++
++pub(super) fn assemble<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    patches: Vec<Patch<S>>,
++) -> Option<Shell<Point3, C, S>>
++where
++    Line<Point3>: ToSameGeometry<C>,
++{
++    let mut points: Vec<Point3> = Vec::new();
++    let polygons: Vec<_> = patches
++        .into_iter()
++        .map(|patch| {
++            let indices: Vec<_> = patch
++                .points
++                .iter()
++                .map(|point| {
++                    if let Some(index) = points.iter().position(|known| known.near(point)) {
++                        index
++                    } else {
++                        points.push(*point);
++                        points.len() - 1
++                    }
++                })
++                .collect();
++            (patch, indices)
++        })
++        .collect();
++    if polygons.iter().any(|(_, indices)| {
++        indices.len() < 3
++            || indices
++                .iter()
++                .zip(indices.iter().cycle().skip(1))
++                .take(indices.len())
++                .any(|(first, second)| first == second)
++    }) {
++        return None;
++    }
++    let mut unique = BTreeMap::new();
++    // Insert every collinear arrangement vertex to eliminate hanging endpoints.
++    let polygons: Vec<_> = polygons
++        .into_iter()
++        .filter_map(|(patch, indices)| {
++            let indices = indices
++                .iter()
++                .copied()
++                .zip(indices.iter().copied().cycle().skip(1))
++                .take(indices.len())
++                .flat_map(|(front, back)| {
++                    let direction = points[back] - points[front];
++                    let length2 = direction.magnitude2();
++                    let mut interior: Vec<_> = points
++                        .iter()
++                        .enumerate()
++                        .filter_map(|(index, point)| {
++                            let parameter = (*point - points[front]).dot(direction) / length2;
++                            (parameter > 0.0
++                                && parameter < 1.0
++                                && point.near(&(points[front] + parameter * direction)))
++                            .then_some((parameter, index))
++                        })
++                        .collect();
++                    interior.sort_by(|first, second| first.0.total_cmp(&second.0));
++                    iter::once(front).chain(interior.into_iter().map(|(_, index)| index))
++                })
++                .collect::<Vec<_>>();
++            let mut key = indices.clone();
++            key.sort_unstable();
++            unique.insert(key, ()).is_none().then_some((patch, indices))
++        })
++        .collect();
++    let mut uses = EdgeUses::new();
++    polygons
++        .iter()
++        .enumerate()
++        .for_each(|(face, (_, indices))| {
++            indices
++                .iter()
++                .copied()
++                .zip(indices.iter().copied().cycle().skip(1))
++                .take(indices.len())
++                .enumerate()
++                .for_each(|(slot, (front, back))| {
++                    uses.entry((front.min(back), front.max(back)))
++                        .or_default()
++                        .push((face, slot, front < back));
++                });
++        });
++    let vertices: Vec<_> = points.iter().copied().map(Vertex::new).collect();
++    let mut edges: Vec<Vec<Option<Edge<Point3, C>>>> = polygons
++        .iter()
++        .map(|(_, indices)| vec![None; indices.len()])
++        .collect();
++    uses.into_iter()
++        .try_for_each(|((front, back), incidence)| {
++            let direction = (points[back] - points[front]).normalize();
++            let (forward, mut backward): (Vec<_>, Vec<_>) =
++                incidence.into_iter().partition(|entry| entry.2);
++            if forward.len() != backward.len() || forward.is_empty() {
++                return None;
++            }
++            forward.into_iter().try_for_each(|(face, slot, _)| {
++                let radial = polygons[face].0.normal.cross(direction);
++                let mate = backward
++                    .iter()
++                    .enumerate()
++                    .min_by(|(_, first), (_, second)| {
++                        let angle = |entry: &(usize, usize, bool)| {
++                            let other = -polygons[entry.0].0.normal.cross(direction);
++                            // Material lies clockwise of an outward-oriented half-edge.
++                            (-direction.dot(radial.cross(other)))
++                                .atan2(radial.dot(other))
++                                .rem_euclid(2.0 * PI)
++                        };
++                        angle(first).total_cmp(&angle(second))
++                    })
++                    .map(|(index, _)| index)?;
++                let (other, other_slot, _) = backward.remove(mate);
++                let edge = Edge::new(
++                    &vertices[front],
++                    &vertices[back],
++                    Line(points[front], points[back]).to_same_geometry(),
++                );
++                edges[face][slot] = Some(edge.clone());
++                edges[other][other_slot] = Some(edge.inverse());
++                Some(())
++            })
++        })?;
++    let faces = polygons
++        .into_iter()
++        .zip(edges)
++        .map(|((patch, _), edges)| {
++            let wire: Wire<_, _> = edges.into_iter().collect::<Option<Vec<_>>>()?.into();
++            let face = Face::try_new(vec![wire], patch.surface).ok()?;
++            Some((patch.source, patch.normal, face))
++        })
++        .collect::<Option<Vec<_>>>()?;
++    Some(coalesce::coalesce(faces))
++}
+--- /dev/null
++++ b/monstertruck-solid/src/transversal/classic/planar/coalesce.rs
+@@ -0,0 +1,73 @@
++//! Remove arrangement edges internal to a surviving source face.
++
++use std::collections::{BTreeMap, HashMap};
++
++use super::*;
++
++/// Preserve the source face decomposition, including disconnected remainders.
++pub(super) fn coalesce<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    faces: Vec<(usize, Vector3, Face<Point3, C, S>)>,
++) -> Shell<Point3, C, S> {
++    let mut sources = BTreeMap::<usize, (Vector3, Shell<Point3, C, S>)>::new();
++    faces.into_iter().for_each(|(source, normal, face)| {
++        sources
++            .entry(source)
++            .or_insert_with(|| (normal, Shell::default()))
++            .1
++            .push(face);
++    });
++    sources
++        .into_values()
++        .flat_map(|(normal, shell)| {
++            shell
++                .connected_components()
++                .into_iter()
++                .flat_map(move |component| match merge(&component, normal) {
++                    Some(face) => vec![face],
++                    None => component.into_iter().collect(),
++                })
++        })
++        .collect()
++}
++
++/// Cancel paired edges only after material-sector adjacency has been resolved.
++fn merge<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    component: &Shell<Point3, C, S>,
++    normal: Vector3,
++) -> Option<Face<Point3, C, S>> {
++    let first = component.first()?;
++    if component.len() == 1 {
++        return Some(first.clone());
++    }
++    let origin = first.boundaries().first()?.front()?.front().point();
++    let mut uses = HashMap::new();
++    component.edge_iter().for_each(|edge| {
++        *uses.entry(edge.id()).or_insert(0usize) += 1;
++    });
++    let mut boundaries = component.extract_boundaries();
++    // A pinched boundary cannot be represented by simple, disjoint face wires.
++    // Keep the original cells if boundary extraction lost any branching edges.
++    if boundaries.iter().map(|wire| wire.len()).sum::<usize>()
++        != uses.values().filter(|count| **count == 1).count()
++    {
++        return None;
++    }
++    let area = |wire: &Wire<Point3, C>| {
++        wire.iter()
++            .map(|edge| {
++                (edge.front().point() - origin)
++                    .cross(edge.back().point() - origin)
++                    .dot(normal)
++            })
++            .sum::<f64>()
++    };
++    // A connected planar region has one positive outer loop and negative holes.
++    // Put the outer loop first for consumers that use the first wire as a trim.
++    if boundaries.iter().filter(|wire| area(wire) > 0.0).count() != 1
++        || boundaries.iter().any(|wire| area(wire) == 0.0)
++    {
++        return None;
++    }
++    boundaries.sort_by(|first, second| area(second).total_cmp(&area(first)));
++    Face::try_new(boundaries, first.oriented_surface()).ok()
++}

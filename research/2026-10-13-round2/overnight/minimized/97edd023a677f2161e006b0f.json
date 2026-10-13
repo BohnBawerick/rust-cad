@@ -1,0 +1,41 @@
+{
+  "original_id": "public-227",
+  "group": "cylinders",
+  "op": "intersection",
+  "recipe": {
+    "a": {
+      "height": 1.0,
+      "kind": "cylinder",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "radius": 0.5
+    },
+    "b": {
+      "height": 1.0,
+      "kind": "cylinder",
+      "origin": [
+        0.5,
+        0.0,
+        0.0
+      ],
+      "radius": 0.5
+    },
+    "boolean_tol": 0.05,
+    "mesh_tol": 0.002,
+    "op": "intersection",
+    "relation": "d/r=1.0"
+  },
+  "steps": [
+    "move_to_origin",
+    "round_dimensions"
+  ],
+  "result": {
+    "pass": false,
+    "reasons": [
+      "error:invalid output shell for `and`: no boundary shells."
+    ]
+  }
+}

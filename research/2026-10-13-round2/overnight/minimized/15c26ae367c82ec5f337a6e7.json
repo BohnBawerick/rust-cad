@@ -1,0 +1,79 @@
+{
+  "original_id": "public-256",
+  "group": "holes",
+  "op": "hole",
+  "recipe": {
+    "a": {
+      "kind": "box",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "size": [
+        2.6,
+        2.3,
+        3.4
+      ]
+    },
+    "b": {
+      "height": 3.8,
+      "kind": "cylinder",
+      "origin": [
+        1.3,
+        1.15,
+        -0.2
+      ],
+      "radius": 0.35
+    },
+    "boolean_tol": 0.05,
+    "mesh_tol": 0.002,
+    "op": "hole"
+  },
+  "steps": [
+    "move_to_origin",
+    "round_dimensions"
+  ],
+  "result": {
+    "pass": false,
+    "reasons": [
+      "geometric_consistency"
+    ],
+    "expected": {
+      "volume": 19.023526659779847,
+      "area": 51.98730031541421,
+      "centroid": [
+        1.3,
+        1.15,
+        1.6999999999999997
+      ],
+      "bodies": 1,
+      "cavities": 0,
+      "euler": 0
+    },
+    "actual": {
+      "volume": 19.0244337333511,
+      "area": 51.99502914575556,
+      "centroid": [
+        1.3000000000000003,
+        1.149999999999999,
+        1.6999999999999995
+      ],
+      "mesh_closed": true,
+      "index_closed": true,
+      "degenerate_triangles": 0,
+      "bodies": 1,
+      "cavities": 0,
+      "triangles": 7904,
+      "shells": [
+        {
+          "signed_volume": 19.0244337333511,
+          "closed": true,
+          "subdivision_closed": true,
+          "degenerate_triangles": 0,
+          "bad_segments": []
+        }
+      ]
+    }
+  }
+}

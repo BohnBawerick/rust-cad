@@ -1,0 +1,242 @@
+--- /dev/null
++++ b/monstertruck-solid/src/transversal/classic/exact_section.rs
+@@ -0,0 +1,164 @@
++//! Preserve rational constant-parameter sections in intersection leaders.
++
++use monstertruck_geometry::prelude::*;
++use monstertruck_meshing::prelude::PolylineCurve;
++
++use super::ShapeOpsSurface;
++
++type SectionCurve<S> = SurfaceCurve<
++    NurbsCurve<Vector4>,
++    S,
++    S,
++    ParameterCurve<BoundaryCurve2D, S>,
++    ParameterCurve<BoundaryCurve2D, S>,
++>;
++
++/// Recover an exact planar section from either carrier of an intersection.
++pub(super) fn intersection_section<S: ShapeOpsSurface>(
++    curve: &IntersectionCurve<PolylineCurve<Point3>, S, S>,
++) -> Option<SectionCurve<S>> {
++    [false, true].into_iter().find_map(|swapped| {
++        let (surface, other) = if swapped {
++            (curve.surface1(), curve.surface0())
++        } else {
++            (curve.surface0(), curve.surface1())
++        };
++        let AnalyticSurfaceKind::Plane(plane) = other.try_into_analytic_surface_kind()? else {
++            return None;
++        };
++        let rational = NurbsSurface::new(surface.try_into_homogeneous_bspline_surface()?);
++        let (section, line) = isoparametric_section(&rational, curve.leader().as_slice())?;
++        // The section lies on its source surface by construction. Testing
++        // its homogeneous control polygon against the plane certifies the
++        // whole curve, including the intervals between marching samples.
++        if !plane.include(&section) {
++            return None;
++        }
++        // Conversion can change the parameter frame of analytic surfaces.
++        // Retain the UV line for native patch domains only, after checking
++        // the original frame as in the geometry crate's boundary recovery.
++        let boundary = (surface.supports_exact_patch_domains()
++            && [0.0, 0.25, 0.5, 0.75, 1.0].into_iter().all(|t| {
++                let uv = line.subs(t);
++                surface.subs(uv.x, uv.y).near(&section.subs(t))
++            }))
++        .then(|| ParameterCurve::new(BoundaryCurve2D::Line(line), surface.clone()));
++        let (boundary0, boundary1) = if swapped {
++            (None, boundary)
++        } else {
++            (boundary, None)
++        };
++        Some(SurfaceCurve::with_boundaries(
++            curve.surface0().clone(),
++            curve.surface1().clone(),
++            section,
++            boundary0,
++            boundary1,
++        ))
++    })
++}
++
++/// Extract and trim a surface section while retaining its rational weights.
++fn isoparametric_section(
++    surface: &NurbsSurface<Vector4>,
++    points: &[Point3],
++) -> Option<(NurbsCurve<Vector4>, Line<Point2>)> {
++    if points.len() < 2 {
++        return None;
++    }
++    // Continue from the preceding sample instead of repeating the global
++    // surface presearch at every marching point.
++    let mut hint = None;
++    let parameters = points
++        .iter()
++        .map(|&point| {
++            let parameter = surface
++                .search_parameter(point, hint, 100)
++                .or_else(|| hint.and_then(|_| surface.search_parameter(point, None, 100)))?;
++            hint = Some(parameter);
++            Some(parameter)
++        })
++        .collect::<Option<Vec<_>>>()?;
++    let &(start_u, start_v) = parameters.first()?;
++    let &(end_u, end_v) = parameters.last()?;
++    let homogeneous = surface.non_rationalized();
++    let (range_u, range_v) = surface.range_tuple();
++    let (mut section, start, end, line, varying_u) =
++        if parameters.iter().all(|uv| uv.1.near(&start_v)) {
++            let fixed = section_parameter((start_v + end_v) * 0.5, range_v)?;
++            let controls = (0..surface.control_points().len())
++                .map(|index| homogeneous.curve_v(index).subs(fixed))
++                .collect();
++            let start = section_parameter(start_u, range_u)?;
++            let end = section_parameter(end_u, range_u)?;
++            (
++                BsplineCurve::new(surface.knot_vector_u().clone(), controls),
++                start,
++                end,
++                Line(Point2::new(start, fixed), Point2::new(end, fixed)),
++                true,
++            )
++        } else if parameters.iter().all(|uv| uv.0.near(&start_u)) {
++            let fixed = section_parameter((start_u + end_u) * 0.5, range_u)?;
++            let controls = (0..surface.control_points().first()?.len())
++                .map(|index| homogeneous.curve_u(index).subs(fixed))
++                .collect();
++            let start = section_parameter(start_v, range_v)?;
++            let end = section_parameter(end_v, range_v)?;
++            (
++                BsplineCurve::new(surface.knot_vector_v().clone(), controls),
++                start,
++                end,
++                Line(Point2::new(fixed, start), Point2::new(fixed, end)),
++                false,
++            )
++        } else {
++            return None;
++        };
++    if start.near(&end) {
++        return None;
++    }
++    let (low, high) = (start.min(end), start.max(end));
++    let (first, last) = section.range_tuple();
++    if !low.near(&first) {
++        section = section.cut(low);
++    }
++    if !high.near(&last) {
++        section.cut(high);
++    }
++    let (mut knots, controls) = section.destruct();
++    knots.try_normalize().ok()?;
++    let mut section = NurbsCurve::new(BsplineCurve::try_new(knots, controls).ok()?);
++    if start > end {
++        section.invert();
++    }
++    // Retain the topological endpoints and the branch selected by the leader.
++    // A closed or folded leader must not become a different trimmed section.
++    if !section.front().near(points.first()?) || !section.back().near(points.last()?) {
++        return None;
++    }
++    // The recovered surface parameters already give the section parameters.
++    // Reuse them rather than running a second inverse search on every point.
++    parameters
++        .iter()
++        .zip(points)
++        .try_fold(0.0, |previous, (&(u, v), point)| {
++            let varying = if varying_u { u } else { v };
++            let parameter = section_parameter((varying - start) / (end - start), (0.0, 1.0))?;
++            ((parameter >= previous || parameter.near(&previous))
++                && section.subs(parameter).near(point))
++            .then_some(parameter)
++        })?;
++    Some((section, line))
++}
++
++/// Snap parameter-search roundoff at the existing section domain endpoints.
++fn section_parameter(value: f64, (start, end): (f64, f64)) -> Option<f64> {
++    if value.near(&start) {
++        Some(start)
++    } else if value.near(&end) {
++        Some(end)
++    } else {
++        (start < value && value < end).then_some(value)
++    }
++}
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -19,6 +19,7 @@
+ //!   the current error enum has no single `Internal` variant.
+ 
+ mod divide_face;
++mod exact_section;
+ mod faces_classification;
+ mod intersection_curve;
+ mod loops_store;
+@@ -37,10 +38,9 @@
+ type AltCurve<C, S> = Alternative<C, IntersectionCurve<PolylineCurve<Point3>, S, S>>;
+ type AltCurveShell<C, S> = Shell<Point3, AltCurve<C, S>, S>;
+ 
+-/// Convert an Alternative-curve shell back to a target-curve shell, approximating
+-/// each intersection-curve arm with a polyline B-spline wrapped in a
+-/// `SurfaceCurve` (uses the `From<SurfaceCurve<BsplineCurve<Point3>, ..>>`
+-/// conversion the current `ShapeOpsCurve` bound guarantees).
++/// Convert an alternative-curve shell back to a target-curve shell.
++/// Preserve exact rational planar sections when available, and otherwise use
++/// the sampled leader wrapped in a [`SurfaceCurve`].
+ fn altshell_to_shell<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     altshell: &AltCurveShell<C, S>,
+ ) -> Option<Shell<Point3, C, S>> {
+@@ -49,6 +49,9 @@
+         |c| match c {
+             Alternative::FirstType(c) => Some(c.clone()),
+             Alternative::SecondType(ic) => {
++                if let Some(section) = exact_section::intersection_section(ic) {
++                    return Some(section.into());
++                }
+                 let surface0 = ic.surface0().clone();
+                 let surface1 = ic.surface1().clone();
+                 let mut points = ic.leader().as_slice().to_vec();
+@@ -85,7 +88,7 @@
+     shell0: &Shell<Point3, C, S>,
+     shell1: &Shell<Point3, C, S>,
+     tol: f64,
+-) -> Option<[Shell<Point3, C, S>; 2]> {
++) -> Option<[AltCurveShell<C, S>; 2]> {
+     if tol <= 0.0 {
+         return None;
+     }
+@@ -144,7 +147,8 @@
+     })?;
+     and0.append(&mut and1);
+     or0.append(&mut or1);
+-    Some([altshell_to_shell(&and0)?, altshell_to_shell(&or0)?])
++    // Recover exact curves only on the boundary the caller will retain.
++    Some([and0, or0])
+ }
+ 
+ fn finalize<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+@@ -183,7 +187,9 @@
+         return finalize(operation, shell);
+     }
+     let [and_shell, _] = pair(&shell0, &shell1)?;
+-    finalize(operation, and_shell)
++    let shell =
++        altshell_to_shell(&and_shell).ok_or(ShapeOpsError::EmptyOutputShell { operation })?;
++    finalize(operation, shell)
+ }
+ 
+ /// OR operation between two solids (classic backend).
+@@ -215,7 +221,9 @@
+         return finalize(operation, shell);
+     }
+     let [_, or_shell] = pair(&shell0, &shell1)?;
+-    finalize(operation, or_shell)
++    let shell =
++        altshell_to_shell(&or_shell).ok_or(ShapeOpsError::EmptyOutputShell { operation })?;
++    finalize(operation, shell)
+ }
+ 
+ /// Difference: the region inside `solid0` but outside `solid1` (classic backend).

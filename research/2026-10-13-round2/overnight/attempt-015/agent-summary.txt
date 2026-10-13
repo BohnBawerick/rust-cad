@@ -1,0 +1,7 @@
+Repaired attempt 14’s hypothesis in `classic/divide_face.rs` and new `classic/divide_face/interior.rs`, including the reported `near()` type error.
+
+The patch preserves paired, simple interior trim loops: small UV area does not invalidate a disk–annulus partition. Expected scope is restoring missing through-hole rims.
+
+Cylinder coincidence and cylinder-pair assembly remain unresolved. Containment and regression behavior require controller validation. No builds or tests run.
+
+[Candidate patch](/workspace/scratch/attempt-15.patch)

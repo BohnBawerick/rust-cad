@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "/workspace/lab/contact_audit.py", line 32, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/workspace/lab/contact_audit.py", line 25, in main
+    c,geometry=raw(case_id);(out/(case_id+'-raw.json')).write_text(json.dumps(geometry)+'\n')
+               ~~~^^^^^^^^^
+  File "/workspace/lab/contact_audit.py", line 19, in raw
+    return c,json.loads(subprocess.check_output(cmd,timeout=8,env={'PATH':'/usr/bin:/bin','LC_ALL':'C','RAYON_NUM_THREADS':'1'}))
+                        ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 473, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               **kwargs).stdout
+               ^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 557, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1221, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 2154, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1268, in _check_timeout
+    raise TimeoutExpired(
+    ...<2 lines>...
+            stderr=b''.join(stderr_seq) if stderr_seq else None)
+subprocess.TimeoutExpired: Command '['prlimit', '--as=4294967296', '--cpu=8', '--', 'bwrap', '--unshare-all', '--die-with-parent', '--ro-bind', '/usr', '/usr', '--ro-bind', '/lib', '/lib', '--ro-bind', '/lib64', '/lib64', '--proc', '/proc', '--dev', '/dev', '--tmpfs', '/tmp', '--ro-bind', '/workspace/lab/target/final-probe', '/probe', '--ro-bind', '/workspace/lab/tmp/tmpj2r0f8fn/case.json', '/case.json', '--', '/probe', '/case.json']' timed out after 8 seconds

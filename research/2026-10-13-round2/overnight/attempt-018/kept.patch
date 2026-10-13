@@ -1,0 +1,51 @@
+--- a/monstertruck-solid/src/transversal/classic/circular_extrusion/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/circular_extrusion/mod.rs
+@@ -122,9 +122,33 @@
+     if !first.vector.near(&second.vector) || !displacement.dot(axis).so_small() {
+         return None;
+     }
++    let disjoint_shell = || match operation {
++        Operation::Union => solid0
++            .face_iter()
++            .chain(solid1.face_iter())
++            .cloned()
++            .collect(),
++        Operation::Intersection => Shell::default(),
++        Operation::Difference => solid0.face_iter().cloned().collect(),
++    };
++    // The certified circular sections lie in balls of their respective radii.
++    // Project those balls and their entire extrusion segments onto a candidate
++    // separating normal. Include both segment endpoints even when the axes
++    // differ slightly. Disjoint projection interiors certify disjoint solid
++    // interiors without relying on tessellation or a vertex bounding box.
++    let normal = displacement - axis * displacement.dot(axis);
++    let normal_length = normal.magnitude();
++    let gap = displacement.dot(normal) + second.vector.dot(normal).min(0.0)
++        - first.vector.dot(normal).max(0.0);
++    if normal_length > 0.0 && gap >= (first.radius + second.radius) * normal_length {
++        // Equality is external tangency: the contact has no solid interior.
++        // Preserve the independent edge identities so union has two shells,
++        // even if their point sets touch along an entire generator.
++        return Some(disjoint_shell());
++    }
+     let distance = displacement.magnitude();
+-    // This path handles two transversal circle crossings. Containment,
+-    // coincidence and tangency stay with the general boundary classifier.
++    // The remaining arrangement requires two transversal circle crossings.
++    // Containment and coincidence stay with the general boundary classifier.
+     if distance <= (first.radius - second.radius).abs() || distance >= first.radius + second.radius
+     {
+         return None;
+@@ -139,7 +163,11 @@
+     let offset = axis.cross(displacement) * (height_squared.sqrt() / distance);
+     let crossings = [middle + offset, middle - offset];
+     if crossings[0].near(&crossings[1]) {
+-        return None;
++        // A repeated circle crossing between the centers is external tangency.
++        // Circle recovery can round a double root into two coincident roots;
++        // apply the same regularization as for separated projection interiors.
++        // An internal tangency lies outside the segment between the centers.
++        return (0.0 < along && along < distance).then(disjoint_shell);
+     }
+     // Both input trims must actually contain both analytic intersection points.
+     if [&first, &second].into_iter().any(|cylinder| {

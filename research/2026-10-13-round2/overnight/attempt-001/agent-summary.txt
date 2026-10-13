@@ -1,0 +1,11 @@
+Candidate written in three files under `transversal/classic`:
+
+- `mod.rs`: classify complete boundary sets and handle empty-solid identities.
+- `shell_classification.rs`: use oriented winding counts, account for complemented cutters, and sample face interiors.
+- `faces_classification.rs`: guard closed unknown components against empty-boundary indexing.
+
+The mathematical correction is membership = winding number plus the material state at infinity. Expected gains cover disjoint subtraction, containment, cavities, and vertex contact without box-specific logic.
+
+Edge/face contact assembly and thin-overlap failures remain unresolved. No builds or tests were run.
+
+[Candidate patch](/workspace/scratch/candidate.patch) · [Findings and risks](/workspace/scratch/partial.txt)

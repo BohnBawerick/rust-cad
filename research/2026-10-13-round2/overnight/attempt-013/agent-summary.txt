@@ -1,0 +1,9 @@
+Modified [loops_store.rs](/workspace/kernel/monstertruck-solid/src/transversal/classic/loops_store.rs:402).
+
+Boundary projection now measures the surface residual at the evaluated curve point. This avoids a singular Newton step when a circular rim already lies in a cap plane, and returns a vertex on the curve being split. Non-finite steps fail explicitly.
+
+Expected scope: curved boundary endpoint refinement. Coplanar face ownership, tangent shell classification, and small-hole UV-area filtering remain unresolved.
+
+No builds or tests run. Formatting verification was limited by stable rustfmt’s lack of repository-required options.
+
+[Candidate patch](/workspace/scratch/attempt-13.patch) · [Findings](/workspace/scratch/partial.txt)

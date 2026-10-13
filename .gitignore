@@ -3,13 +3,17 @@ lab/agent-home/
 lab/agent-scratch/
 lab/cache/
 lab/target/
+lab/gate-target/
 lab/clean-target/
 lab/upstream-target/
+lab/release-target/
 lab/tmp/
+lab/logs/
 lab/export/
 lab/overnight/
 lab/final-audit/
 lab/patch-replay/
+lab/contact-audit/
 lab/*.pid
 __pycache__/
 /kernel/resources/

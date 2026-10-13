@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""Frozen evaluator. Candidate code runs with one recipe and no corpus access."""
+"""Frozen evaluator. Candidate code runs with one recipe and no corpus access.
+
+Every suite result carries the evaluator revision from `evaluator.json`, and the loop and the
+CI gate refuse to compare results across revisions.
+"""
 import argparse, concurrent.futures, hashlib, json, os, signal, subprocess, tempfile, time
 from pathlib import Path
 from oracle import analytic,mesh_metrics,verdict
 ROOT=Path(__file__).resolve().parent
+EVALUATOR=json.loads((ROOT/'evaluator.json').read_text())['revision']
 GROUPS=['boxes','cylinders','extrude','revolve','fillet','chamfer','holes','patterns','step']
 TIMEOUT=8
 
@@ -48,17 +53,17 @@ def score(rows):
     present=[v for v in groups.values() if v['total']]
     return dict(score=100*sum(v['passed']/v['total'] for v in present)/len(present),passed=sum(r['pass'] for r in rows),total=len(rows),groups=groups)
 
-def suite(split,output,binary=None):
+def suite(split,output,binary=None,workers=2):
     paths=sorted((ROOT/'corpus'/split).glob('*.json'))
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
         rows=list(pool.map(lambda p:evaluate(p,binary),paths))
-    result=score(rows);result.update(split=split,rows=rows)
+    result=score(rows);result.update(split=split,evaluator=EVALUATOR,rows=rows)
     Path(output).write_text(json.dumps(result,indent=2)+'\n');return result
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();s=p.add_subparsers(dest='command',required=True)
     c=s.add_parser('case');c.add_argument('path');c.add_argument('--binary',type=Path)
-    c=s.add_parser('suite');c.add_argument('split',choices=['public','heldout']);c.add_argument('--out',required=True);c.add_argument('--binary',type=Path)
+    c=s.add_parser('suite');c.add_argument('split',choices=['public','heldout']);c.add_argument('--out',required=True);c.add_argument('--binary',type=Path);c.add_argument('--workers',type=int,default=2)
     a=p.parse_args()
     if a.command=='case':r=evaluate(a.path,a.binary);print(json.dumps(r));raise SystemExit(0 if r['pass'] else 1)
-    else:r=suite(a.split,a.out,a.binary);print(json.dumps({k:v for k,v in r.items() if k!='rows'}))
+    else:r=suite(a.split,a.out,a.binary,a.workers);print(json.dumps({k:v for k,v in r.items() if k!='rows'}))

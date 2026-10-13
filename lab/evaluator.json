@@ -1,0 +1,6 @@
+{
+  "revision": "oracle-v2",
+  "since": "2026-10-13",
+  "files": ["oracle.py", "verify.py", "probe/src/main.rs", "probe/src/step.rs"],
+  "log": "EVALUATOR-CHANGES.md"
+}

@@ -73,7 +73,10 @@ fn run(c: &Value) -> Result<Value> {
     let mut consistent=true;let mut roundtrip=Value::Null;
     for solid in &solids {
         consistent &= catch_unwind(AssertUnwindSafe(||solid.is_geometric_consistent())).unwrap_or(false);
-        for shell in solid.boundaries() {
+        // One mesh per B-rep shell, so the checker can judge each shell's closure on its
+        // own and count bodies. Shell order matches `solid.boundaries()`.
+        let meshed=if solid.boundaries().is_empty() {None} else {Some(solid.triangulation(num(c,"mesh_tol",0.005)).collect_option().ok_or("mesh omitted face")?)};
+        for (index,shell) in solid.boundaries().iter().enumerate() {
             let mut edges=HashMap::new();let mut vertices=HashSet::new();let mut face_cells=0i64;
             for face in shell.iter() {
                 face_cells+=2-face.boundaries().len() as i64;
@@ -82,14 +85,15 @@ fn run(c: &Value) -> Result<Value> {
                     vertices.insert(e.front().id());vertices.insert(e.back().id());
                 }}
             }
+            let mesh=meshed.as_ref().map(|m|m.boundaries()[index].to_polygon()).ok_or("shell mesh absent")?;
+            let point_base=all_points.len();let triangle_base=all_triangles.len();
+            all_points.extend(mesh.positions().iter().map(|p|[p.x,p.y,p.z]));
+            all_triangles.extend(mesh.tri_faces().iter().map(|t|[point_base+t[0].pos,point_base+t[1].pos,point_base+t[2].pos]));
             shells.push(json!({"vertices":vertices.len(),"edges":edges.len(),"faces":shell.len(),"face_cells":face_cells,
-                "edge_uses":edges.values().map(|x|[x.0,x.1]).collect::<Vec<_>>(),"euler":vertices.len() as i64-edges.len() as i64+face_cells}));
+                "edge_uses":edges.values().map(|x|[x.0,x.1]).collect::<Vec<_>>(),"euler":vertices.len() as i64-edges.len() as i64+face_cells,
+                "points":[point_base,all_points.len()],"triangles":[triangle_base,all_triangles.len()]}));
         }
         if !solid.boundaries().is_empty() {
-            let mesh=solid.triangulation(num(c,"mesh_tol",0.005)).collect_option().ok_or("mesh omitted face")?.to_polygon();
-            let base=all_points.len();
-            all_points.extend(mesh.positions().iter().map(|p|[p.x,p.y,p.z]));
-            all_triangles.extend(mesh.tri_faces().iter().map(|t|[base+t[0].pos,base+t[1].pos,base+t[2].pos]));
             if mode=="step_roundtrip" {
                 step=CompleteStepDisplay::new(StepModel::from(&solid.compress()),StepHeaderDescriptor::default()).to_string();
                 let table=monstertruck_io::step::load::Table::from_step(&step)?;

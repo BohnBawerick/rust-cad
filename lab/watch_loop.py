@@ -4,7 +4,7 @@ import datetime,json,os,subprocess,time
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 RUN=ROOT/'overnight'
-pidfile=ROOT/'overnight-controller.pid'
+pidfile=RUN/'controller.pid'
 pid=int(pidfile.read_text())
 started=pidfile.stat().st_mtime
 next_check=0
@@ -27,6 +27,6 @@ while True:
     if terminal:break
     if not live:
         hook=os.environ.get('RESEARCH_STATUS_HOOK')
-        if hook:subprocess.run(['python3',hook,'blocked','Astra controller exited without a terminal record; independent monitor stopped and saved its last check.'],check=True)
+        if hook:subprocess.run(['python3',hook,'blocked','Controller exited without a terminal record; independent monitor stopped and saved its last check.'],check=True)
         break
     time.sleep(30)

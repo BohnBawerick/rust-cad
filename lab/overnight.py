@@ -133,7 +133,7 @@ def run(cmd, log, budget, env, deadline):
         return 124, 0
     start = time.monotonic()
     with Path(log).open('wb') as out:
-        CHILD = subprocess.Popen(cmd, stdout=out, stderr=subprocess.STDOUT, env=env, start_new_session=True)
+        CHILD = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT, env=env, start_new_session=True)
         write_json(RUN / 'child.json', dict(pid=CHILD.pid, at=now(), log=str(Path(log).relative_to(ROOT)), budget=limit))
         try:
             rc = CHILD.wait(timeout=limit)
@@ -649,7 +649,8 @@ def main(argv=None):
         (directory / 'candidate.patch').write_text(diff)
         changed_files = sorted(rel for rel in set(before) | set(after) if before.get(rel) != after.get(rel))
         record = dict(attempt=i, lane=lane['name'], lane_switch=why, started=started, agent=cfg['agent'], agent_exit=rc,
-                      agent_seconds=seconds, revision=cfg['revision'], evaluator=cfg['evaluator'], changed=bool(diff),
+                      agent_seconds=seconds, agent_usage=agent_command.usage(cfg['agent'], directory / 'agent.jsonl'),
+                      revision=cfg['revision'], evaluator=cfg['evaluator'], changed=bool(diff),
                       files_changed=changed_files, lines_added=sum(1 for l in diff.splitlines() if l.startswith('+') and not l.startswith('+++')),
                       lines_removed=sum(1 for l in diff.splitlines() if l.startswith('-') and not l.startswith('---')),
                       patch_sha256=digest(diff.encode()), kept=False, heldout_result='not_evaluated')

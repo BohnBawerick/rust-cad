@@ -16,6 +16,7 @@ Harnesses:
 Neither harness ever receives an API key: the environment is a fixed allow-list and
 `forbid_api_keys` refuses to start when one is present in the agent home or the process
 environment, so a rate limit can only back off or stop, never fall through to a paid key.
+The agent home is the only credential source the sandbox can see.
 """
 import json
 import os
@@ -80,7 +81,7 @@ def codex(agent, prompt):
     return ['/opt/agent/codex', 'exec', '--ignore-user-config', '--ephemeral', '--json', '--skip-git-repo-check',
             '-s', 'danger-full-access', '-c', 'approval_policy="never"',
             '-m', agent['model'], '-c', f'model_reasoning_effort="{agent["effort"]}"',
-            '-c', 'preferred_auth_method="chatgpt"', '-c', 'web_search="disabled"', '-c', 'features.apps=false',
+            '-c', 'web_search="disabled"', '-c', 'features.apps=false',
             '-o', '/work/scratch/last-message.txt', prompt]
 
 
@@ -115,6 +116,26 @@ def summary(agent, log):
         if event.get('type') == 'result':
             text = event.get('result') or ''
     return text[:5000]
+
+
+def usage(agent, log):
+    """Token usage summed over the attempt's turns, when the harness reports it."""
+    totals = {}
+    path = Path(log)
+    if not path.exists():
+        return totals
+    for line in path.read_text(errors='replace').splitlines():
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        report = event.get('usage') if agent['harness'] == 'codex' and event.get('type') == 'turn.completed' else None
+        if agent['harness'] == 'claude' and event.get('type') == 'result':
+            report = event.get('usage')
+        for key, value in (report or {}).items():
+            if isinstance(value, (int, float)):
+                totals[key] = totals.get(key, 0) + value
+    return totals
 
 
 def rate_limited(log):

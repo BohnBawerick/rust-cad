@@ -111,7 +111,11 @@ with tempfile.TemporaryDirectory() as td:
 agent_command.binary_dir = lambda name: Path('/opt/fake')
 codex = agent_command.command(dict(harness='codex', model='gpt-6-astra', effort='high'), 'P', ['monstertruck-solid/src'])
 checks['codex_uses_model_and_effort'] = '-m' in codex and codex[codex.index('-m') + 1] == 'gpt-6-astra' and 'model_reasoning_effort="high"' in codex
-checks['codex_prefers_chatgpt_login'] = 'preferred_auth_method="chatgpt"' in codex
+checks['codex_runs_ephemeral_without_user_config'] = '--ephemeral' in codex and '--ignore-user-config' in codex
+with tempfile.TemporaryDirectory() as td:
+    log = Path(td) / 'agent.jsonl'
+    log.write_text('{"type":"turn.completed","usage":{"input_tokens":10,"output_tokens":2}}\n{"type":"turn.completed","usage":{"input_tokens":5,"output_tokens":1}}\n')
+    checks['codex_usage_summed'] = agent_command.usage(dict(harness='codex'), log) == {'input_tokens': 15, 'output_tokens': 3}
 checks['codex_mounts_editable_rw'] = '--bind' in codex and any(a.endswith('monstertruck-solid/src') for a in codex)
 checks['probe_source_mounted_read_only'] = '/work/probe' in codex
 claude = agent_command.command(dict(harness='claude', model='claude-opus-5-5', effort='high'), 'P', [])

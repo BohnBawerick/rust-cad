@@ -45,7 +45,7 @@ The controller hashes every protected file before and after each attempt and sto
 
 ### Rate limits and stops
 
-When the agent log shows a usage or rate limit, the attempt is recorded as `rate_limited`, the controller waits `rate_limit.base_wait_seconds` doubling each time up to `max_wait_seconds`, and stops cleanly once `total_wait_seconds` of waiting is used. The agent environment is a fixed allow-list without API keys, `forbid_api_keys` refuses to start if one is present, and codex is told to prefer the ChatGPT login, so a limit can only slow the run down or stop it.
+When the agent log shows a usage or rate limit, the attempt is recorded as `rate_limited`, the controller waits `rate_limit.base_wait_seconds` doubling each time up to `max_wait_seconds`, and stops cleanly once `total_wait_seconds` of waiting is used. The agent environment is a fixed allow-list without API keys, `forbid_api_keys` refuses to start if one is present in the agent home or the process environment, and the agent home is the only credential source the sandbox can see, so a limit can only slow the run down or stop it.
 
 `touch lab/overnight/pause-between-rounds` holds the loop between attempts; `touch lab/overnight/stop-after-attempt` stops it cleanly after the current attempt. SIGTERM and SIGINT restore the editable files and record a `stopped` state. `python3 lab/overnight.py --resume` continues from the records, restoring the editable paths to the last kept state first if they drifted.
 

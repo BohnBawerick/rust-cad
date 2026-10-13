@@ -94,6 +94,17 @@ Failure is a run with no keeps and no gate-failed candidates, that is, the agent
 
 Numbers that matter afterwards: `combined_score` and `combined_passed` from `lab/review_run.py`, the per-group table, the count of attempts by `reason`, and `lab/final_audit.py`'s sealed-sample comparison. A score rise with sealed regressions is not progress.
 
+## The smoke run
+
+The harness was proved on 13 October 2026 with the launch command above cut to `--max-attempts 2 --hours 2`, on the unpatched kernel, with codex `gpt-6-astra` at `high`. The record is `research/2026-10-13-round2-prep/smoke-run/` (transcripts dropped, paths redacted).
+
+| Attempt | Lane | Agent | Files | Public | Held-out | Outcome |
+| ---: | --- | ---: | ---: | ---: | ---: | --- |
+| 1 | planar | 858 s | 6 (3 new) | 206/318 | 59/102 | rejected: `public-262` (a through hole) turned from an error into geometry with `geometric_consistency=false`, the same new wrong success that vetoed round 1's attempt 1 |
+| 2 | planar | 428 s | 5 (3 new) | 191/318 | 58/102 | kept: no regression, kernel tests for `monstertruck` and `monstertruck-solid` green in 20 s, release check green, repeat identical; combined score 59.7364373100 to 64.4372920108 |
+
+The kept change split its work over `mod.rs`, `faces_classification.rs` and three new modules (`region.rs`, `separation.rs`, `contact.rs`), which the one-file loop of round 1 could not have produced. The gate baseline for the whole workspace took 442 s cached. The kept patch is evidence for the harness, not a kernel change; `kernel/` in this repository stays unpatched.
+
 ## Stop rules
 
 The controller stops on its own when:

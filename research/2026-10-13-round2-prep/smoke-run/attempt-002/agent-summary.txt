@@ -1,0 +1,12 @@
+Candidate written in `monstertruck-solid/src/transversal/classic`:
+
+- Modified `mod.rs` and `faces_classification.rs`.
+- Added `region.rs`, `separation.rs`, and `contact.rs`.
+
+The repair restores oriented crossing counts and complement membership for certified polygonal boundaries, addressing disjoint subtraction and containment with cavities. Supporting planes prove separation; edge and vertex contacts preserve separate shells, while matching whole shared faces are canceled and joined.
+
+Both operands must satisfy the polygonal certificate. Curved operands retain the existing classification path, excluding the previous through-hole veto from this change.
+
+Partial coplanar overlaps, thin overlaps, and some rotated contacts remain unresolved. Findings are in `/work/scratch/partial.txt`.
+
+No builds or tests were run. No tests, dependencies, or configuration were changed.

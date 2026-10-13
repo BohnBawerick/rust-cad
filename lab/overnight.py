@@ -581,7 +581,9 @@ def main(argv=None):
     last_revision = records[-1]['revision'] if records else None
     last_hour = time.time()
     failures = 0
-    binary = ROOT / 'target/debug/kernel-probe'
+    # The probe in target/ belongs to whatever was compiled last, which after a rejected
+    # candidate is the candidate. Feedback is judged with a copy taken at the last keep.
+    binary = RUN / 'best-probe'
     if not records:
         set_state(state='baseline')
         build_rc, build_s = run(compile_command(), RUN / 'baseline-build.log', cfg['compile_seconds'], COMPILE_ENV, deadline)
@@ -593,9 +595,16 @@ def main(argv=None):
             write_json(RUN / 'run.json', run_state)
             if not ok:
                 raise RuntimeError(f'the gates fail on the starting source: {details}; a gate that fails before any change is not a gate')
+        shutil.copy2(ROOT / 'target/debug/kernel-probe', binary)
         run_state['probe_sha256'] = digest(binary.read_bytes())
         write_json(RUN / 'run.json', run_state)
         save_best_source(cfg)
+    elif not binary.exists():
+        set_state(state='baseline')
+        build_rc, build_s = run(compile_command(), RUN / 'resume-build.log', cfg['compile_seconds'], COMPILE_ENV, deadline)
+        if build_rc:
+            raise RuntimeError('the retained source does not compile on resume; see lab/overnight/resume-build.log')
+        shutil.copy2(ROOT / 'target/debug/kernel-probe', binary)
     lane_state = run_state.setdefault('lanes', {})
     start_attempt = records[-1]['attempt'] + 1 if records else 1
     for i in range(start_attempt, 100000):
@@ -713,6 +722,7 @@ def main(argv=None):
             write_json(RUN / 'best-heldout.json', hidden)
             (directory / 'kept.patch').write_text(diff)
             save_best_source(cfg)
+            shutil.copy2(ROOT / 'target/debug/kernel-probe', binary)
             state.update(kept=state['kept'] + 1, since_keep=0)
             if keeps == 1:
                 status('working', f"First improvement kept in lane {lane['name']}: score {record['score_before']:.6f} to {record['score_after']:.6f}; gates passed, repeat stable.")

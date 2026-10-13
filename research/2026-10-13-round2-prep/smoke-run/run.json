@@ -1,0 +1,37 @@
+{
+  "started": "2026-10-13T06:27:27.760792+00:00",
+  "deadline": "2026-10-13T08:27:27.760803+00:00",
+  "revision": "v4-round2",
+  "evaluator": "oracle-v2",
+  "agent": {
+    "harness": "codex",
+    "model": "gpt-6-astra",
+    "effort": "high",
+    "seconds": 900,
+    "max_tool_calls": 40
+  },
+  "kernel_commit": "53d346eff7cc7dcd11d758274b9ac0b71272c622",
+  "lanes": {
+    "current": "planar",
+    "planar": {
+      "attempts": 2,
+      "kept": 1,
+      "since_keep": 0,
+      "stalls": 0
+    }
+  },
+  "rate_limit_hits": 0,
+  "rate_limit_wait": 0,
+  "gate_baseline": {
+    "packages": "workspace",
+    "kernel_tests": {
+      "exit": 0,
+      "seconds": 128.417
+    },
+    "release_check": {
+      "exit": 0,
+      "seconds": 20.105
+    }
+  },
+  "probe_sha256": "5122c944196ab1391209003b446f977b467b82d146ac14f1dc388adbb79367b6"
+}

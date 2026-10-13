@@ -1,0 +1,49 @@
+{
+  "original_id": "public-006",
+  "group": "boxes",
+  "op": "difference",
+  "recipe": {
+    "a": {
+      "kind": "box",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "size": [
+        2.0,
+        3.3,
+        2.5
+      ]
+    },
+    "b": {
+      "kind": "box",
+      "origin": [
+        2.0,
+        3.3,
+        0.0
+      ],
+      "size": [
+        2.0,
+        3.3,
+        2.5
+      ]
+    },
+    "boolean_tol": 0.05,
+    "mesh_tol": 0.002,
+    "op": "difference",
+    "relation": "touch_edge",
+    "rotation": 0
+  },
+  "steps": [
+    "drop_rotation",
+    "move_to_origin",
+    "round_dimensions"
+  ],
+  "result": {
+    "pass": false,
+    "reasons": [
+      "error:invalid output shell for `and`: This shell is not oriented and closed.."
+    ]
+  }
+}

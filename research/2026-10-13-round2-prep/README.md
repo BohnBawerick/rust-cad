@@ -72,4 +72,4 @@ Two consequences for reading round 2's numbers:
 | File | What it holds |
 | --- | --- |
 | `revalidation.json` | Evaluator revision, gate packages, baseline numbers, and one record per prefix with suite counts, per-group passes, regressions and gate exits. |
-| `smoke-run/` | The harness proof: the attempts of the short smoke run described in `ROUND2.md`, with prompts, diffs, logs and verdicts, paths redacted. |
+| `smoke-run/` | The harness proof: two real attempts with codex `gpt-6-astra` at `high` on the unpatched kernel. Attempt 1 gained and was vetoed for a new wrong success on `public-262`; attempt 2 was kept after the kernel tests, the release check and the repeat run, score 59.7364373100 to 64.4372920108. Prompts, diffs, build and gate logs, verdicts and the minimized feedback are included; agent transcripts are not; paths are redacted. The `ROUND2.md` smoke-run section has the table. |

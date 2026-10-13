@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-13T06:55:38.050230+00:00",
+  "attempt": 3,
+  "state": "finished",
+  "reason": "deadline_or_attempt_limit",
+  "attempts": 2,
+  "keeps": 1,
+  "score": 64.43729201082142
+}

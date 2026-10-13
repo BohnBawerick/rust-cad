@@ -5,7 +5,8 @@ A regression is any case that passed in the baseline and now fails, any new
 incorrect success (a failing case that now returns geometry where the baseline
 did not), any new timeout, crash, panic or evaluator error, or a lower score.
 New passes are allowed and listed, so an improvement prompts a baseline update
-instead of a red build.
+instead of a red build. Results recorded under a different evaluator revision
+never compare equal: re-baseline instead.
 """
 import argparse, json, sys
 from pathlib import Path
@@ -25,6 +26,8 @@ def compare(baseline, current):
     old = {r['id']: r for r in baseline['rows']}
     new = {r['id']: r for r in current['rows']}
     problems = []
+    if baseline.get('evaluator') != current.get('evaluator'):
+        problems.append(f"evaluator revision differs: baseline {baseline.get('evaluator')!r}, current {current.get('evaluator')!r}")
     if set(old) != set(new):
         problems.append(f'case set differs: missing {sorted(set(old) - set(new))}, extra {sorted(set(new) - set(old))}')
     regressions = sorted(i for i in old if i in new and old[i]['pass'] and not new[i]['pass'])

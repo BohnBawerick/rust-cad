@@ -7,7 +7,7 @@ def box(p=(0,0,0),d=(1,1,1)):
     return dict(kind='box',origin=list(p),size=list(d))
 def cyl(p=(0,0,0),r=1,h=1):
     return dict(kind='cylinder',origin=list(p),radius=r,height=h)
-def generate(split,seed,n):
+def generate(split,seed,n,out=None):
     rng=random.Random(seed); cases=[]
     def add(group,op,a,**kw):
         i=len(cases);cases.append(dict(id=f'{split}-{i:03d}',group=group,op=op,a=a,boolean_tol=.05,mesh_tol=.002,**kw))
@@ -39,7 +39,7 @@ def generate(split,seed,n):
         add('boxes','difference',box(),b=box([2,0,0]),regression='engine-path unit_disjoint')
         add('fillet','fillet',box(d=[40,30,10]),radius=2,regression='engine-path radius-2 fillet')
         add('step','step_import',box(),fixture='nist_ctc_01_asme1_ap242-e1.stp',regression='engine-path empty-success assembly traversal')
-    out=ROOT/'corpus'/split;out.mkdir(parents=True,exist_ok=True)
+    out=Path(out) if out else ROOT/'corpus'/split;out.mkdir(parents=True,exist_ok=True)
     for c in cases:(out/(c['id']+'.json')).write_text(json.dumps(c,sort_keys=True)+'\n')
     print(split,len(cases))
 if __name__=='__main__':

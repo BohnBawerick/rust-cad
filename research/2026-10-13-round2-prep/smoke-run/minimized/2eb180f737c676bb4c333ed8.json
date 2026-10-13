@@ -1,0 +1,83 @@
+{
+  "original_id": "public-009",
+  "group": "boxes",
+  "op": "difference",
+  "recipe": {
+    "a": {
+      "kind": "box",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "size": [
+        2.7,
+        3.1,
+        2.9
+      ]
+    },
+    "b": {
+      "kind": "box",
+      "origin": [
+        2.7,
+        3.1,
+        2.9
+      ],
+      "size": [
+        2.7,
+        3.1,
+        2.9
+      ]
+    },
+    "boolean_tol": 0.05,
+    "mesh_tol": 0.002,
+    "op": "difference",
+    "relation": "touch_vertex",
+    "rotation": 1.5707963267948966
+  },
+  "steps": [
+    "move_to_origin",
+    "round_dimensions"
+  ],
+  "result": {
+    "pass": false,
+    "reasons": [
+      "area",
+      "centroid",
+      "empty_geometry",
+      "volume"
+    ],
+    "expected": {
+      "volume": 24.273000000000003,
+      "area": 50.38000000000001,
+      "centroid": [
+        -1.5500000000000003,
+        1.35,
+        1.4499999999999997
+      ],
+      "bodies": 1,
+      "cavities": 0,
+      "euler": 2
+    },
+    "actual": {
+      "volume": 0.0,
+      "area": 0.0,
+      "centroid": null,
+      "mesh_closed": false,
+      "index_closed": false,
+      "degenerate_triangles": 0,
+      "bodies": 0,
+      "cavities": 0,
+      "triangles": 0,
+      "shells": [
+        {
+          "signed_volume": 0.0,
+          "closed": false,
+          "subdivision_closed": false,
+          "degenerate_triangles": 0,
+          "bad_segments": []
+        }
+      ]
+    }
+  }
+}

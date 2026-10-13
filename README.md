@@ -4,7 +4,7 @@ A pure-Rust CAD geometry engine. The long-term aim is a solid modeller that can 
 
 The kernel starts as a fork of [monstertruck](https://github.com/virtualritz/monstertruck) (Apache-2.0). Around it sits a verification loop. A command-line probe builds geometry with the kernel, an independent Python checker compares the result against closed-form answers, and a controller lets a coding agent propose kernel changes. It keeps only the changes that raise the score without breaking any case that already passed. The idea comes from Karpathy's [autoresearch](https://github.com/karpathy/autoresearch), adapted for geometry, where a better average can never excuse a newly wrong solid.
 
-This is early research. Nothing here is ready for production use, and the kernel in this repository is upstream monstertruck with no changes yet.
+This is early research. Nothing here is ready for production use, and the kernel in this repository is upstream monstertruck with no changes yet. [`ROUND2.md`](ROUND2.md) is the launch sheet for the next search run.
 
 ## Layout
 
@@ -12,13 +12,15 @@ This is early research. Nothing here is ready for production use, and the kernel
 | --- | --- |
 | `kernel/` | monstertruck at commit `d2ad1ed7aa420b7f32cd2c1e3ad319b46d593652`, unpatched, with its `LICENSE`. |
 | `lab/probe/` | `kernel-probe`, the Rust CLI. It reads one JSON recipe, runs the operation and prints mesh coordinates plus B-rep topology. It prints observations, not verdicts. |
-| `lab/verify.py`, `lab/oracle.py` | The frozen evaluator. It runs the probe in a sandbox and judges its output. |
-| `lab/check_identities.py`, `lab/contact_audit.py` | Diagnostics. Boolean volume identities, and an edge-incidence check that ignores how an edge was subdivided. |
+| `lab/verify.py`, `lab/oracle.py` | The frozen evaluator. It runs the probe in a sandbox and judges its output, one shell at a time. Its revision is `lab/evaluator.json`; every change is logged in `lab/EVALUATOR-CHANGES.md`. |
+| `lab/check_identities.py`, `lab/contact_audit.py` | Diagnostics. Boolean volume identities, and the contact cases judged shell by shell next to the merged-mesh view. |
 | `lab/generate.py`, `lab/corpus/` | The recipe generator and the 420 recipes it produced, plus 351 fresh audit recipes in `corpus/sealed/`. |
 | `lab/fixtures/` | One public NIST STEP file. Source and hash are in `lab/fixture-manifest.json`. |
-| `lab/overnight.py` and friends | The search loop controller. See [`lab/README.md`](lab/README.md). |
+| `lab/overnight.py` and friends | The search loop controller with its lanes, gates and minimizer. See [`lab/README.md`](lab/README.md). |
+| `lab/gates.py` | The kernel's own tests and the release check as keep gates, offline. |
 | `lab/results/frozen-baseline-*.json` | The recorded baseline verdicts that CI compares against. |
 | `research/2026-10-13-overnight/` | The record of the first overnight run, including its patch stack. Not applied. See [its README](research/2026-10-13-overnight/README.md). |
+| `research/2026-10-13-round2-prep/` | The re-judgement of that run under the current evaluator and gates, and the decision on what round 2 starts from. |
 
 ## Requirements
 
@@ -43,13 +45,15 @@ python3 lab/compare_baseline.py heldout lab/tmp/heldout.json
 
 A suite command exits 0 whenever evaluation finishes, however many cases fail. `compare_baseline.py` is the gate. It exits 1 if a case that passed in the recorded baseline now fails, if a failing case starts returning geometry it did not return before, if a new timeout or crash appears, or if the score drops.
 
-You should get exactly the recorded numbers:
+You should get exactly the recorded numbers, under evaluator revision `oracle-v2`:
 
 | Split | Passed | Score |
 | --- | ---: | ---: |
-| public (visible to the search agent) | 108/318 | 48.2012267044 |
-| held-out | 33/102 | 48.8562091503 |
-| combined | 141/420 | 48.8987047811 |
+| public (visible to the search agent) | 122/318 | 58.7425372457 |
+| held-out | 39/102 | 60.6481481481 |
+| combined | 161/420 | 59.7364373100 |
+
+The first run was judged by `oracle-v1`, which scored the same source 141/420 (48.8987047811). [`lab/EVALUATOR-CHANGES.md`](lab/EVALUATOR-CHANGES.md) lists the 20 verdicts that changed and why.
 
 The score is `100 * mean(passed / total)` over nine operation groups (box booleans, cylinder booleans, extrude, revolve, fillet, chamfer, holes, patterns, STEP). It is not the raw pass percentage. A full run takes about a minute on a desktop machine.
 
@@ -59,6 +63,7 @@ The score is `100 * mean(passed / total)` over nine operation groups (box boolea
 cp lab/upstream-tests/Cargo.lock kernel/Cargo.lock
 git clone https://github.com/ricosjp/resources4truck.git kernel/resources
 git -C kernel/resources checkout 9bf9de1426c5fc2f2b8d63f501dca0d3c53ebd91
+. lab/env.sh
 cargo test --locked --manifest-path kernel/Cargo.toml --workspace \
   --exclude monstertruck-gpu --exclude monstertruck-render \
   --exclude monstertruck-wasm --exclude example-pages-generator \
@@ -77,7 +82,7 @@ A recipe is a small JSON file. This one subtracts two disjoint unit cubes:
 {"id":"demo","group":"boxes","op":"difference","a":{"kind":"box","origin":[0,0,0],"size":[1,1,1]},"b":{"kind":"box","origin":[2,0,0],"size":[1,1,1]},"boolean_tol":0.05,"mesh_tol":0.002}
 ```
 
-`verify.py` strips the recipe down to the operation inputs and runs the probe with no network, no corpus and limits of 8 seconds, 8 CPU seconds and 4 GiB. `oracle.py` computes the expected volume, area and centroid from closed-form formulas. Box booleans use an independent cell decomposition. Cylinder booleans use the equal-radius lens formula. Extrusion, revolution, one-edge fillet and chamfer, through holes and translated patterns use direct integrals. It then integrates the probe's mesh itself and checks that every welded edge has two uses with opposite winding. It also checks that each B-rep edge has two opposite uses and that each shell's Euler characteristic is even and at most two. An empty result passes only where empty is the right answer.
+`verify.py` strips the recipe down to the operation inputs and runs the probe with no network, no corpus and limits of 8 seconds, 8 CPU seconds and 4 GiB. `oracle.py` computes the expected volume, area and centroid from closed-form formulas. Box booleans use an independent cell decomposition. Cylinder booleans use the equal-radius lens formula. Extrusion, revolution, one-edge fillet and chamfer, through holes and translated patterns use direct integrals. It then integrates the probe's mesh itself. Each B-rep shell has its own mesh; after zero-area triangles are dropped and collinear subdivisions of an edge are merged, every sub-edge must be used exactly twice with opposite winding, so the verdict does not depend on how either side tessellated an edge, and a shell that glues two bodies together fails. Shells with positive signed volume are bodies and shells with negative signed volume are cavities, and both counts must match the regularized operation: two boxes touching along an edge unite into two bodies, across a face into one. It also checks that each B-rep edge has two opposite uses and that each shell's Euler characteristic is two, or zero for the through hole. An empty result passes only where empty is the right answer.
 
 These are coarse research checks. Equal mass properties do not prove a shape is right, and the cylinder, revolve, hole, fillet and chamfer groups allow 1% error. `research/2026-10-13-overnight/README.md` lists what the oracle misses.
 
@@ -85,12 +90,14 @@ These are coarse research checks. Equal mass properties do not prove a shape is 
 
 `lab/overnight.py` runs bounded attempts until a deadline. Each attempt:
 
-1. Gives the coding agent one editable kernel file, a few visible failing recipes and recent feedback. The agent cannot read the corpus, the evaluator or the held-out cases.
-2. Compiles the candidate offline in a separate sandbox.
-3. Runs both suites and keeps the change only if the public and combined scores both rise, no previously passing case fails, no new incorrect success or runtime failure appears, and a repeat run gives identical verdicts.
-4. Otherwise restores the file. Every attempt's diff, prompt, build log and verdicts are written to an append-only record.
+1. Picks a lane: a group of operations with its own editable kernel modules and focus. A lane with no failing visible case, or six attempts without a keep, hands over to the next one; with nothing visible left anywhere the run stops.
+2. Gives the coding agent the lane's modules read-write, the lane's visible failures minimized to the simplest recipe that still fails the same way, and the recent history. The agent cannot read the corpus, the evaluator or the held-out cases.
+3. Rejects the candidate before building if it touched a test, an existing `#[cfg(test)]` block or anything outside the lane.
+4. Compiles the candidate offline in a separate sandbox and runs both suites. The change must raise the visible pass count with no previously passing case failing and no new incorrect success or runtime failure.
+5. Runs the kernel's own tests for the affected crates and `cargo check --release` with warnings denied, both offline. Either failing rejects the change.
+6. Repeats both suites; every verdict must repeat. Then keeps the change or restores the modules. Every attempt's diff, prompt, logs and verdicts are written to an append-only record.
 
-The controller also hashes every protected file before and after each attempt and stops if one changed. [`lab/README.md`](lab/README.md) covers configuration, authentication and the audit scripts.
+The controller also hashes every protected file before and after each attempt and stops if one changed. A rate-limited agent backs off and the run stops cleanly rather than switching credentials; a stopped run resumes from its records. [`lab/README.md`](lab/README.md) covers configuration, authentication and the audit scripts; [`ROUND2.md`](ROUND2.md) is the launch sheet.
 
 ## The first overnight run
 
@@ -104,16 +111,17 @@ That stack is not in the kernel, and you should not apply it as a trusted fix. T
 
 The patch is also large: 2,652 lines added and 103 removed in one file. The run record keeps it as `research/2026-10-13-overnight/kept.patch` (SHA-256 `2c26c8673b8c2e51eb5152ed3ebfcfecfe09d592e4981064fa6b0bb48c36d6a7`), with each of the 12 steps beside it.
 
+Re-judged under `oracle-v2` and the round 2 gates (`research/2026-10-13-round2-prep/`), the run looks different in two ways. The seven contact results were two closed shells each, which is the right answer for bodies touching along an edge; what was wrong was the judgement, which saw one welded mesh. And the revolve group, reported as 0/17, was 16/17 all along: the only defect was eight zero-area triangles at the axis apexes, which the boolean file could never have fixed. The kernel test gate, on the other hand, rejects the stack from its first patch.
+
 ## Next steps
 
-These come from the run's report and are not done yet:
+Done for round 2, in `lab/` and [`ROUND2.md`](ROUND2.md): the evaluator is invariant to edge subdivision and knows what separate touching bodies are; the kernel's own tests and the release check are keep gates; the agent edits focused modules per lane and sees minimized failures; every evaluator change is a recorded revision.
 
-- Fix the oracle so edge subdivision cannot change a verdict, and define what a result of separate touching bodies looks like.
-- Make the kernel's own tests and the release build hard gates in the loop, not only in CI.
-- Review the kept patches one root cause at a time, starting with the winding and complement fix, and land each one only after the review passes.
+Still open, from the run's report:
+
+- Review the round 1 kept patches one root cause at a time, starting with the winding and complement fix, under the kernel's own tests, and land each one only after the review passes. None of them passes those tests as kept.
 - Add a recipe schema with units and explicit contact semantics, and separate error kinds for unsupported input, non-convergence, invalid topology, geometric inconsistency, precision failure and conversion loss.
-- Generate a new private validation set. The held-out recipes here are now public, so they are ordinary regression tests.
-- Then resume the search, with focused modules instead of one ever-growing file.
+- Generate a new private validation set. The held-out recipes here are now public, so they are ordinary regression tests; the loop still uses them only to veto, never to show the agent.
 
 ## Licence
 

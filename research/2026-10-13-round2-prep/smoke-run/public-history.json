@@ -1,0 +1,111 @@
+[
+  {
+    "attempt": 1,
+    "lane": "planar",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/contact.rs",
+      "monstertruck-solid/src/transversal/classic/faces_classification.rs",
+      "monstertruck-solid/src/transversal/classic/loops_store.rs",
+      "monstertruck-solid/src/transversal/classic/mod.rs",
+      "monstertruck-solid/src/transversal/classic/region.rs",
+      "monstertruck-solid/src/transversal/classic/separation.rs"
+    ],
+    "kept": false,
+    "build_exit": 0,
+    "public_score": 65.76251655869491,
+    "public_passed": 206,
+    "public_regressions": [],
+    "reason": "regression",
+    "hypothesis": "Candidate written under `monstertruck-solid/src/transversal/classic`.\n\n- Updated `mod.rs` and `faces_classification.rs`.\n- Added `region.rs`, `separation.rs`, and `contact.rs`.\n- `loops_store.rs` has incidental formatting changes.\n\nThe repair uses oriented ray crossings and complement classification for disjoint subtraction and containment. It classifies all boundary components together, preserving cavities.\n\nFor certified polygonal boundaries, supporting planes prove separation. Two independent contact planes restrict contact to an edge or vertex, preserving separate shells. Matching whole shared faces are canceled and their boundary topology joined.\n\nThis applies through geometric predicates, without recognizing boxes. Partial coplanar overlaps and thin or near-coincident overlaps remain unresolved in the existing intersection pipeline. Curved-input regressions and runtime costs require controller evaluation.\n\nNo builds or tests were run. Findings are recorded in `/work/scratch/partial.txt`.",
+    "visible_vetoes": [
+      {
+        "case": {
+          "a": {
+            "kind": "box",
+            "origin": [
+              -2.6835639947114696,
+              -2.6931864800690075,
+              0.28159731019198464
+            ],
+            "size": [
+              2.9147649942251577,
+              2.7206916297016037,
+              3.902107275126074
+            ]
+          },
+          "b": {
+            "height": 4.302107275126074,
+            "kind": "cylinder",
+            "origin": [
+              -1.2261814975988907,
+              -1.3328406652182057,
+              0.08159731019198463
+            ],
+            "radius": 0.40810374445524056
+          },
+          "boolean_tol": 0.05,
+          "group": "holes",
+          "id": "public-262",
+          "mesh_tol": 0.002,
+          "op": "hole"
+        },
+        "result": {
+          "reasons": [
+            "geometric_consistency"
+          ],
+          "expected": {
+            "volume": 28.90270823712506,
+            "area": 68.799960009427,
+            "centroid": [
+              -1.226181497598891,
+              -1.3328406652182057,
+              2.232650947755021
+            ],
+            "bodies": 1,
+            "cavities": 0,
+            "euler": 0
+          },
+          "id": "public-262",
+          "group": "holes",
+          "op": "hole",
+          "seconds": 3.8776,
+          "pass": false
+        }
+      }
+    ]
+  },
+  {
+    "attempt": 2,
+    "lane": "planar",
+    "agent_exit": 0,
+    "files_changed": [
+      "monstertruck-solid/src/transversal/classic/contact.rs",
+      "monstertruck-solid/src/transversal/classic/faces_classification.rs",
+      "monstertruck-solid/src/transversal/classic/mod.rs",
+      "monstertruck-solid/src/transversal/classic/region.rs",
+      "monstertruck-solid/src/transversal/classic/separation.rs"
+    ],
+    "kept": true,
+    "build_exit": 0,
+    "public_score": 63.62576442194276,
+    "public_passed": 191,
+    "public_regressions": [],
+    "reason": "improved_without_regression",
+    "gates": {
+      "packages": [
+        "monstertruck",
+        "monstertruck-solid"
+      ],
+      "kernel_tests": {
+        "exit": 0,
+        "seconds": 20.269
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.615
+      }
+    },
+    "hypothesis": "Candidate written in `monstertruck-solid/src/transversal/classic`:\n\n- Modified `mod.rs` and `faces_classification.rs`.\n- Added `region.rs`, `separation.rs`, and `contact.rs`.\n\nThe repair restores oriented crossing counts and complement membership for certified polygonal boundaries, addressing disjoint subtraction and containment with cavities. Supporting planes prove separation; edge and vertex contacts preserve separate shells, while matching whole shared faces are canceled and joined.\n\nBoth operands must satisfy the polygonal certificate. Curved operands retain the existing classification path, excluding the previous through-hole veto from this change.\n\nPartial coplanar overlaps, thin overlaps, and some rotated contacts remain unresolved. Findings are in `/work/scratch/partial.txt`.\n\nNo builds or tests were run. No tests, dependencies, or configuration were changed."
+  }
+]

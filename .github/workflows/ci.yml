@@ -93,6 +93,8 @@ jobs:
         run: |
           cp lab/target/debug/kernel-probe lab/target/baseline-probe
           python3 lab/test_oracle.py
+      - name: Controller unit checks
+        run: python3 lab/test_controller.py
       - name: Public suite
         run: |
           . lab/env.sh

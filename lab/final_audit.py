@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Audit the retained source after the experiment window ends, with a fresh seed."""
+"""Audit the retained source after the experiment window ends, with a fresh seed.
+
+Rebuilds the retained source in a clean target, repeats both suites, checks the boolean
+identities and judges a fresh sealed sample written to `lab/final-audit/sealed/`. The round 1
+sealed sample stays in `corpus/sealed/` as a fixed regression set.
+"""
 import concurrent.futures,datetime,hashlib,json,random,secrets,shutil,subprocess,time
 from pathlib import Path
 import generate
@@ -29,9 +34,10 @@ def main():
         subprocess.run(cmd,stdout=log,stderr=subprocess.STDOUT,env=ENV,check=True,timeout=240)
     final=ROOT/'target/final-probe';shutil.copy2(clean_target/'debug/kernel-probe',final)
     seed=secrets.randbits(64);rng=random.Random(seed)
-    generate.generate('sealed',seed,52)
+    sealed=OUT/'sealed'
+    generate.generate('sealed',seed,52,sealed)
     # Avoid the repeated fixed STEP recipes in the exploratory public/validation split.
-    for p in sorted((ROOT/'corpus/sealed').glob('*.json')):
+    for p in sorted(sealed.glob('*.json')):
         c=json.loads(p.read_text())
         if c['op']=='step_roundtrip':
             c['a']=generate.box([rng.uniform(-20,20) for _ in range(3)],[rng.uniform(.3,8) for _ in range(3)])
@@ -43,8 +49,8 @@ def main():
         dims=[scale*rng.uniform(.3,4) for _ in range(3)]
         b=origin.copy();b[i%3]+=dims[i%3]+scale*rng.choice([.2,1,4])
         c=dict(id=f'sealed-extra-{i:03d}',group='boxes',op=['difference','union','intersection'][i%3],a=generate.box(origin,dims),b=generate.box(b,dims),rotation=rng.choice([.13,.51,1.2]),boolean_tol=.05,mesh_tol=.002,relation='fresh_scale_disjoint')
-        (ROOT/'corpus/sealed'/(c['id']+'.json')).write_text(json.dumps(c,sort_keys=True)+'\n')
-    cases=sorted((ROOT/'corpus/sealed').glob('*.json'))
+        (sealed/(c['id']+'.json')).write_text(json.dumps(c,sort_keys=True)+'\n')
+    cases=sorted(sealed.glob('*.json'))
     save(OUT/'seal-manifest.json',dict(at=datetime.datetime.now(datetime.timezone.utc).isoformat(),seed=seed,total=len(cases),recipes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in cases},baseline_binary_sha256=hashlib.sha256((ROOT/'target/baseline-probe').read_bytes()).hexdigest(),final_binary_sha256=hashlib.sha256(final.read_bytes()).hexdigest()))
     baseline=suite(cases,ROOT/'target/baseline-probe');save(OUT/'sealed-baseline.json',baseline)
     candidate=suite(cases,final);save(OUT/'sealed-final.json',candidate)
@@ -60,7 +66,7 @@ def main():
         repeat=suite(sorted((ROOT/'corpus'/split).glob('*.json')),final);repeat['split']=split
         save(OUT/(split+'-repeat.json'),repeat)
         if {r['id']:(r['pass'],r['reasons']) for r in verified['rows']}!={r['id']:(r['pass'],r['reasons']) for r in repeat['rows']}:raise RuntimeError('fresh rebuild repeat changed verdicts or reasons')
-    (OUT/'retained.patch').write_text(subprocess.check_output(['git','-C',str(ROOT/'kernel/source'),'diff','--relative','--','*.rs'],text=True))
+    (OUT/'retained.patch').write_text((RUN/'kept.patch').read_text())
     save(OUT/'complete.json',dict(at=datetime.datetime.now(datetime.timezone.utc).isoformat(),seconds=time.monotonic()-t,verdict='fresh cases expose regressions; do not promote as hardened' if regressions or unsafe(candidate)-unsafe(baseline) else 'no regressions found in this fresh sample'))
     print((OUT/'sealed-comparison.json').read_text())
 if __name__=='__main__':main()

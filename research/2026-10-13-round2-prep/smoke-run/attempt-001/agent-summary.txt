@@ -1,0 +1,13 @@
+Candidate written under `monstertruck-solid/src/transversal/classic`.
+
+- Updated `mod.rs` and `faces_classification.rs`.
+- Added `region.rs`, `separation.rs`, and `contact.rs`.
+- `loops_store.rs` has incidental formatting changes.
+
+The repair uses oriented ray crossings and complement classification for disjoint subtraction and containment. It classifies all boundary components together, preserving cavities.
+
+For certified polygonal boundaries, supporting planes prove separation. Two independent contact planes restrict contact to an edge or vertex, preserving separate shells. Matching whole shared faces are canceled and their boundary topology joined.
+
+This applies through geometric predicates, without recognizing boxes. Partial coplanar overlaps and thin or near-coincident overlaps remain unresolved in the existing intersection pipeline. Curved-input regressions and runtime costs require controller evaluation.
+
+No builds or tests were run. Findings are recorded in `/work/scratch/partial.txt`.

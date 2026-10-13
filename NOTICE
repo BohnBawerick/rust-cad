@@ -1,0 +1,24 @@
+rust-cad
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+This repository includes the following third-party material.
+
+kernel/
+  monstertruck, https://github.com/virtualritz/monstertruck, at commit
+  d2ad1ed7aa420b7f32cd2c1e3ad319b46d593652. Licensed under the Apache
+  License, Version 2.0; see kernel/LICENSE. monstertruck is a fork of
+  truck, https://github.com/ricosjp/truck, also Apache-2.0. Upstream
+  ships no NOTICE file at that commit.
+
+lab/probe/src/step.rs
+  Adapts step_to_mesh and shell_bounding_box from
+  monstertruck-io/examples/step-to-mesh.rs at the same monstertruck
+  commit (Apache-2.0). The changes expose the traversal to the probe and
+  use qualified types and imports.
+
+lab/fixtures/nist_ctc_01_asme1_ap242-e1.stp
+  NIST CTC 01 AP242 test file, published by the U.S. National Institute
+  of Standards and Technology at
+  https://www.nist.gov/document/nist-pmi-step-files. Included unchanged
+  as a public interoperability regression; SHA-256 and size are in
+  lab/fixture-manifest.json.

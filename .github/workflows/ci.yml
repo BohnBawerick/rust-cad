@@ -1,0 +1,111 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The recorded baseline used this stable toolchain. Pinning it here keeps
+  # kernel/rust-toolchain.toml (floating nightly) out of CI.
+  RUSTUP_TOOLCHAIN: "1.98.1"
+  CARGO_TERM_COLOR: always
+  # The GPU, render and wasm crates need a display stack or a wasm target
+  # and are not on the geometry path the verifier exercises.
+  KERNEL_CRATES: >-
+    --workspace
+    --exclude monstertruck-gpu
+    --exclude monstertruck-render
+    --exclude monstertruck-wasm
+    --exclude example-pages-generator
+
+jobs:
+  kernel:
+    name: kernel tests and release build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      # Upstream keeps test resources in a submodule. Fetch the pinned
+      # commit instead of committing 48 MB of third-party fixtures.
+      - uses: actions/checkout@v5
+        with:
+          repository: ricosjp/resources4truck
+          ref: 9bf9de1426c5fc2f2b8d63f501dca0d3c53ebd91
+          path: kernel/resources
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUSTUP_TOOLCHAIN }}
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            kernel/target
+          key: kernel-${{ env.RUSTUP_TOOLCHAIN }}-${{ hashFiles('lab/upstream-tests/Cargo.lock', 'kernel/**/Cargo.toml') }}
+      - name: Use the recorded dependency lock
+        run: cp lab/upstream-tests/Cargo.lock kernel/Cargo.lock
+      - name: Kernel tests
+        # One test thread: monstertruck-traits has a process-wide work meter
+        # that a parallel test can charge, which fails
+        # the_work_meter_charges_what_the_division_spends at random.
+        run: cargo test --locked --manifest-path kernel/Cargo.toml $KERNEL_CRATES --no-fail-fast -- --test-threads=1
+      - name: Kernel release build
+        run: cargo build --release --locked --manifest-path kernel/Cargo.toml $KERNEL_CRATES
+
+  verifier:
+    name: verifier against the frozen baseline
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Allow the evaluator's Bubblewrap sandbox
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap
+          # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUSTUP_TOOLCHAIN }}
+      - uses: actions/cache@v4
+        with:
+          path: |
+            lab/cache/cargo/registry
+            lab/cache/cargo/git
+            lab/target
+          key: probe-${{ env.RUSTUP_TOOLCHAIN }}-${{ hashFiles('lab/probe/Cargo.lock', 'lab/probe/src/**', 'kernel/**/Cargo.toml') }}
+      - name: Build the probe
+        run: |
+          mkdir -p lab/cache/cargo lab/tmp lab/target
+          . lab/env.sh
+          cargo build --locked --manifest-path lab/probe/Cargo.toml
+      - name: Probe release build
+        run: |
+          . lab/env.sh
+          cargo build --release --locked --manifest-path lab/probe/Cargo.toml
+      - name: Oracle rejection controls
+        run: |
+          cp lab/target/debug/kernel-probe lab/target/baseline-probe
+          python3 lab/test_oracle.py
+      - name: Public suite
+        run: |
+          . lab/env.sh
+          python3 lab/verify.py suite public --out lab/tmp/public.json
+          python3 lab/compare_baseline.py public lab/tmp/public.json
+      - name: Held-out suite
+        run: |
+          . lab/env.sh
+          python3 lab/verify.py suite heldout --out lab/tmp/heldout.json
+          python3 lab/compare_baseline.py heldout lab/tmp/heldout.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verifier-results
+          path: lab/tmp/*.json
+          if-no-files-found: ignore

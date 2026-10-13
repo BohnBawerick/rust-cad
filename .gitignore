@@ -1,0 +1,15 @@
+/target/
+lab/agent-home/
+lab/agent-scratch/
+lab/cache/
+lab/target/
+lab/clean-target/
+lab/upstream-target/
+lab/tmp/
+lab/export/
+lab/overnight/
+lab/final-audit/
+lab/patch-replay/
+lab/*.pid
+__pycache__/
+/kernel/resources/

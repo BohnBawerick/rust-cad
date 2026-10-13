@@ -173,7 +173,7 @@ def main():
         if time.time()-last_hour>=3600:
             append(RUN/'hourly-checks.jsonl',dict(at=now(),attempt=i,keeps=keeps,score=score(public['rows']+hidden['rows'])['score'],controller_pid=os.getpid()))
             last_hour=time.time()
-    final_patch=subprocess.check_output(['git','-C',str(KERNEL),'diff','--','*.rs'],text=True)
+    final_patch=subprocess.check_output(['git','-C',str(KERNEL),'diff','--relative','--','*.rs'],text=True)
     (RUN/'kept.patch').write_text(final_patch)
     write_json(RUN/'controller-state.json',dict(state='finished',at=now(),attempts=CURRENT-1,keeps=keeps,score=score(public['rows']+hidden['rows'])['score']))
     status('working','Overnight experiment window finished; results are ready for final audit and public-safe packaging.')

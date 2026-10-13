@@ -60,7 +60,7 @@ def main():
         repeat=suite(sorted((ROOT/'corpus'/split).glob('*.json')),final);repeat['split']=split
         save(OUT/(split+'-repeat.json'),repeat)
         if {r['id']:(r['pass'],r['reasons']) for r in verified['rows']}!={r['id']:(r['pass'],r['reasons']) for r in repeat['rows']}:raise RuntimeError('fresh rebuild repeat changed verdicts or reasons')
-    (OUT/'retained.patch').write_text(subprocess.check_output(['git','-C',str(ROOT/'kernel/source'),'diff','--','*.rs'],text=True))
+    (OUT/'retained.patch').write_text(subprocess.check_output(['git','-C',str(ROOT/'kernel/source'),'diff','--relative','--','*.rs'],text=True))
     save(OUT/'complete.json',dict(at=datetime.datetime.now(datetime.timezone.utc).isoformat(),seconds=time.monotonic()-t,verdict='fresh cases expose regressions; do not promote as hardened' if regressions or unsafe(candidate)-unsafe(baseline) else 'no regressions found in this fresh sample'))
     print((OUT/'sealed-comparison.json').read_text())
 if __name__=='__main__':main()

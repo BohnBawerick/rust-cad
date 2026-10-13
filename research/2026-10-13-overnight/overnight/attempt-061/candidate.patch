@@ -1,0 +1,82 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -36,6 +36,8 @@
+ //!   chart regions and assigning each hole to its immediate containing boundary.
+ //! - Failed intersection fits can retain exact rational sections of certified
+ //!   translational supports, including oblique cuts by planar supports.
++//! - Unclassified neighboring faces retain propagated trim subdivisions and
++//!   replacement vertices before component classification and assembly.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -806,6 +808,15 @@
+     shell.iter().zip(store).try_for_each(|(face, loops)| {
+         if loops.is_empty() {
+             return None;
++        }
++        if loops
++            .iter()
++            .all(|wire| wire.status() == ShapesOpStatus::Unknown)
++        {
++            // The caller has synchronized these boundaries with the loop store.
++            // An uncut face needs no chart reconstruction, including at a seam.
++            result.push(face.clone(), ShapesOpStatus::Unknown);
++            return Some(());
+         }
+         let surface = face.surface();
+         let mut samples = HashMap::default();
+@@ -970,9 +981,52 @@
+     C: BoundedCurve<Point = Point3> + ParameterDivision1D<Point = Point3> + Clone,
+     S: ShapeOpsSurface,
+ {
++    if shell.len() != store.len() {
++        return None;
++    }
++    // Intersections replace shared vertices and split edges throughout the
++    // loop store. A neighboring face can remain `Unknown` even though its
++    // boundary topology changed. Both dividers must see those same edge and
++    // vertex identities, or classification and sewing encounter open seams.
++    let synchronized = shell
++        .iter()
++        .zip(store)
++        .map(|(face, loops)| {
++            if !loops
++                .iter()
++                .all(|wire| wire.status() == ShapesOpStatus::Unknown)
++            {
++                return Some(face.clone());
++            }
++            let original = face.absolute_boundaries();
++            let unchanged = original.len() == loops.len()
++                && original.iter().zip(loops.iter()).all(|(old, new)| {
++                    old.len() == new.len()
++                        && old
++                            .iter()
++                            .zip(new.iter())
++                            .all(|(a, b)| a.id() == b.id() && a.orientation() == b.orientation())
++                });
++            if unchanged {
++                Some(face.clone())
++            } else {
++                // Stored loops use the absolute support orientation. Apply the
++                // face orientation exactly once, preserving inward cavities.
++                let wires = loops
++                    .iter()
++                    .map(|wire| wire.iter().cloned().collect())
++                    .collect();
++                let mut rebuilt = Face::try_new(wires, face.surface()).ok()?;
++                if !face.orientation() {
++                    rebuilt.invert();
++                }
++                Some(rebuilt)
++            }
++        })
++        .collect::<Option<Shell<_, _, _>>>()?;
+     match division {
+-        FaceDivision::Classic => divide_face::divide_faces(shell, store, tol),
+-        FaceDivision::Nested => nested_division(shell, store, tol),
++        FaceDivision::Classic => divide_face::divide_faces(&synchronized, store, tol),
++        FaceDivision::Nested => nested_division(&synchronized, store, tol),
+     }
+ }
+ 

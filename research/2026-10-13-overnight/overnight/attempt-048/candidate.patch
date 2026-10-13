@@ -1,0 +1,227 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -30,6 +30,8 @@
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
+ //! - Failed assembly can reconstruct all nested trim loops, retaining small
+ //!   chart regions and assigning each hole to its immediate containing boundary.
++//! - Failed assembly can reclassify every reconstructed cell against all oriented
++//!   operand shells, independently of local intersection-side labels.
+ //! - Failed intersection fits can retain exact rational sections of certified
+ //!   translational supports, including oblique cuts by planar supports.
+ 
+@@ -747,6 +749,7 @@
+ enum FaceDivision {
+     Classic,
+     Nested,
++    Reclassified,
+ }
+ 
+ /// Locate a point in a polygon without counting a boundary point as interior.
+@@ -788,6 +791,7 @@
+     shell: &Shell<Point3, C, S>,
+     store: &LoopsStore<Point3, C>,
+     tol: f64,
++    reclassify: bool,
+ ) -> Option<FacesClassification<Point3, C, S>>
+ where
+     C: BoundedCurve<Point = Point3> + ParameterDivision1D<Point = Point3> + Clone,
+@@ -932,7 +936,11 @@
+             let status = indices
+                 .iter()
+                 .try_fold(ShapesOpStatus::Unknown, |status, &index| {
+-                    let next = loops[index].status();
++                    let next = if reclassify {
++                        ShapesOpStatus::Unknown
++                    } else {
++                        loops[index].status()
++                    };
+                     if status == ShapesOpStatus::Unknown || status == next {
+                         Some(next)
+                     } else if next == ShapesOpStatus::Unknown {
+@@ -968,8 +976,143 @@
+ {
+     match division {
+         FaceDivision::Classic => divide_face::divide_faces(shell, store, tol),
+-        FaceDivision::Nested => nested_division(shell, store, tol),
+-    }
++        FaceDivision::Nested => nested_division(shell, store, tol, false),
++        FaceDivision::Reclassified => nested_division(shell, store, tol, true),
++    }
++}
++
++/// Reclassify connected boundary cells without trusting local intersection labels.
++///
++/// A crossing changes membership only at an intersection trim. Every interior
++/// witness of one reconstructed cell must therefore have the same relation to
++/// the entire other operand. Require agreement between three interior points
++/// and three rays, including the winding at infinity for a complement. Reject
++/// nonbinary windings and disagreement rather than voting away ambiguity.
++/// Meshes locate witnesses and count crossings; output geometry is unchanged.
++fn reclassify_cells<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    cells: AltCurveShell<C, S>,
++    operand: (&Shell<Point3, C, S>, &PolyShell),
++    at_infinity: isize,
++    owns_shared: bool,
++    tol: f64,
++    work: &mut usize,
++) -> Option<[AltCurveShell<C, S>; 2]> {
++    if cells.len() > 512 {
++        return None;
++    }
++    let (other, polygons) = operand;
++    // Cache the polygon surfaces once, since extracting a surface clones it.
++    let meshes = polygons
++        .iter()
++        .map(|face| Some((face.surface()?, face.orientation())))
++        .collect::<Option<Vec<_>>>()?;
++    let triangle_count = meshes
++        .iter()
++        .flat_map(|(mesh, _)| mesh.face_iter())
++        .try_fold(0_usize, |count, polygon| {
++            count.checked_add(polygon.len().checked_sub(2)?)
++        })?;
++    if triangle_count == 0 {
++        return None;
++    }
++    cells.into_iter().try_fold(
++        [Shell::default(), Shell::default()],
++        |[mut intersection, mut union], face| {
++            *work = work.checked_sub(1)?;
++            let patch: AltCurveShell<C, S> = iter::once(face.clone()).collect();
++            let triangulated = patch.triangulation(tol);
++            let mesh = triangulated.first()?.surface()?;
++            let triangle = mesh
++                .face_iter()
++                .flat_map(|polygon| {
++                    (2..polygon.len())
++                        .map(move |index| [polygon[0], polygon[index - 1], polygon[index]])
++                })
++                .max_by(|lhs, rhs| {
++                    let area = |triangle: &[StandardVertex; 3]| {
++                        let [a, b, c] = triangle.map(|vertex| mesh.positions()[vertex.pos]);
++                        (b - a).cross(c - a).magnitude2()
++                    };
++                    area(lhs).total_cmp(&area(rhs))
++                })?;
++            let [Some(a), Some(b), Some(c)] =
++                triangle.map(|vertex| vertex.uv.map(|index| mesh.uv_coords()[index]))
++            else {
++                return None;
++            };
++            let area = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
++            if !area.is_finite() || area == 0.0 {
++                return None;
++            }
++            let surface = face.surface();
++            let witnesses = [
++                (a + b + c) / 3.0,
++                a * 0.5 + b * 0.25 + c * 0.25,
++                a * 0.25 + b * 0.5 + c * 0.25,
++            ];
++            let relation = witnesses.into_iter().try_fold(None, |previous, uv| {
++                *work = work.checked_sub(other.len())?;
++                let point = surface.evaluate(uv.x, uv.y);
++                let normal = surface.normal(uv.x, uv.y);
++                if !point.to_vec().magnitude2().is_finite()
++                    || !normal.magnitude2().is_finite()
++                    || normal.magnitude2() == 0.0
++                {
++                    return None;
++                }
++                let normal = if face.orientation() {
++                    normal.normalize()
++                } else {
++                    -normal.normalize()
++                };
++                let relation = if let Some(aligned) =
++                    coincident_boundary(&face, point, normal, other, polygons)
++                {
++                    // A shared patch is owned once. Opposed patches are internal
++                    // to the union and have no regularized intersection volume.
++                    (owns_shared && aligned, owns_shared && aligned)
++                } else {
++                    *work = work.checked_sub(triangle_count.checked_mul(3)?)?;
++                    let directions = [
++                        hash::take_one_unit(point),
++                        hash::take_one_unit(point + Vector3::new(1.0, 2.0, 3.0)),
++                        hash::take_one_unit(point + Vector3::new(3.0, 1.0, 2.0)),
++                    ];
++                    let winding =
++                        directions
++                            .into_iter()
++                            .try_fold(None, |previous, direction| {
++                                let winding = meshes.iter().try_fold(
++                                    at_infinity,
++                                    |sum, (mesh, orientation)| {
++                                        let crossings =
++                                            mesh.signed_crossing_faces(point, direction);
++                                        sum.checked_add(if *orientation {
++                                            crossings
++                                        } else {
++                                            -crossings
++                                        })
++                                    },
++                                )?;
++                                ((winding == 0 || winding == 1)
++                                    && previous.is_none_or(|previous| previous == winding))
++                                .then_some(Some(winding))
++                            })??;
++                    (winding == 1, winding == 0)
++                };
++                previous
++                    .is_none_or(|previous| previous == relation)
++                    .then_some(Some(relation))
++            })??;
++            if relation.0 {
++                intersection.push(face.clone());
++            }
++            if relation.1 {
++                union.push(face);
++            }
++            Some([intersection, union])
++        },
++    )
+ }
+ 
+ /// Split the combined boundaries into intersection and union boundaries.
+@@ -1002,6 +1145,32 @@
+         (stores.geom_loops_store0, stores.geom_loops_store1)
+     };
+     Some(move |division| {
++        if matches!(division, FaceDivision::Reclassified) {
++            let [_, _, cells0] =
++                divide_boundary_faces(&altshell0, &loops_store0, tol, division)?.and_or_unknown();
++            let [_, _, cells1] =
++                divide_boundary_faces(&altshell1, &loops_store1, tol, division)?.and_or_unknown();
++            let mut work = 1_048_576_usize;
++            let [mut and0, mut or0] = reclassify_cells(
++                cells0,
++                (&shell1, &poly_shell1),
++                second_at_infinity,
++                true,
++                tol,
++                &mut work,
++            )?;
++            let [mut and1, mut or1] =
++                reclassify_cells(cells1, (&shell0, &poly_shell0), 0, false, tol, &mut work)?;
++            and0.append(&mut and1);
++            or0.append(&mut or1);
++            if !contact_arrangement {
++                // Both cell selections must close, even if the requested result
++                // is empty. An open complementary selection signals a lost cell.
++                Solid::try_new(and0.connected_components()).ok()?;
++                Solid::try_new(or0.connected_components()).ok()?;
++            }
++            return Some(([and0, or0], contact_arrangement));
++        }
+         let mut cls0 = divide_boundary_faces(&altshell0, &loops_store0, tol, division)?;
+         if cls0.and_or_unknown()[2]
+             .connected_components()
+@@ -2432,6 +2601,7 @@
+             .or_else(|error| {
+                 sweep_boolean(solid0, solid1, operation, tol, FaceDivision::Nested).ok_or(error)
+             })
++            .or_else(|error| assemble(FaceDivision::Reclassified).or(Err(error)))
+     }
+ }
+ 

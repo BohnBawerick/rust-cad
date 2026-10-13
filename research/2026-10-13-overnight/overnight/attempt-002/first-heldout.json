@@ -1,0 +1,2117 @@
+{
+  "score": 52.15141612200435,
+  "passed": 47,
+  "total": 102,
+  "groups": {
+    "boxes": {
+      "passed": 29,
+      "total": 51
+    },
+    "cylinders": {
+      "passed": 3,
+      "total": 24
+    },
+    "extrude": {
+      "passed": 4,
+      "total": 4
+    },
+    "revolve": {
+      "passed": 0,
+      "total": 4
+    },
+    "fillet": {
+      "passed": 0,
+      "total": 4
+    },
+    "chamfer": {
+      "passed": 4,
+      "total": 4
+    },
+    "holes": {
+      "passed": 0,
+      "total": 4
+    },
+    "patterns": {
+      "passed": 4,
+      "total": 4
+    },
+    "step": {
+      "passed": 3,
+      "total": 3
+    }
+  },
+  "split": "heldout",
+  "rows": [
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 405.20844272770603,
+        "area": 332.31142777815876,
+        "centroid": [
+          4.360332400016347,
+          2.489718758897784,
+          0.3385576886242503
+        ]
+      },
+      "actual": {
+        "volume": 405.20844272770614,
+        "area": 332.31142777815876,
+        "centroid": [
+          4.360332400016349,
+          2.489718758897786,
+          0.33855768862425073
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-000",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0695,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 810.4168854554121,
+        "area": 664.6228555563175,
+        "centroid": [
+          12.0028039587067,
+          1.0408856972834002,
+          0.3385576886242503
+        ]
+      },
+      "actual": {
+        "volume": 810.4168854554124,
+        "area": 664.6228555563177,
+        "centroid": [
+          12.0028039587067,
+          1.0408856972834002,
+          0.3385576886242512
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "heldout-001",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.066,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "heldout-002",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0328,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-003",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "heldout-004",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.033,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "heldout-005",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0651,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: This shell is not oriented and closed.."
+      ],
+      "id": "heldout-006",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0329,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 5.833220275402627,
+        "area": 24.81330738384263,
+        "centroid": [
+          3.735162019475112,
+          -1.4625675934862115,
+          -3.5607908293573964
+        ]
+      },
+      "actual": {
+        "volume": 5.833220275402628,
+        "area": 24.813307383842634,
+        "centroid": [
+          3.7351620194751125,
+          -1.4625675934862108,
+          -3.5607908293573964
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 14,
+        "triangles": 24
+      },
+      "id": "heldout-007",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0655,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "heldout-008",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0647,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 479.58600607466167,
+        "area": 380.2034715809759,
+        "centroid": [
+          -5.820905519474739,
+          -2.0577578965888192,
+          6.7103141692084645
+        ]
+      },
+      "actual": {
+        "volume": 479.5860060746617,
+        "area": 380.2034715809759,
+        "centroid": [
+          -5.820905519474739,
+          -2.0577578965888197,
+          6.710314169208463
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-009",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0667,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 959.1720121493233,
+        "area": 760.4069431619517,
+        "centroid": [
+          -2.6107969423854143,
+          10.395466684278155,
+          11.193533347117633
+        ]
+      },
+      "actual": {
+        "volume": 959.1720121493233,
+        "area": 760.4069431619517,
+        "centroid": [
+          -2.6107969423854143,
+          10.395466684278155,
+          11.193533347117633
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 15,
+        "triangles": 24
+      },
+      "id": "heldout-010",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0664,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "heldout-011",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0657,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-012",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0331,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "timeout"
+      ],
+      "id": "heldout-013",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 8.0012,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "heldout-014",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.033,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1.7475241441045855,
+        "area": 14.173863341323605,
+        "centroid": [
+          0.3087299272509285,
+          3.7758259274466113,
+          0.8009859252244599
+        ]
+      },
+      "actual": {
+        "volume": 1.7475241441045857,
+        "area": 14.173863341323589,
+        "centroid": [
+          0.30872992725092835,
+          3.7758259274466113,
+          0.8009859252244594
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "heldout-015",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0652,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 2.2289848776844203,
+        "area": 10.42195833920853,
+        "centroid": [
+          2.8501259918200583,
+          2.4957879383293258,
+          0.8009859252244598
+        ]
+      },
+      "actual": {
+        "volume": 2.22898487768442,
+        "area": 10.42195833920853,
+        "centroid": [
+          2.850125991820059,
+          2.495787938329326,
+          0.8009859252244599
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-016",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0337,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.4814607335798348,
+        "area": 3.7519050021150697,
+        "centroid": [
+          -2.495787938329326,
+          2.850125991820059,
+          0.8009859252244598
+        ]
+      },
+      "actual": {
+        "volume": 0.4814607335798348,
+        "area": 3.75190500211507,
+        "centroid": [
+          -2.495787938329326,
+          2.850125991820059,
+          0.8009859252244598
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-017",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0335,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "heldout-018",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0329,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 532.234266428648,
+        "area": 397.1500542189037,
+        "centroid": [
+          -4.817918394250904,
+          2.9345500658740367,
+          0.7284862070509693
+        ]
+      },
+      "actual": {
+        "volume": 532.2342664286477,
+        "area": 397.15005421890334,
+        "centroid": [
+          -4.8179183942509045,
+          2.9345500658740384,
+          0.7284862070509703
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-019",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0335,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 193.96292508332652,
+        "area": 202.627578683114,
+        "centroid": [
+          -4.8179183942509045,
+          2.9345500658740384,
+          0.7284862070509703
+        ]
+      },
+      "actual": {
+        "volume": 193.96292508332652,
+        "area": 202.62757868311405,
+        "centroid": [
+          -4.8179183942509045,
+          2.9345500658740384,
+          0.7284862070509699
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-020",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0327,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-021",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "heldout-022",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0644,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "heldout-023",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0325,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 27.750444440154464,
+        "area": 55.7583110569081,
+        "centroid": [
+          -3.5269301657157053,
+          6.48784879132352,
+          -2.334608918030321
+        ]
+      },
+      "actual": {
+        "volume": 27.750444440154464,
+        "area": 55.7583110569081,
+        "centroid": [
+          -3.5269301657157053,
+          6.48784879132352,
+          -2.3346089180303213
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-024",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.034,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 55.50088888030893,
+        "area": 111.51662211381617,
+        "centroid": [
+          -2.308744152144839,
+          6.48784879132352,
+          -2.334608918030321
+        ]
+      },
+      "actual": {
+        "volume": 55.500888880308935,
+        "area": 111.51662211381614,
+        "centroid": [
+          -2.3087441521448384,
+          6.48784879132352,
+          -2.334608918030322
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "heldout-025",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0657,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "heldout-026",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0331,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-027",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "heldout-028",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0327,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "heldout-029",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0329,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 401.7700118279421,
+        "area": 328.75244073858005,
+        "centroid": [
+          0.372422529790327,
+          7.4505089156762505,
+          0.7800555325174106
+        ]
+      },
+      "actual": {
+        "volume": 401.770011827942,
+        "area": 328.75244073858005,
+        "centroid": [
+          0.37242252979032653,
+          7.4505089156762505,
+          0.7800555325174101
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-030",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0332,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 803.5400236558842,
+        "area": 657.50488147716,
+        "centroid": [
+          0.372422529790327,
+          -5.073574147721932,
+          0.7800555325174106
+        ]
+      },
+      "actual": {
+        "volume": 803.5400236558842,
+        "area": 657.5048814771601,
+        "centroid": [
+          0.3724225297903261,
+          -5.073574147721935,
+          0.7800555325174101
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "heldout-031",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0652,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "heldout-032",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0327,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 518.0422006684978,
+        "area": 509.6279414490023,
+        "centroid": [
+          3.896956156565081,
+          2.3875228088083014,
+          6.064575243181666
+        ]
+      },
+      "actual": {
+        "volume": 518.0422006684978,
+        "area": 509.62794144900255,
+        "centroid": [
+          3.8969561565650817,
+          2.387522808808302,
+          6.064575243181665
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 65,
+        "triangles": 126
+      },
+      "id": "heldout-033",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0668,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 1298.22623781985,
+        "area": 769.2809769048274,
+        "centroid": [
+          5.984110449407296,
+          4.938059577935189,
+          7.566429993670708
+        ]
+      },
+      "actual": {
+        "volume": 1298.22623781985,
+        "area": 769.2809769048266,
+        "centroid": [
+          5.984110449407295,
+          4.93805957793519,
+          7.566429993670702
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 71,
+        "triangles": 138
+      },
+      "id": "heldout-034",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0663,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 262.1418364828542,
+        "area": 249.9749059931774,
+        "centroid": [
+          5.984110449407295,
+          4.9380595779351895,
+          7.566429993670709
+        ]
+      },
+      "actual": {
+        "volume": 262.1418364828542,
+        "area": 249.97490599317734,
+        "centroid": [
+          5.984110449407295,
+          4.9380595779351895,
+          7.56642999367071
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 59,
+        "triangles": 114
+      },
+      "id": "heldout-035",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.066,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-036",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0326,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "heldout-037",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "heldout-038",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 246.16108332433004,
+        "area": 239.52446761458975,
+        "centroid": [
+          2.0797585136458316,
+          1.9508173952776255,
+          6.155607185668218
+        ]
+      },
+      "actual": {
+        "volume": 246.16108332433,
+        "area": 239.52446761458978,
+        "centroid": [
+          2.079758513645832,
+          1.9508173952776264,
+          6.155607185668218
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-039",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0332,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 492.3221666486601,
+        "area": 479.0489352291795,
+        "centroid": [
+          7.549994009088867,
+          4.466930923538643,
+          6.155607185668218
+        ]
+      },
+      "actual": {
+        "volume": 492.3221666486601,
+        "area": 479.0489352291794,
+        "centroid": [
+          7.54999400908887,
+          4.466930923538643,
+          6.155607185668218
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "heldout-040",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0333,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "heldout-041",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0323,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-042",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "heldout-043",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0323,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "heldout-044",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: This shell is not oriented and closed.."
+      ],
+      "id": "heldout-045",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0324,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "heldout-046",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.0329,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "heldout-047",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0328,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 25.133837147424877,
+        "area": 52.36494830555799,
+        "centroid": [
+          1.5887833060396486,
+          5.597822835725719,
+          4.764072907780658
+        ]
+      },
+      "actual": {
+        "volume": 25.133837147424885,
+        "area": 52.36494830555799,
+        "centroid": [
+          1.588783306039649,
+          5.597822835725719,
+          4.764072907780659
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-048",
+      "group": "boxes",
+      "op": "difference",
+      "seconds": 0.0334,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 50.267674294849755,
+        "area": 104.72989661111598,
+        "centroid": [
+          6.31577603628123,
+          4.197159601838982,
+          6.677514211763087
+        ]
+      },
+      "actual": {
+        "volume": 50.26767429484977,
+        "area": 104.72989661111599,
+        "centroid": [
+          6.315776036281228,
+          4.197159601838981,
+          6.677514211763087
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 15,
+        "triangles": 24
+      },
+      "id": "heldout-049",
+      "group": "boxes",
+      "op": "union",
+      "seconds": 0.065,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "heldout-050",
+      "group": "boxes",
+      "op": "intersection",
+      "seconds": 0.0324,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-051",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 5.675,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "heldout-052",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 5.1353,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "heldout-053",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.466,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.6356943305503611,
+        "area": 4.149393452075939,
+        "centroid": [
+          0.9340565172765718,
+          -1.6955699639552262,
+          -1.2153337458799822
+        ]
+      },
+      "actual": {
+        "volume": 0.6354213474745136,
+        "area": 4.146377256107587,
+        "centroid": [
+          0.9340565172765759,
+          -1.6955699639552262,
+          -1.2153337458799904
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 3972,
+        "triangles": 7940
+      },
+      "id": "heldout-054",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.9813,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 1.2713886611007221,
+        "area": 8.298786904151878,
+        "centroid": [
+          1.4569559214033914,
+          -1.6955699639552262,
+          -1.2153337458799822
+        ]
+      },
+      "actual": {
+        "volume": 1.2708426949490659,
+        "area": 8.292754512215057,
+        "centroid": [
+          1.4569559214033896,
+          -1.695569963955226,
+          -1.215333745880002
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 7942,
+        "triangles": 15880
+      },
+      "id": "heldout-055",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 1.6989,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null
+      },
+      "actual": {
+        "volume": 0.0,
+        "area": 0.0,
+        "centroid": null,
+        "mesh_closed": true,
+        "mesh_vertices": 0,
+        "triangles": 0
+      },
+      "id": "heldout-056",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.3151,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-057",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.7155,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "heldout-058",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.6154,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "heldout-059",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.6154,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-060",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.6657,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "heldout-061",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.716,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "heldout-062",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.7158,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-063",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.866,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "heldout-064",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.7659,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "heldout-065",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.6656,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-066",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.4151,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "heldout-067",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.415,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "heldout-068",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.4151,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-069",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 0.3149,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: no boundary shells."
+      ],
+      "id": "heldout-070",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.365,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "heldout-071",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 0.315,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `difference`: no boundary shells."
+      ],
+      "id": "heldout-072",
+      "group": "cylinders",
+      "op": "difference",
+      "seconds": 3.7724,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `or`: This shell is not oriented and closed.."
+      ],
+      "id": "heldout-073",
+      "group": "cylinders",
+      "op": "union",
+      "seconds": 0.5153,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "error:invalid output shell for `and`: no boundary shells."
+      ],
+      "id": "heldout-074",
+      "group": "cylinders",
+      "op": "intersection",
+      "seconds": 3.6372,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 38.259355275390675,
+        "area": 69.42079978904903,
+        "centroid": [
+          -0.0572581658205078,
+          2.4074475317031165,
+          -0.9746777161984168
+        ]
+      },
+      "actual": {
+        "volume": 38.25935527539066,
+        "area": 69.42079978904904,
+        "centroid": [
+          -0.0572581658205078,
+          2.407447531703116,
+          -0.9746777161984168
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-075",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0328,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 1.0438912236938342,
+        "area": 5.741449049888599,
+        "centroid": [
+          -1.347074977815338,
+          0.5420144620929355,
+          -2.304208751564742
+        ]
+      },
+      "actual": {
+        "volume": 1.0434442041053176,
+        "area": 5.738442951267828,
+        "centroid": [
+          -1.347074977815338,
+          0.5420144620929355,
+          -2.304208751564813
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 3974,
+        "triangles": 7952
+      },
+      "id": "heldout-076",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.3897,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 38.202585203575566,
+        "area": 68.95209781048644,
+        "centroid": [
+          -0.05542708923591219,
+          2.410133989569074,
+          -0.9746777161984169
+        ]
+      },
+      "actual": {
+        "volume": 38.20244290495766,
+        "area": 68.95114554062631,
+        "centroid": [
+          -0.0554226219306444,
+          2.410140604148487,
+          -0.974677716198467
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 1599,
+        "triangles": 3194
+      },
+      "id": "heldout-077",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.5541,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 38.127086901750786,
+        "area": 68.75354133027884,
+        "centroid": [
+          -0.05308190898700785,
+          2.41362068450802,
+          -0.9746777161984168
+        ]
+      },
+      "actual": {
+        "volume": 38.12708690175077,
+        "area": 68.75354133027885,
+        "centroid": [
+          -0.05308190898700804,
+          2.41362068450802,
+          -0.9746777161984168
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "heldout-078",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3152,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "timeout"
+      ],
+      "id": "heldout-079",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 8.0011,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 76.51871055078135,
+        "area": 138.84159957809806,
+        "centroid": [
+          1.4825586461743223,
+          2.4074475317031165,
+          -0.9746777161984168
+        ]
+      },
+      "actual": {
+        "volume": 76.51871055078132,
+        "area": 138.84159957809806,
+        "centroid": [
+          1.4825586461743223,
+          2.407447531703116,
+          -0.9746777161984168
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "heldout-080",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0332,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 6.391867583035352,
+        "area": 21.545129250363427,
+        "centroid": [
+          -2.124305479151035,
+          -2.065987566646191,
+          3.2105352924638497
+        ]
+      },
+      "actual": {
+        "volume": 6.391867583035352,
+        "area": 21.545129250363424,
+        "centroid": [
+          -2.1243054791510354,
+          -2.0659875666461915,
+          3.2105352924638497
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-081",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0327,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 1.0940640349669537,
+        "area": 5.9582056189790515,
+        "centroid": [
+          -2.9809147612938807,
+          -2.7426424032690204,
+          2.540833133829304
+        ]
+      },
+      "actual": {
+        "volume": 1.093595530160864,
+        "area": 5.955238209435886,
+        "centroid": [
+          -2.980914761295288,
+          -2.742642403268878,
+          2.5408331338292482
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 3974,
+        "triangles": 7952
+      },
+      "id": "heldout-082",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.4545,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 6.381032166325305,
+        "area": 21.377136501711547,
+        "centroid": [
+          -2.1229022298291516,
+          -2.064889891932805,
+          3.2105352924638497
+        ]
+      },
+      "actual": {
+        "volume": 6.380946687657098,
+        "area": 21.376632539965293,
+        "centroid": [
+          -2.1228913851808318,
+          -2.064881462033756,
+          3.2105352924638684
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 843,
+        "triangles": 1682
+      },
+      "id": "heldout-083",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.4925,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 6.366622186999635,
+        "area": 21.308263018691726,
+        "centroid": [
+          -2.121087664112149,
+          -2.0634833201389537,
+          3.2105352924638493
+        ]
+      },
+      "actual": {
+        "volume": 6.366622186999632,
+        "area": 21.30826301869172,
+        "centroid": [
+          -2.121087664112149,
+          -2.063483320138954,
+          3.2105352924638493
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "heldout-084",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3657,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "timeout"
+      ],
+      "id": "heldout-085",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 8.0012,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 12.783735166070704,
+        "area": 43.090258500726854,
+        "centroid": [
+          -1.0176961970081895,
+          -2.065987566646191,
+          3.2105352924638497
+        ]
+      },
+      "actual": {
+        "volume": 12.783735166070704,
+        "area": 43.09025850072684,
+        "centroid": [
+          -1.0176961970081901,
+          -2.0659875666461915,
+          3.2105352924638493
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "heldout-086",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0337,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 7.4669425062466,
+        "area": 26.080619091641836,
+        "centroid": [
+          2.7464155569068174,
+          0.5452403899481849,
+          0.13719258241642085
+        ]
+      },
+      "actual": {
+        "volume": 7.466942506246601,
+        "area": 26.080619091641836,
+        "centroid": [
+          2.7464155569068174,
+          0.5452403899481848,
+          0.13719258241642085
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-087",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0331,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 1.2944023016493849,
+        "area": 6.575237434465608,
+        "centroid": [
+          1.8851873763446845,
+          -0.0022552177315819932,
+          -1.2591134013753056
+        ]
+      },
+      "actual": {
+        "volume": 1.2938480071285268,
+        "area": 6.571197746565764,
+        "centroid": [
+          1.8851873763446843,
+          -0.002255217731581715,
+          -1.2591134013753102
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 3974,
+        "triangles": 7952
+      },
+      "id": "heldout-088",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.5976,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 7.456755685853034,
+        "area": 25.889410775728784,
+        "centroid": [
+          2.747558684274462,
+          0.5459549210862886,
+          0.13719258241642085
+        ]
+      },
+      "actual": {
+        "volume": 7.456626283041778,
+        "area": 25.888579660526588,
+        "centroid": [
+          2.7475729706207854,
+          0.5459637492109728,
+          0.13719243969740047
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 1291,
+        "triangles": 2578
+      },
+      "id": "heldout-089",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.7046,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 7.4432082722930675,
+        "area": 25.814687410340007,
+        "centroid": [
+          2.7490453769816217,
+          0.5468698077755666,
+          0.13719258241642085
+        ]
+      },
+      "actual": {
+        "volume": 7.443208272293067,
+        "area": 25.81468741034,
+        "centroid": [
+          2.749045376981621,
+          0.5468698077755667,
+          0.1371925824164213
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "heldout-090",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.4169,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "timeout"
+      ],
+      "id": "heldout-091",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 8.0013,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 22.4008275187398,
+        "area": 78.24185727492551,
+        "centroid": [
+          4.968871918031083,
+          0.5452403899481849,
+          0.13719258241642085
+        ]
+      },
+      "actual": {
+        "volume": 22.400827518739796,
+        "area": 78.24185727492552,
+        "centroid": [
+          4.968871918031085,
+          0.5452403899481849,
+          0.13719258241642218
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 24,
+        "triangles": 36
+      },
+      "id": "heldout-092",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0342,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 16.040071670104144,
+        "area": 38.98857979094838,
+        "centroid": [
+          0.7011473328348679,
+          1.7497505493726109,
+          -1.2922970698688006
+        ]
+      },
+      "actual": {
+        "volume": 16.040071670104144,
+        "area": 38.98857979094838,
+        "centroid": [
+          0.7011473328348679,
+          1.7497505493726107,
+          -1.2922970698688006
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-093",
+      "group": "extrude",
+      "op": "extrude",
+      "seconds": 0.0331,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "mesh_closure"
+      ],
+      "expected": {
+        "volume": 1.5331358974817306,
+        "area": 7.576167230171463,
+        "centroid": [
+          -0.8040543364436186,
+          0.8011978451576622,
+          -1.8084572347668448
+        ]
+      },
+      "actual": {
+        "volume": 1.5324793714352118,
+        "area": 7.572746395403078,
+        "centroid": [
+          -0.8040543364436186,
+          0.8011978451576622,
+          -1.8084572347669752
+        ],
+        "mesh_closed": false,
+        "mesh_vertices": 3974,
+        "triangles": 7952
+      },
+      "id": "heldout-094",
+      "group": "revolve",
+      "op": "revolve",
+      "seconds": 0.4806,
+      "pass": false
+    },
+    {
+      "reasons": [
+        "geometric_consistency"
+      ],
+      "expected": {
+        "volume": 16.018379324546668,
+        "area": 38.744443832390516,
+        "centroid": [
+          0.7031283157720519,
+          1.750977709375544,
+          -1.2922970698688006
+        ]
+      },
+      "actual": {
+        "volume": 16.018283324092316,
+        "area": 38.74382468860579,
+        "centroid": [
+          0.7031369415882684,
+          1.7509829945765063,
+          -1.2922970698687914
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 1158,
+        "triangles": 2312
+      },
+      "id": "heldout-095",
+      "group": "fillet",
+      "op": "fillet",
+      "seconds": 0.5375,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 15.98953075698593,
+        "area": 38.640470181889164,
+        "centroid": [
+          0.705705203851383,
+          1.752548922414595,
+          -1.2922970698688008
+        ]
+      },
+      "actual": {
+        "volume": 15.989530756985928,
+        "area": 38.64047018188916,
+        "centroid": [
+          0.7057052038513824,
+          1.752548922414595,
+          -1.2922970698688006
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 10,
+        "triangles": 16
+      },
+      "id": "heldout-096",
+      "group": "chamfer",
+      "op": "chamfer",
+      "seconds": 0.3659,
+      "pass": true
+    },
+    {
+      "reasons": [
+        "timeout"
+      ],
+      "id": "heldout-097",
+      "group": "holes",
+      "op": "hole",
+      "seconds": 8.0013,
+      "pass": false
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 32.08014334020829,
+        "area": 77.97715958189676,
+        "centroid": [
+          2.4563490021133543,
+          1.7497505493726109,
+          -1.2922970698688006
+        ]
+      },
+      "actual": {
+        "volume": 32.08014334020829,
+        "area": 77.97715958189674,
+        "centroid": [
+          2.456349002113354,
+          1.7497505493726107,
+          -1.2922970698688006
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 16,
+        "triangles": 24
+      },
+      "id": "heldout-098",
+      "group": "patterns",
+      "op": "pattern",
+      "seconds": 0.0334,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 6,
+        "area": 22,
+        "centroid": [
+          0.5,
+          1.0,
+          1.5
+        ]
+      },
+      "actual": {
+        "volume": 6.0,
+        "area": 22.0,
+        "centroid": [
+          0.5,
+          1.0,
+          1.5
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "roundtrip": {
+        "volume": 6.0,
+        "area": 22.0,
+        "centroid": [
+          0.5,
+          1.0,
+          1.5
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-099",
+      "group": "step",
+      "op": "step_roundtrip",
+      "seconds": 0.0653,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 12,
+        "area": 32,
+        "centroid": [
+          2.0,
+          0.0,
+          1.5
+        ]
+      },
+      "actual": {
+        "volume": 12.0,
+        "area": 32.0,
+        "centroid": [
+          2.0,
+          0.0,
+          1.5
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "roundtrip": {
+        "volume": 12.0,
+        "area": 32.0,
+        "centroid": [
+          2.0,
+          0.0,
+          1.5
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-100",
+      "group": "step",
+      "op": "step_roundtrip",
+      "seconds": 0.0653,
+      "pass": true
+    },
+    {
+      "reasons": [],
+      "expected": {
+        "volume": 18,
+        "area": 42,
+        "centroid": [
+          3.5,
+          -1.0,
+          1.5
+        ]
+      },
+      "actual": {
+        "volume": 18.0,
+        "area": 42.0,
+        "centroid": [
+          3.5,
+          -1.0,
+          1.5
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "roundtrip": {
+        "volume": 18.0,
+        "area": 42.0,
+        "centroid": [
+          3.5,
+          -1.0,
+          1.5
+        ],
+        "mesh_closed": true,
+        "mesh_vertices": 8,
+        "triangles": 12
+      },
+      "id": "heldout-101",
+      "group": "step",
+      "op": "step_roundtrip",
+      "seconds": 0.0657,
+      "pass": true
+    }
+  ]
+}

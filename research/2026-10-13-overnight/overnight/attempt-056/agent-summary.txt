@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate certifies separation between individual face enclosures, then classifies whole boundary components using oriented winding. Deforming boundaries within enclosures that exclude the query preserves winding. Assembly retains exact input geometry and reverses retained cutter shells for subtraction.
+
+Expected scope: disjoint and nested solids with certifiable spline or planar faces, including multiple oriented shells. Touching boundaries and inconclusive enclosures retain existing paths.
+
+Risks: conservative bounds may yield no gain; numerical conditioning requires controller evaluation.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

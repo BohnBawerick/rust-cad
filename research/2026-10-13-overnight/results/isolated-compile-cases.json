@@ -1,0 +1,110 @@
+[
+  {
+    "reasons": [
+      "area",
+      "centroid",
+      "empty_geometry",
+      "volume"
+    ],
+    "expected": {
+      "volume": 1.0,
+      "area": 6.0,
+      "centroid": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "actual": {
+      "volume": 0.0,
+      "area": 0.0,
+      "centroid": null,
+      "mesh_closed": true,
+      "mesh_vertices": 0,
+      "triangles": 0
+    },
+    "id": "public-315",
+    "group": "boxes",
+    "op": "difference",
+    "seconds": 0.0659,
+    "pass": false
+  },
+  {
+    "reasons": [
+      "geometric_consistency"
+    ],
+    "expected": {
+      "volume": 11991.415926535898,
+      "area": 3789.6991118430774,
+      "centroid": [
+        20.013997234081067,
+        15.010417976420133,
+        5.0
+      ]
+    },
+    "actual": {
+      "volume": 11991.402832313359,
+      "area": 3789.685694363527,
+      "centroid": [
+        20.014018307316313,
+        15.010433585909517,
+        4.9999999999998925
+      ],
+      "mesh_closed": true,
+      "mesh_vertices": 1993,
+      "triangles": 3982
+    },
+    "id": "public-316",
+    "group": "fillet",
+    "op": "fillet",
+    "seconds": 1.4471,
+    "pass": false
+  },
+  {
+    "reasons": [
+      "empty_success"
+    ],
+    "actual": {
+      "import_shells": 0,
+      "import_triangles": 0,
+      "input_solids": 1,
+      "status": "ok"
+    },
+    "id": "public-317",
+    "group": "step",
+    "op": "step_import",
+    "seconds": 1.6434,
+    "pass": false
+  },
+  {
+    "reasons": [
+      "mesh_closure"
+    ],
+    "expected": {
+      "volume": 1.170263097869771,
+      "area": 6.176720231959099,
+      "centroid": [
+        2.330651673093108,
+        1.8027810906766897,
+        -2.223214444740444
+      ]
+    },
+    "actual": {
+      "volume": 1.1697619627741225,
+      "area": 6.172537920131009,
+      "centroid": [
+        2.330651673093108,
+        1.80278109067669,
+        -2.2232144447404076
+      ],
+      "mesh_closed": false,
+      "mesh_vertices": 3974,
+      "triangles": 7952
+    },
+    "id": "public-235",
+    "group": "revolve",
+    "op": "revolve",
+    "seconds": 1.5201,
+    "pass": false
+  }
+]

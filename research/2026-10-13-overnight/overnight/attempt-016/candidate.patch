@@ -1,0 +1,222 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,8 @@
+ //!   before marching, retaining the exact input surfaces.
+ //! - Complete positive-weight spline control nets certify separation, including
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
++//! - Planar arrangement edges retain source trims or certified affine traces,
++//!   avoiding an unnecessary intersection projection for exact straight edges.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -867,6 +869,121 @@
+     })
+ }
+ 
++/// Restrict an original straight trim to an arrangement segment.
++///
++/// This is used only after complete planar support and incidence certification.
++/// Thus membership of both endpoints in a trim also proves membership of the
++/// whole segment. Cutting the original curve retains its exact representation.
++fn source_planar_trim<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    face: &Face<Point3, C, S>,
++    front: Point3,
++    back: Point3,
++) -> Option<C> {
++    face.edge_iter().find_map(|edge| {
++        let mut curve = edge.curve();
++        let (start, end) = curve.range_tuple();
++        let a = curve.search_parameter(front, None, 100)?;
++        let b = curve.search_parameter(back, None, 100)?;
++        if !a.is_finite()
++            || !b.is_finite()
++            || a == b
++            || a.min(b) < start
++            || a.max(b) > end
++            || !curve.evaluate(a).near(&front)
++            || !curve.evaluate(b).near(&back)
++        {
++            return None;
++        }
++        if a.max(b) < end {
++            let _ = curve.cut(a.max(b));
++        }
++        // `Cut` may reparameterize the retained prefix, as a line does.
++        // Locate the second cut again in the current parameter interval.
++        let lower_point = if a < b { front } else { back };
++        let lower = curve.search_parameter(lower_point, None, 100)?;
++        let (start, end) = curve.range_tuple();
++        if !lower.is_finite() || lower < start || lower >= end {
++            return None;
++        }
++        if lower > start {
++            curve = curve.cut(lower);
++        }
++        if a > b {
++            curve.invert();
++        }
++        (curve.front().near(&front) && curve.back().near(&back)).then_some(curve)
++    })
++}
++
++/// Express a straight trim directly in a certified affine parameter chart.
++///
++/// A single bilinear patch with equal positive weights is affine precisely
++/// when its mixed coefficient vanishes. Check the complete control net and
++/// knot multiplicities, rather than inferring linearity from surface samples.
++/// The arithmetic allowance is the same roundoff bound used for plane tests.
++fn affine_planar_trim<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    surface: &S,
++    front: Point3,
++    back: Point3,
++) -> Option<C> {
++    let spline = surface.try_into_homogeneous_bspline_surface()?;
++    let rows = spline.control_points();
++    if spline.udegree() != 1
++        || spline.vdegree() != 1
++        || rows.len() != 2
++        || rows.iter().any(|row| row.len() != 2)
++    {
++        return None;
++    }
++    let weight = rows[0][0].w;
++    if !weight.is_finite() || weight <= 0.0 || rows.iter().flatten().any(|point| point.w != weight)
++    {
++        return None;
++    }
++    let clamped = |knots: &KnotVector| {
++        knots.len() == 4
++            && knots[0].is_finite()
++            && knots[3].is_finite()
++            && knots[0] == knots[1]
++            && knots[2] == knots[3]
++            && knots[0] < knots[3]
++    };
++    if !clamped(spline.knot_vector_u()) || !clamped(spline.knot_vector_v()) {
++        return None;
++    }
++    let p00 = rows[0][0].to_point();
++    let p01 = rows[0][1].to_point();
++    let p10 = rows[1][0].to_point();
++    let p11 = rows[1][1].to_point();
++    let mixed = (p11 - p10) - (p01 - p00);
++    let scale = [p00, p01, p10, p11]
++        .into_iter()
++        .map(|point| point.to_vec().map(f64::abs))
++        .sum::<Vector3>();
++    if ![mixed.x, mixed.y, mixed.z]
++        .into_iter()
++        .zip([scale.x, scale.y, scale.z])
++        .all(|(coefficient, scale)| {
++            coefficient.is_finite()
++                && scale.is_finite()
++                && coefficient.abs() <= 32.0 * f64::EPSILON * scale
++        })
++    {
++        return None;
++    }
++    let start = surface.search_parameter(front, None, 100)?;
++    let end = surface.search_parameter(back, Some(start), 100)?;
++    let curve = ParameterCurve::new(
++        Line(Point2::from(start), Point2::from(end)),
++        surface.clone(),
++    );
++    if curve.front().near(&front) && curve.back().near(&back) {
++        C::try_from(curve).ok()
++    } else {
++        None
++    }
++}
++
+ /// Assemble one common arrangement of the exact input support planes.
+ ///
+ /// Certification covers the complete surfaces and every trim before any result
+@@ -884,6 +1001,7 @@
+     let mut cells = planar_cells(solid0, &mut work)?;
+     let first_len = cells.len();
+     cells.extend(planar_cells(solid1, &mut work)?);
++    let source_faces: Vec<_> = solid0.face_iter().chain(solid1.face_iter()).collect();
+     let mut retained = Vec::new();
+     cells.iter().enumerate().try_for_each(|(index, source)| {
+         let pieces = cells
+@@ -999,39 +1117,48 @@
+                     } else {
+                         let front = vertices[a].point();
+                         let back = vertices[b].point();
+-                        work = work.checked_sub(cells.len())?;
+-                        let support = cells.iter().find_map(|other| {
+-                            if cell.normal.cross(other.normal).so_small() {
+-                                return None;
+-                            }
+-                            [front, front.midpoint(back), back]
+-                                .into_iter()
+-                                .try_for_each(|p| {
+-                                    let (distance, error) =
+-                                        plane_distance(p, other.points[0], other.normal);
+-                                    if distance.abs() > error {
+-                                        return None;
+-                                    }
+-                                    projections = projections.checked_sub(1)?;
+-                                    other.surface.search_parameter(p, None, 100).map(|_| ())
+-                                })?;
+-                            Some(other)
++                        let projected = (|| {
++                            work = work.checked_sub(cells.len())?;
++                            let support = cells.iter().find_map(|other| {
++                                if cell.normal.cross(other.normal).so_small() {
++                                    return None;
++                                }
++                                [front, front.midpoint(back), back]
++                                    .into_iter()
++                                    .try_for_each(|p| {
++                                        let (distance, error) =
++                                            plane_distance(p, other.points[0], other.normal);
++                                        if distance.abs() > error {
++                                            return None;
++                                        }
++                                        projections = projections.checked_sub(1)?;
++                                        other.surface.search_parameter(p, None, 100).map(|_| ())
++                                    })?;
++                                Some(other)
++                            })?;
++                            let leader = BsplineCurve::from(Line(front, back));
++                            let boundary0: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
++                            let boundary1: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
++                            let curve = SurfaceCurve::with_boundaries(
++                                cell.surface.clone(),
++                                support.surface.clone(),
++                                leader,
++                                boundary0,
++                                boundary1,
++                            )
++                            .into();
++                            let edge = Edge::try_new(&vertices[a], &vertices[b], curve).ok()?;
++                            edge.is_geometric_consistent().then_some(edge)
++                        })();
++                        // Retain existing successful representations. Recover only
++                        // when projection cannot produce a consistent edge.
++                        let edge = projected.or_else(|| {
++                            work = work.checked_sub(source_faces[source].edge_iter().count())?;
++                            let curve = source_planar_trim(source_faces[source], front, back)
++                                .or_else(|| affine_planar_trim(&cell.surface, front, back))?;
++                            let edge = Edge::try_new(&vertices[a], &vertices[b], curve).ok()?;
++                            edge.is_geometric_consistent().then_some(edge)
+                         })?;
+-                        let leader = BsplineCurve::from(Line(front, back));
+-                        let boundary0: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
+-                        let boundary1: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
+-                        let curve = SurfaceCurve::with_boundaries(
+-                            cell.surface.clone(),
+-                            support.surface.clone(),
+-                            leader,
+-                            boundary0,
+-                            boundary1,
+-                        )
+-                        .into();
+-                        let edge = Edge::try_new(&vertices[a], &vertices[b], curve).ok()?;
+-                        if !edge.is_geometric_consistent() {
+-                            return None;
+-                        }
+                         edges.insert(key, (edge.clone(), a, 1));
+                         Some(edge)
+                     }

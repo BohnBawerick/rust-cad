@@ -1,0 +1,10 @@
+{
+  "completed_transcripts": 68,
+  "usage": {
+    "input_tokens": 52199426,
+    "cached_input_tokens": 47689856,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 782323,
+    "reasoning_output_tokens": 389172
+  }
+}

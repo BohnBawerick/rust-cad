@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added a failed-union fallback: complete support enclosures prove separation, and per-knot-span certificates exclude shared face regions. Curve or point contacts then retain the original exact, oriented shells, including cavities.
+
+Existing successful paths retain precedence. Negative enclosure gaps require normal intersection assembly; tolerances are unchanged.
+
+Scope includes certifiable spline solids with multiple shells. Conservative enclosure bounds may miss contacts, and downstream mesh closure remains unverified.
+
+Formatted and checked whitespace. No builds, tests, or commits.

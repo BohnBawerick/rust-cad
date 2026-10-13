@@ -1,0 +1,216 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -36,6 +36,8 @@
+ //!   chart regions and assigning each hole to its immediate containing boundary.
+ //! - Failed intersection fits can retain exact rational sections of certified
+ //!   translational supports, including oblique cuts by planar supports.
++//! - Sweep certificates recognize planar rational supports and cancel internal
++//!   cap seams before matching the section arcs of analytic or spline sides.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -1918,10 +1920,36 @@
+ 
+ /// Certify a planar support against its complete homogeneous control net.
+ fn certified_plane<S: ShapeOpsSurface>(surface: &S) -> Option<Plane> {
+-    let AnalyticSurfaceKind::Plane(plane) = surface.try_into_analytic_surface_kind()? else {
+-        return None;
+-    };
+     let spline = surface.try_into_homogeneous_bspline_surface()?;
++    let plane =
++        if let Some(AnalyticSurfaceKind::Plane(plane)) = surface.try_into_analytic_surface_kind() {
++            plane
++        } else {
++            // A planar support need not have an analytic plane tag. In particular,
++            // revolving a radial segment produces a rational planar control net.
++            // Derivatives determine its orientation; the complete net below proves
++            // planarity, rather than inferring it from a finite set of samples.
++            let count = spline.control_points().iter().map(Vec::len).sum::<usize>();
++            if count == 0 || count > 4096 {
++                return None;
++            }
++            let (u, v) = surface.try_range_tuple();
++            let ((u0, u1), (v0, v1)) = (u?, v?);
++            let (u, v) = (u0 + (u1 - u0) / 2.0, v0 + (v1 - v0) / 2.0);
++            let origin = surface.evaluate(u, v);
++            let tangent = surface.derivative_u(u, v);
++            let normal = surface.normal(u, v);
++            if !tangent.magnitude2().is_finite()
++                || !normal.magnitude2().is_finite()
++                || tangent.magnitude2() == 0.0
++                || normal.magnitude2() == 0.0
++            {
++                return None;
++            }
++            let tangent = tangent.normalize();
++            let normal = normal.normalize();
++            Plane::new(origin, origin + tangent, origin + normal.cross(tangent))
++        };
+     spline
+         .control_points()
+         .iter()
+@@ -1990,7 +2018,7 @@
+         let (distance, error) = plane_distance(point, origin, normal);
+         distance.is_finite() && distance.abs() <= error
+     };
+-    let mut cap_edges = HashMap::default();
++    let mut cap_incidence = HashMap::default();
+     let mut sides = Vec::new();
+     solid.face_iter().try_for_each(|face| {
+         let cap = certified_plane(&face.surface()).and_then(|plane| {
+@@ -2005,13 +2033,30 @@
+             }
+         });
+         if let Some(top) = cap {
+-            face.edge_iter()
+-                .try_for_each(|edge| cap_edges.insert(edge.id(), top).is_none().then_some(()))
++            face.edge_iter().try_for_each(|edge| {
++                let entry =
++                    cap_incidence
++                        .entry(edge.id())
++                        .or_insert((top, edge.orientation(), 0_usize));
++                // A seam internal to one cap has two opposed incidences.
++                // Only its uncancelled boundary participates in the sweep.
++                if entry.0 != top || entry.2 >= 2 || (entry.2 == 1 && entry.1 == edge.orientation())
++                {
++                    None
++                } else {
++                    entry.2 += 1;
++                    Some(())
++                }
++            })
+         } else {
+             sides.push(face);
+             Some(())
+         }
+     })?;
++    let cap_edges: HashMap<_, _> = cap_incidence
++        .into_iter()
++        .filter_map(|(edge, (top, _, count))| (count == 1).then_some((edge, top)))
++        .collect();
+     if sides.is_empty() || sides.len() > 128 {
+         return None;
+     }
+@@ -2043,9 +2088,9 @@
+                     lower.back().point().to_homogeneous(),
+                 )))
+             } else {
+-                if !surface.supports_exact_patch_domains() {
+-                    return None;
+-                }
++                // The translational identity is certified by the complete
++                // net below. Analytic carriers may supply the same exact net
++                // while preferring parameter domains other than knot spans.
+                 let spline = surface.try_into_homogeneous_bspline_surface()?;
+                 let controls = spline.control_points();
+                 if controls.iter().map(Vec::len).sum::<usize>() > 4096
+@@ -2441,6 +2486,78 @@
+             Some(())
+         })
+     })?;
++    let uncut_membership = if parameters.iter().all(|parameters| parameters.len() == 2) {
++        // With no section intersections, membership is constant on each arc.
++        // Checking both operands also detects enclosed holes and disconnected
++        // components; one representative for the entire solid would not.
++        Some(
++            arcs.iter()
++                .enumerate()
++                .map(|(index, arc)| {
++                    let (start, end) = arc.curve.range_tuple();
++                    section_inside(
++                        arc.curve.evaluate((start + end) / 2.0),
++                        if index < count0 {
++                            &arcs[count0..]
++                        } else {
++                            &arcs[..count0]
++                        },
++                        translation.normalize(),
++                        &mut work,
++                    )
++                })
++                .collect::<Option<Vec<_>>>()?,
++        )
++    } else {
++        None
++    };
++    if let Some(membership) = uncut_membership.as_ref() {
++        let first = &membership[..count0];
++        let second = &membership[count0..];
++        let first_outside = first.iter().all(|inside| !inside);
++        let second_outside = second.iter().all(|inside| !inside);
++        if first_outside && second_outside {
++            // Keep the exact cap charts when the certified sections are disjoint.
++            return match operation {
++                Operation::Intersection => Solid::try_new(Vec::new()).ok(),
++                Operation::Difference => Some(solid0.clone()),
++                Operation::Union => Solid::try_new(
++                    solid0
++                        .boundaries()
++                        .iter()
++                        .chain(solid1.boundaries())
++                        .cloned()
++                        .collect(),
++                )
++                .ok(),
++            };
++        } else if first.iter().all(|inside| *inside) && second_outside {
++            return match operation {
++                Operation::Intersection => Some(solid0.clone()),
++                Operation::Union => Some(solid1.clone()),
++                Operation::Difference => Solid::try_new(Vec::new()).ok(),
++            };
++        } else if first_outside && second.iter().all(|inside| *inside) {
++            match operation {
++                Operation::Intersection => return Some(solid1.clone()),
++                Operation::Union => return Some(solid0.clone()),
++                // Subtraction still has to trim the shared planar caps.
++                Operation::Difference => {}
++            }
++        }
++    }
++    // A rational planar chart can cover only an annulus or a sector. The set
++    // identities above retain that chart unchanged, but a merged cap needs an
++    // unbounded plane carrier; control-net planarity alone does not prove that
++    // the original parameter domain covers the newly assembled cap.
++    if [bottom_face, top_face].into_iter().any(|face| {
++        !matches!(
++            face.surface().try_into_analytic_surface_kind(),
++            Some(AnalyticSurfaceKind::Plane(_))
++        )
++    }) {
++        return None;
++    }
+     let mut patches = Vec::new();
+     arcs.iter()
+         .zip(&mut parameters)
+@@ -2450,16 +2567,20 @@
+             parameters.dedup_by(|a, b| (*a).near(&*b));
+             parameters.windows(2).try_for_each(|span| {
+                 let point = arc.curve.evaluate((span[0] + span[1]) / 2.0);
+-                let in_other = section_inside(
+-                    point,
+-                    if index < count0 {
+-                        &arcs[count0..]
+-                    } else {
+-                        &arcs[..count0]
+-                    },
+-                    translation.normalize(),
+-                    &mut work,
+-                )?;
++                let in_other = if let Some(membership) = uncut_membership.as_ref() {
++                    membership[index]
++                } else {
++                    section_inside(
++                        point,
++                        if index < count0 {
++                            &arcs[count0..]
++                        } else {
++                            &arcs[..count0]
++                        },
++                        translation.normalize(),
++                        &mut work,
++                    )?
++                };
+                 let keep = match operation {
+                     Operation::Intersection => in_other,
+                     Operation::Union => !in_other,

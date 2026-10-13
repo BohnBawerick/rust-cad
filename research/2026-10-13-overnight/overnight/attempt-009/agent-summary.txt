@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate runs the certified planar arrangement before marching. Oriented winding classifies arrangement cells across all shells, preserving subtraction and cavity orientation while distinguishing valid empty results from failures. Exact B-rep surfaces and trims remain intact.
+
+Expected gain: avoid marching timeouts for certified polyhedra, without box-specific recognition. Unsupported arrangements retain the existing pipeline.
+
+Risks: earlier planar assembly may expose numerical or meshing limitations; thin-face certification remains unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

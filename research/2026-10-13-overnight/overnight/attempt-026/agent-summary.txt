@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Restored attempt 25’s common-sweep implementation and fixed the reported `dedup_by` reference mismatch. The hypothesis reduces certified translational sweeps to exact rational section arrangements, reversing retained second-operand patches for subtraction.
+
+Scope includes spline sweeps with nonconvex sections and multiple oriented shells, without primitive recognition or mesh replacement. Risks remain in sampled classification, tangencies, trim correspondence, and mesh closure.
+
+Rustfmt parsed the candidate; patch whitespace checks passed. No builds, tests, or commits were performed.

@@ -1,0 +1,53 @@
+   Compiling monstertruck-solid v0.4.1 (/work/kernel/source/monstertruck-solid)
+warning: unnecessary qualification
+    --> /work/kernel/source/monstertruck-solid/src/transversal/classic/mod.rs:2417:54
+     |
+2417 |                 loops_store::BoundaryWire::new(wire, loops_store::ShapesOpStatus::And)
+     |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+note: the lint level is defined here
+    --> /work/kernel/source/monstertruck-solid/src/lib.rs:41:5
+     |
+  41 |     unused_qualifications
+     |     ^^^^^^^^^^^^^^^^^^^^^
+help: remove the unnecessary path segments
+     |
+2417 -                 loops_store::BoundaryWire::new(wire, loops_store::ShapesOpStatus::And)
+2417 +                 loops_store::BoundaryWire::new(wire, ShapesOpStatus::And)
+     |
+
+warning: unnecessary qualification
+    --> /work/kernel/source/monstertruck-solid/src/transversal/classic/mod.rs:2423:24
+     |
+2423 |         let mut store: loops_store::LoopsStore<_, _> = iter::once(cap).collect();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2423 -         let mut store: loops_store::LoopsStore<_, _> = iter::once(cap).collect();
+2423 +         let mut store: LoopsStore<_, _> = iter::once(cap).collect();
+     |
+
+error[E0308]: mismatched types
+   --> /work/kernel/source/monstertruck-solid/src/transversal/classic/mod.rs:110:92
+    |
+110 |                 (uv.x.is_finite() && uv.y.is_finite() && surface.evaluate(uv.x, uv.y).near(point))
+    |                                                                                       ---- ^^^^^ expected `&Point3<f64>`, found `Point3<f64>`
+    |                                                                                       |
+    |                                                                                       arguments to this method are incorrect
+    |
+    = note: expected reference `&monstertruck_core::cgmath::Point3<_>`
+                  found struct `monstertruck_core::cgmath::Point3<_>`
+note: method defined here
+   --> /work/kernel/source/monstertruck-core/src/tolerance.rs:14:8
+    |
+ 14 |     fn near(&self, other: &Self) -> bool { self.abs_diff_eq(other, TOLERANCE) }
+    |        ^^^^
+help: consider borrowing here
+    |
+110 |                 (uv.x.is_finite() && uv.y.is_finite() && surface.evaluate(uv.x, uv.y).near(&point))
+    |                                                                                            +
+
+For more information about this error, try `rustc --explain E0308`.
+warning: `monstertruck-solid` (lib) generated 2 warnings
+error: could not compile `monstertruck-solid` (lib) due to 1 previous error; 2 warnings emitted

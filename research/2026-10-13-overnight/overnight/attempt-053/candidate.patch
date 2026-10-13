@@ -1,0 +1,163 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -30,6 +30,8 @@
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
+ //! - Failed assembly can reconstruct all nested trim loops, retaining small
+ //!   chart regions and assigning each hole to its immediate containing boundary.
++//! - Strict containment in certified convex planar boundaries uses complete
++//!   support enclosures, retaining all oriented shells without subdivision.
+ //! - Failed intersection fits can retain exact rational sections of certified
+ //!   translational supports, including oblique cuts by planar supports.
+ 
+@@ -1514,24 +1516,18 @@
+ /// face, or lie on two nonparallel planes, making its endpoints sufficient.
+ /// This argument includes holes and all oriented shells of the input solid.
+ /// Unbounded analytic supports and coplanar seams decline certification.
+-fn solid_enclosure<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++fn for_each_enclosing_point<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid: &Solid<Point3, C, S>,
+-) -> Option<(Point3, Point3)> {
++    mut visitor: impl FnMut(Point3) -> Option<()>,
++) -> Option<()> {
+     let mut work = 65_536_usize;
+     let mut incidence: HashMap<EdgeId<C>, (usize, Option<Vector3>)> = HashMap::default();
+-    let mut minimum = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+-    let mut maximum = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+     let mut include = |point: Point3| {
+-        if !point.x.is_finite() || !point.y.is_finite() || !point.z.is_finite() {
+-            return None;
++        if point.x.is_finite() && point.y.is_finite() && point.z.is_finite() {
++            visitor(point)
++        } else {
++            None
+         }
+-        minimum.x = minimum.x.min(point.x);
+-        minimum.y = minimum.y.min(point.y);
+-        minimum.z = minimum.z.min(point.z);
+-        maximum.x = maximum.x.max(point.x);
+-        maximum.y = maximum.y.max(point.y);
+-        maximum.z = maximum.z.max(point.z);
+-        Some(())
+     };
+     solid.face_iter().try_for_each(|face| {
+         work = work.checked_sub(1)?;
+@@ -1587,8 +1583,25 @@
+             Some(())
+         })
+     })?;
+-    (!incidence.is_empty() && incidence.values().all(|(count, _)| *count == 2))
+-        .then_some((minimum, maximum))
++    (!incidence.is_empty() && incidence.values().all(|(count, _)| *count == 2)).then_some(())
++}
++
++/// Bound the complete support hull along the coordinate axes.
++fn solid_enclosure<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++) -> Option<(Point3, Point3)> {
++    let mut minimum = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
++    let mut maximum = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
++    for_each_enclosing_point(solid, |point| {
++        minimum.x = minimum.x.min(point.x);
++        minimum.y = minimum.y.min(point.y);
++        minimum.z = minimum.z.min(point.z);
++        maximum.x = maximum.x.max(point.x);
++        maximum.y = maximum.y.max(point.y);
++        maximum.z = maximum.z.max(point.z);
++        Some(())
++    })?;
++    Some((minimum, maximum))
+ }
+ 
+ /// Apply set identities only after a support enclosure separates the interiors.
+@@ -1634,6 +1647,80 @@
+             } else {
+                 None
+             }
++        }
++    }
++}
++
++/// Prove strict containment of a complete support hull in a convex solid.
++///
++/// The planar certificate covers entire faces and straight trims. Requiring
++/// every boundary vertex behind every outward plane proves convexity of the
++/// valid closed boundary. Positive rational weights make a half-space bound
++/// on all control points a bound on every point of each curved support.
++/// Strict inequalities leave the contact and intersecting cases to assembly.
++fn contains_enclosure<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    container: &Solid<Point3, C, S>,
++    inner: &Solid<Point3, C, S>,
++) -> Option<()> {
++    let mut work = 262_144_usize;
++    let cells = planar_cells(container, &mut work)?;
++    if cells.is_empty() {
++        return None;
++    }
++    cells.iter().try_for_each(|plane| {
++        cells.iter().try_for_each(|cell| {
++            cell.points.iter().try_for_each(|point| {
++                work = work.checked_sub(1)?;
++                let (distance, error) = plane_distance(*point, plane.points[0], plane.normal);
++                (distance.is_finite() && error.is_finite() && distance <= error).then_some(())
++            })
++        })
++    })?;
++    for_each_enclosing_point(inner, |point| {
++        cells.iter().try_for_each(|plane| {
++            work = work.checked_sub(1)?;
++            let (distance, error) = plane_distance(point, plane.points[0], plane.normal);
++            (distance.is_finite() && error.is_finite() && distance < -error).then_some(())
++        })
++    })
++}
++
++/// Apply containment identities only after certifying the entire inner solid.
++///
++/// The enclosure includes curved supports, planar trims, and every component.
++/// Reversing all inner shells in subtraction makes removed material a cavity
++/// and makes each pre-existing cavity an island of retained material.
++fn contained_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
++    let first_inside = contains_enclosure(solid1, solid0).is_some();
++    if first_inside {
++        match operation {
++            Operation::Intersection => Some(solid0.clone()),
++            Operation::Union => Some(solid1.clone()),
++            Operation::Difference => Solid::try_new(Vec::new()).ok(),
++        }
++    } else {
++        contains_enclosure(solid0, solid1)?;
++        match operation {
++            Operation::Intersection => Some(solid1.clone()),
++            Operation::Union => Some(solid0.clone()),
++            Operation::Difference => Solid::try_new(
++                solid0
++                    .boundaries()
++                    .iter()
++                    .cloned()
++                    .chain(
++                        solid1
++                            .boundaries()
++                            .iter()
++                            .map(|shell| shell.iter().map(Face::inverse).collect()),
++                    )
++                    .collect(),
++            )
++            .ok(),
+         }
+     }
+ }
+@@ -2450,7 +2537,9 @@
+         // Its empty boundary is therefore a valid empty result, while failure
+         // to certify or assemble an arrangement still requires marching.
+         Ok(solid)
+-    } else if let Some(solid) = separated_boolean(solid0, solid1, operation) {
++    } else if let Some(solid) = separated_boolean(solid0, solid1, operation)
++        .or_else(|| contained_boolean(solid0, solid1, operation))
++    {
+         Ok(solid)
+     } else {
+         boolean_classic(solid0, solid1, tol, operation)

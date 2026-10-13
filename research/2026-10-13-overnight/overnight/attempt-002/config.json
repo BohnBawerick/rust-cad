@@ -1,0 +1,12 @@
+{
+  "revision": "v2-isolated-compile",
+  "deadline_utc": "2026-10-13T02:45:00Z",
+  "agent_seconds": 600,
+  "compile_seconds": 240,
+  "suite_seconds": 360,
+  "max_attempts": 200,
+  "editable": [
+    "monstertruck-solid/src/transversal/classic/mod.rs"
+  ],
+  "focus": "Boolean classification and assembly. Start with disjoint subtraction, then containment and touching solids. Derive a repair that applies to arbitrary valid solids in the supported API, not a box-specific recognizer."
+}

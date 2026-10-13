@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The repair preserves propagated edge splits and replacement vertices on unclassified neighboring faces. Previously, cloning their original boundaries discarded shared topology. Both dividers now use synchronized boundaries, retaining exact geometry and applying face orientation once, including cavity shells.
+
+This is independent of solid shape and surface type. Remaining risks include intersection generation, ambiguous trim loops, and numerical classification.
+
+Formatted and checked whitespace. No builds, tests, or commits performed; controller evaluation remains pending.

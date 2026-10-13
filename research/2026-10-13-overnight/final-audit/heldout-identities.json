@@ -1,0 +1,256 @@
+{
+  "total": 25,
+  "passed": 24,
+  "operation_failed": 1,
+  "identity_failed": 0,
+  "rows": [
+    {
+      "ids": [
+        "heldout-000",
+        "heldout-001",
+        "heldout-002"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 1.1368683772161603e-13,
+      "union_plus_intersection_error": 3.410605131648481e-13
+    },
+    {
+      "ids": [
+        "heldout-003",
+        "heldout-004",
+        "heldout-005"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 1.1368683772161603e-13,
+      "union_plus_intersection_error": -2.2737367544323206e-13
+    },
+    {
+      "ids": [
+        "heldout-006",
+        "heldout-007",
+        "heldout-008"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 8.881784197001252e-16
+    },
+    {
+      "ids": [
+        "heldout-009",
+        "heldout-010",
+        "heldout-011"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -5.684341886080802e-14,
+      "union_plus_intersection_error": -2.2737367544323206e-13
+    },
+    {
+      "ids": [
+        "heldout-012",
+        "heldout-013",
+        "heldout-014"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 5.551115123125783e-17,
+      "union_plus_intersection_error": -2.220446049250313e-16
+    },
+    {
+      "ids": [
+        "heldout-015",
+        "heldout-016",
+        "heldout-017"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -1.7763568394002505e-15,
+      "union_plus_intersection_error": -1.5543122344752192e-15
+    },
+    {
+      "ids": [
+        "heldout-018",
+        "heldout-019",
+        "heldout-020"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -2.842170943040401e-14,
+      "union_plus_intersection_error": -1.1368683772161603e-13
+    },
+    {
+      "ids": [
+        "heldout-021",
+        "heldout-022",
+        "heldout-023"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -4.996003610813204e-16,
+      "union_plus_intersection_error": -7.771561172376096e-16
+    },
+    {
+      "ids": [
+        "heldout-024",
+        "heldout-025",
+        "heldout-026"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 7.105427357601002e-15
+    },
+    {
+      "ids": [
+        "heldout-027",
+        "heldout-028",
+        "heldout-029"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -3.552713678800501e-15,
+      "union_plus_intersection_error": -7.105427357601002e-15
+    },
+    {
+      "ids": [
+        "heldout-030",
+        "heldout-031",
+        "heldout-032"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -5.684341886080802e-14,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "heldout-033",
+        "heldout-034",
+        "heldout-035"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": -2.2737367544323206e-13
+    },
+    {
+      "ids": [
+        "heldout-036",
+        "heldout-037",
+        "heldout-038"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -1.1368683772161603e-13,
+      "union_plus_intersection_error": -9.603429163007604e-14
+    },
+    {
+      "ids": [
+        "heldout-039",
+        "heldout-040",
+        "heldout-041"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -2.842170943040401e-14,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "heldout-042",
+        "heldout-043",
+        "heldout-044"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -3.552713678800501e-15,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "heldout-045",
+        "heldout-046",
+        "heldout-047"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 2.220446049250313e-16
+    },
+    {
+      "ids": [
+        "heldout-048",
+        "heldout-049",
+        "heldout-050"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 7.105427357601002e-15,
+      "union_plus_intersection_error": 7.105427357601002e-15
+    },
+    {
+      "ids": [
+        "heldout-051",
+        "heldout-052",
+        "heldout-053"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0007602015879153434,
+      "union_plus_intersection_error": -0.0015204031758284664
+    },
+    {
+      "ids": [
+        "heldout-054",
+        "heldout-055",
+        "heldout-056"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.00027298307584744386,
+      "union_plus_intersection_error": -0.0005459661516866721
+    },
+    {
+      "ids": [
+        "heldout-057",
+        "heldout-058",
+        "heldout-059"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.00012243090244394572,
+      "union_plus_intersection_error": -0.00024486180488789144
+    },
+    {
+      "ids": [
+        "heldout-060",
+        "heldout-061",
+        "heldout-062"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0009729749890841077,
+      "union_plus_intersection_error": -0.0019459499781682155
+    },
+    {
+      "ids": [
+        "heldout-063",
+        "heldout-064",
+        "heldout-065"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0006446012825394032,
+      "union_plus_intersection_error": -0.0012892025651893846
+    },
+    {
+      "ids": [
+        "heldout-066",
+        "heldout-067",
+        "heldout-068"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.00023253075917706312,
+      "union_plus_intersection_error": -0.00046506151833280995
+    },
+    {
+      "ids": [
+        "heldout-069",
+        "heldout-070",
+        "heldout-071"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0002201244771016242,
+      "union_plus_intersection_error": -0.0004402489542032484
+    },
+    {
+      "ids": [
+        "heldout-072",
+        "heldout-073",
+        "heldout-074"
+      ],
+      "verdict": "operation_failed"
+    }
+  ]
+}

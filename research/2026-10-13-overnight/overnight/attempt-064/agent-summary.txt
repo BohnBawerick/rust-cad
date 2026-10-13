@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate certifies oblique separation using complete rational support hulls, tightened by exact subdivision. Independently checked separating planes justify disjoint set identities while preserving exact geometry and shell orientations.
+
+Expected scope: rotated and curved solids whose axis-aligned bounds overlap despite a genuine gap. Inconclusive cases retain existing containment and contact handling.
+
+Risks: conservative hulls may yield no gain; numerical margins and runtime require controller evaluation.
+
+Formatted and checked whitespace. No builds, tests, or commits.

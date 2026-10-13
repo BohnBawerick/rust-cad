@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate certifies whole-shell separation and nesting using complete support enclosures and convex support planes. Classification sums enclosing-shell orientations; subtraction reverses retained cutter shells to preserve cavities.
+
+Expected scope: disjoint components and strict containment involving certifiable convex planar shells, including enclosed curved boundaries and multiple oriented shells. Original B-rep geometry is retained.
+
+Touching boundaries, unsupported surfaces, and inconclusive enclosures retain the existing pipeline. Conservative bounds may limit gains; curved intersection failures remain unresolved.
+
+Formatted and checked patch whitespace. No builds, tests, or commits. Findings are saved in `/work/scratch/partial.txt`.

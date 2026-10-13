@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate uses complete support enclosures and convex halfspaces to certify separation or strict containment. Proven relations permit exact Boolean identities; subtraction reverses every contained shell, preserving cavity orientation.
+
+This supports convex planar containers and certified curved solids with multiple oriented shells. Conservative bounds may miss valid relations. Touching-union mesh closure remains unresolved.
+
+Formatting and whitespace checks completed. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

@@ -1,0 +1,365 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,8 @@
+ //!   before marching, retaining the exact input surfaces.
+ //! - Complete positive-weight spline control nets certify separation, including
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
++//! - Failed shared-cap arrangements can recover planar domains from the exact
++//!   exposed side edges after classifying against the complete oriented solids.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -34,7 +36,7 @@
+ use monstertruck_meshing::prelude::*;
+ use monstertruck_topology::*;
+ use rustc_hash::FxHashMap as HashMap;
+-use std::iter;
++use std::{iter, ops::Bound};
+ 
+ type ClassicResult<T> = std::result::Result<T, ShapeOpsError>;
+ 
+@@ -616,9 +618,18 @@
+     shell1: &Shell<Point3, C, S>,
+     tol: f64,
+     second_at_infinity: isize,
++    classification: Option<(&Shell<Point3, C, S>, &Shell<Point3, C, S>)>,
+ ) -> Option<([AltCurveShell<C, S>; 2], bool)> {
+     let poly_shell0 = shell0.triangulation(tol);
+     let poly_shell1 = shell1.triangulation(tol);
++    let full_polygons =
++        classification.map(|(first, second)| (first.triangulation(tol), second.triangulation(tol)));
++    let (classifier0, classifier1) = classification.unwrap_or((shell0, shell1));
++    let (class_poly0, class_poly1) = full_polygons
++        .as_ref()
++        .map_or((&poly_shell0, &poly_shell1), |(first, second)| {
++            (first, second)
++        });
+     let altshell0: AltCurveShell<C, S> =
+         shell0.mapped(|x| *x, |c| Alternative::FirstType(c.clone()), Clone::clone);
+     let altshell1: AltCurveShell<C, S> =
+@@ -655,7 +666,7 @@
+     unknown0.into_iter().try_for_each(|face| {
+         let (point, normal) = interior_point(&face, tol)?;
+         if let Some(same_orientation) =
+-            coincident_boundary(&face, point, normal, shell1, &poly_shell1)
++            coincident_boundary(&face, point, normal, classifier1, class_poly1)
+         {
+             // A shared co-oriented patch belongs to both results, once. Opposed
+             // patches enclose no intersection and are internal to the union.
+@@ -663,7 +674,7 @@
+                 and0.push(face.clone());
+                 or0.push(face);
+             }
+-        } else if inside(point, &poly_shell1, second_at_infinity)? {
++        } else if inside(point, class_poly1, second_at_infinity)? {
+             and0.push(face);
+         } else {
+             or0.push(face);
+@@ -674,8 +685,8 @@
+     unknown1.into_iter().try_for_each(|face| {
+         let (point, normal) = interior_point(&face, tol)?;
+         // The first operand owns coincident patches.
+-        if coincident_boundary(&face, point, normal, shell0, &poly_shell0).is_none() {
+-            if inside(point, &poly_shell0, 0)? {
++        if coincident_boundary(&face, point, normal, classifier0, class_poly0).is_none() {
++            if inside(point, class_poly0, 0)? {
+                 and1.push(face);
+             } else {
+                 or1.push(face);
+@@ -1201,6 +1212,279 @@
+     }
+ }
+ 
++/// Certify a planar support and retain its material-side normal.
++fn supporting_cap<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    face: &Face<Point3, C, S>,
++) -> Option<(Point3, Vector3)> {
++    let surface = face.surface();
++    let AnalyticSurfaceKind::Plane(plane) = surface.try_into_analytic_surface_kind()? else {
++        return None;
++    };
++    let spline = surface.try_into_homogeneous_bspline_surface()?;
++    let origin = plane.origin();
++    let normal = plane.normal().normalize();
++    spline
++        .control_points()
++        .iter()
++        .flatten()
++        .all(|control| {
++            let (distance, error) = plane_distance(control.to_point(), origin, normal);
++            control.w.is_finite()
++                && control.w > 0.0
++                && distance.is_finite()
++                && error.is_finite()
++                && distance.abs() <= error
++        })
++        .then_some((origin, if face.orientation() { normal } else { -normal }))
++}
++
++/// Recover common supporting caps from the exact boundary of selected side faces.
++///
++/// A common supporting plane cannot cut either solid's interior. Consequently,
++/// the selected side boundary uniquely determines the regularized cap domains.
++/// This avoids inserting a second copy of a rim already lying on that plane.
++/// Every output cap shares the side edges, including curved trims and hole wires.
++fn capped_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    tol: f64,
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
++    let same_plane = |a: (Point3, Vector3), b: (Point3, Vector3)| {
++        let (distance, error) = plane_distance(a.0, b.0, b.1);
++        distance.abs() <= error && (a.1 - b.1).magnitude() <= 32.0 * f64::EPSILON
++    };
++    let planes1: Vec<_> = solid1.face_iter().filter_map(supporting_cap).collect();
++    let mut caps = Vec::new();
++    solid0.face_iter().for_each(|face| {
++        if let Some(plane) = supporting_cap(face)
++            && planes1.iter().any(|other| same_plane(plane, *other))
++            && !caps.iter().any(|(_, _, other)| same_plane(plane, *other))
++        {
++            caps.push((face.surface(), face.orientation(), plane));
++        }
++    });
++    if caps.is_empty() {
++        return None;
++    }
++    let cap_index = |face: &Face<Point3, C, S>| {
++        supporting_cap(face).and_then(|plane| {
++            caps.iter()
++                .position(|(_, _, other)| same_plane(plane, *other))
++        })
++    };
++    let mut work = 65_536_usize;
++    // Positive control weights certify every remaining bounded support lies on
++    // the material side of each cap. Unbounded supports decline this fallback.
++    let sides = [solid0, solid1].map(|solid| {
++        let mut incidence = HashMap::default();
++        let side: Shell<_, _, _> = solid
++            .face_iter()
++            .filter(|face| cap_index(face).is_none())
++            .cloned()
++            .collect();
++        side.iter().try_for_each(|face| {
++            work = work.checked_sub(1)?;
++            let surface = face.surface();
++            if !surface.supports_exact_patch_domains()
++                && matches!(
++                    surface.try_into_analytic_surface_kind(),
++                    Some(AnalyticSurfaceKind::Plane(_))
++                )
++            {
++                return None;
++            }
++            let (u, v) = surface.parameter_range();
++            if ![u.0, u.1, v.0, v.1].into_iter().all(|bound| match bound {
++                Bound::Included(value) | Bound::Excluded(value) => value.is_finite(),
++                Bound::Unbounded => false,
++            }) {
++                return None;
++            }
++            let spline = surface.try_into_homogeneous_bspline_surface()?;
++            spline
++                .control_points()
++                .iter()
++                .flatten()
++                .try_for_each(|control| {
++                    work = work.checked_sub(caps.len())?;
++                    if !control.w.is_finite() || control.w <= 0.0 {
++                        return None;
++                    }
++                    caps.iter()
++                        .all(|(_, _, (origin, normal))| {
++                            let (distance, error) =
++                                plane_distance(control.to_point(), *origin, *normal);
++                            distance.is_finite() && error.is_finite() && distance <= error
++                        })
++                        .then_some(())
++                })?;
++            face.edge_iter().for_each(|edge| {
++                incidence.insert(edge.id(), ());
++            });
++            Some(())
++        })?;
++        // Every cap rim is also a trim on a certified bounded side support.
++        solid
++            .face_iter()
++            .filter(|face| cap_index(face).is_some())
++            .all(|face| {
++                face.edge_iter()
++                    .all(|edge| incidence.contains_key(&edge.id()))
++            })
++            .then_some(side)
++    });
++    let [Some(side0), Some(mut side1)] = sides else {
++        return None;
++    };
++    let full0: Shell<_, _, _> = solid0.face_iter().cloned().collect();
++    let mut full1: Shell<_, _, _> = solid1.face_iter().cloned().collect();
++    let at_infinity = if matches!(operation, Operation::Difference) {
++        side1.iter_mut().for_each(|face| {
++            face.invert();
++        });
++        full1.iter_mut().for_each(|face| {
++            face.invert();
++        });
++        1
++    } else {
++        0
++    };
++    let ([intersection, union], _) =
++        process_one_pair_of_shells(&side0, &side1, tol, at_infinity, Some((&full0, &full1)))?;
++    let selected = match operation {
++        Operation::Union => union,
++        Operation::Intersection | Operation::Difference => intersection,
++    };
++    // A transverse side intersection is required for this recovery. Tangential
++    // contacts need their own manifold arrangement and must not become successes
++    // merely because each touching component can be capped independently.
++    let mut intersections = HashMap::default();
++    selected.edge_iter().try_for_each(|edge| {
++        if let Alternative::SecondType(curve) = edge.curve()
++            && !intersections.contains_key(&edge.id())
++        {
++            let (start, end) = curve.range_tuple();
++            let (_, uv0, uv1) = curve.search_triple((start + end) / 2.0, 100)?;
++            let normal0 = curve.surface0().normal(uv0.x, uv0.y).normalize();
++            let normal1 = curve.surface1().normal(uv1.x, uv1.y).normalize();
++            if !normal0.cross(normal1).magnitude2().is_finite() || normal0.cross(normal1).so_small()
++            {
++                return None;
++            }
++            intersections.insert(edge.id(), ());
++        }
++        Some(())
++    })?;
++    if intersections.is_empty() {
++        return None;
++    }
++    // Require simple open boundary cycles before using the shell's wire walker.
++    let mut edge_counts = HashMap::default();
++    selected.edge_iter().for_each(|edge| {
++        *edge_counts.entry(edge.id()).or_insert(0_usize) += 1;
++    });
++    if edge_counts.values().any(|count| *count > 2) {
++        return None;
++    }
++    let mut degrees = HashMap::default();
++    selected
++        .edge_iter()
++        .filter(|edge| edge_counts[&edge.id()] == 1)
++        .try_for_each(|edge| {
++            if !matches!(edge.curve(), Alternative::FirstType(_)) {
++                return None;
++            }
++            let outgoing = degrees
++                .entry(edge.front().id())
++                .or_insert((0_usize, 0_usize));
++            outgoing.0 += 1;
++            let incoming = degrees
++                .entry(edge.back().id())
++                .or_insert((0_usize, 0_usize));
++            incoming.1 += 1;
++            Some(())
++        })?;
++    if degrees.values().any(|degree| *degree != (1, 1)) {
++        return None;
++    }
++    let mut shell = altshell_to_shell(&selected)?;
++    let mut cap_wires: Vec<Vec<(Wire<Point3, C>, PolylineCurve<Point2>)>> =
++        caps.iter().map(|_| Vec::new()).collect();
++    shell
++        .extract_boundaries()
++        .into_iter()
++        .try_for_each(|wire| {
++            if !wire.is_closed() {
++                return None;
++            }
++            let wire = wire.inverse();
++            let mut candidates =
++                caps.iter()
++                    .enumerate()
++                    .filter_map(|(index, (surface, orientation, _))| {
++                        let wire = if *orientation {
++                            wire.clone()
++                        } else {
++                            wire.inverse()
++                        };
++                        let mut hint = None;
++                        let points = wire.iter().try_fold(Vec::new(), |mut points, edge| {
++                            let curve = edge.oriented_curve();
++                            let division = curve.parameter_division(curve.range_tuple(), tol).1;
++                            division.into_iter().skip(1).try_for_each(|point| {
++                                work = work.checked_sub(1)?;
++                                let uv = surface.search_parameter(point, hint, 100)?;
++                                hint = Some(uv);
++                                points.push(Point2::new(uv.0, uv.1));
++                                Some(())
++                            })?;
++                            Some(points)
++                        })?;
++                        let poly = PolylineCurve(points);
++                        (poly.len() >= 3 && poly.area().is_finite() && poly.area() != 0.0)
++                            .then_some((index, wire, poly))
++                    });
++            let (index, wire, poly) = candidates.next()?;
++            if candidates.next().is_some() {
++                return None;
++            }
++            cap_wires[index].push((wire, poly));
++            Some(())
++        })?;
++    cap_wires
++        .into_iter()
++        .enumerate()
++        .try_for_each(|(index, wires)| {
++            let (surface, orientation, _) = &caps[index];
++            let (positive, negative): (Vec<_>, Vec<_>) =
++                wires.into_iter().partition(|(_, poly)| poly.area() > 0.0);
++            let mut domains: Vec<_> = positive
++                .into_iter()
++                .map(|(wire, poly)| (vec![wire], poly))
++                .collect();
++            negative.into_iter().try_for_each(|(wire, poly)| {
++                let owner = domains
++                    .iter()
++                    .enumerate()
++                    .filter(|(_, (_, outer))| outer.include(poly.front()))
++                    .min_by(|(_, (_, a)), (_, (_, b))| a.area().total_cmp(&b.area()))
++                    .map(|(index, _)| index)?;
++                domains[owner].0.push(wire);
++                Some(())
++            })?;
++            domains.into_iter().try_for_each(|(wires, _)| {
++                let mut face = Face::try_new(wires, surface.clone()).ok()?;
++                if !*orientation {
++                    face.invert();
++                }
++                shell.push(face);
++                Some(())
++            })
++        })?;
++    Solid::try_new(shell.connected_components()).ok()
++}
++
+ fn boolean_classic<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+@@ -1237,7 +1521,7 @@
+         }
+     } else {
+         let ([and_shell, or_shell], contacts) =
+-            process_one_pair_of_shells(&shell0, &shell1, tol, at_infinity)
++            process_one_pair_of_shells(&shell0, &shell1, tol, at_infinity, None)
+                 .ok_or(ShapeOpsError::EmptyOutputShell { operation: name })?;
+         let selected = match operation {
+             Operation::Union => or_shell,
+@@ -1275,6 +1559,7 @@
+         Ok(solid)
+     } else {
+         boolean_classic(solid0, solid1, tol, operation)
++            .or_else(|error| capped_boolean(solid0, solid1, tol, operation).ok_or(error))
+     }
+ }
+ 

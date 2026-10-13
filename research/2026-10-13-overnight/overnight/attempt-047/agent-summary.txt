@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added a periodic-chart assembly fallback. Integer-period shifts preserve surface points while restoring continuous loop coordinates, signed areas, and hole containment. Original curves, surfaces, and shell orientations remain intact.
+
+Expected scope: failed assembly involving periodic trimmed surfaces. Pole charts, noncontractible loops, earlier intersection failures, and touching-union mesh closure remain unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

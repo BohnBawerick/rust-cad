@@ -1,0 +1,305 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -28,6 +28,8 @@
+ //!   only new transverse generators require intersection-curve assembly.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
++//! - Failed planar contact arrangements pair face uses around material sectors
++//!   and normalize vertex links, retaining distinct shells at edge contacts.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -41,7 +43,7 @@
+ use monstertruck_topology::*;
+ use rustc_hash::FxHashMap as HashMap;
+ use smallvec::SmallVec;
+-use std::iter;
++use std::{f64::consts::TAU, iter};
+ 
+ type ClassicResult<T> = std::result::Result<T, ShapeOpsError>;
+ 
+@@ -939,6 +941,204 @@
+     })
+ }
+ 
++/// Topological vertices and edge sectors of an oriented planar arrangement.
++struct PlanarContactTopology {
++    vertices: Vec<Vertex<Point3>>,
++    corners: Vec<Vec<usize>>,
++    sectors: Vec<Vec<usize>>,
++}
++
++/// One oriented edge use before coincident geometry is assigned topology.
++struct PlanarEdgeUse {
++    face: usize,
++    corner: usize,
++    start: usize,
++    end: usize,
++    normal: Vector3,
++}
++
++/// Find a vertex-link component with path compression and bounded work.
++fn contact_vertex_root(parents: &mut [usize], mut index: usize, work: &mut usize) -> Option<usize> {
++    while parents[index] != index {
++        *work = work.checked_sub(1)?;
++        parents[index] = parents[parents[index]];
++        index = parents[index];
++    }
++    Some(index)
++}
++
++/// Normalize edge contacts by their oriented material sectors.
++///
++/// In a plane perpendicular to an edge, each face is a ray. Material lies
++/// clockwise of a forward edge use and counterclockwise of a reverse use.
++/// Consecutive reverse/forward rays therefore bound one material sector and
++/// share one topological edge. Distinct sectors may touch geometrically.
++/// Vertex identity follows these pairings around each vertex link, rather
++/// than equality of coordinates. This also separates isolated point contacts.
++/// Coincident rays or nonalternating orientations decline the arrangement.
++fn planar_contact_topology<S>(
++    indexed: &[(usize, bool, Vec<usize>)],
++    cells: &[PlanarCell<S>],
++    vertices: &[Vertex<Point3>],
++    work: &mut usize,
++) -> Option<PlanarContactTopology> {
++    let offsets = indexed
++        .iter()
++        .scan(0, |offset, (_, _, indices)| {
++            let start = *offset;
++            *offset += indices.len();
++            Some(start)
++        })
++        .collect::<Vec<_>>();
++    let uses = indexed
++        .iter()
++        .enumerate()
++        .flat_map(|(face, (source, orientation, indices))| {
++            let normal = if *orientation == cells[*source].orientation {
++                cells[*source].normal
++            } else {
++                -cells[*source].normal
++            };
++            indices
++                .iter()
++                .enumerate()
++                .map(move |(corner, &start)| PlanarEdgeUse {
++                    face,
++                    corner,
++                    start,
++                    end: indices[(corner + 1) % indices.len()],
++                    normal,
++                })
++        })
++        .collect::<Vec<_>>();
++    *work = work.checked_sub(uses.len())?;
++    let mut groups: HashMap<(usize, usize), SmallVec<[usize; 4]>> = HashMap::default();
++    uses.iter().enumerate().try_for_each(|(index, edge)| {
++        if edge.start == edge.end {
++            return None;
++        }
++        groups
++            .entry((edge.start.min(edge.end), edge.start.max(edge.end)))
++            .or_default()
++            .push(index);
++        Some(())
++    })?;
++    let mut groups = groups.into_iter().collect::<Vec<_>>();
++    groups.sort_unstable_by_key(|(key, _)| *key);
++    let mut partners = vec![usize::MAX; uses.len()];
++    groups.into_iter().try_for_each(|((a, b), group)| {
++        if group.len() == 2 {
++            let (first, second) = (group[0], group[1]);
++            if uses[first].start != uses[second].end {
++                return None;
++            }
++            partners[first] = second;
++            partners[second] = first;
++            Some(())
++        } else if group.len() < 4 || group.len() & 1 != 0 {
++            None
++        } else {
++            let direction = (vertices[b].point() - vertices[a].point()).normalize();
++            let ray = |index: usize| {
++                let edge = &uses[index];
++                let ray = edge.normal.cross(direction) * if edge.start == a { 1.0 } else { -1.0 };
++                let length = ray.magnitude();
++                (length.is_finite() && length > 0.0).then(|| ray / length)
++            };
++            let reference = ray(group[0])?;
++            let mut ordered = group
++                .into_iter()
++                .map(|index| {
++                    let ray = ray(index)?;
++                    let angle = direction
++                        .dot(reference.cross(ray))
++                        .atan2(reference.dot(ray))
++                        .rem_euclid(TAU);
++                    angle.is_finite().then_some((index, angle))
++                })
++                .collect::<Option<SmallVec<[(usize, f64); 4]>>>()?;
++            ordered.sort_unstable_by(|a, b| a.1.total_cmp(&b.1).then_with(|| a.0.cmp(&b.0)));
++            ordered
++                .iter()
++                .enumerate()
++                .try_for_each(|(position, &(first, angle))| {
++                    *work = work.checked_sub(1)?;
++                    let (second, next_angle) = ordered[(position + 1) % ordered.len()];
++                    let gap = (next_angle - angle).rem_euclid(TAU);
++                    if gap <= 32.0 * f64::EPSILON || uses[first].start == uses[second].start {
++                        return None;
++                    }
++                    if uses[first].start == b {
++                        partners[first] = second;
++                        partners[second] = first;
++                    }
++                    Some(())
++                })
++        }
++    })?;
++    let mut parents = (0..uses.len()).collect::<Vec<_>>();
++    let next_corner = |index: usize| {
++        let edge = &uses[index];
++        offsets[edge.face] + (edge.corner + 1) % indexed[edge.face].2.len()
++    };
++    partners
++        .iter()
++        .enumerate()
++        .try_for_each(|(first, &second)| {
++            if second == usize::MAX || partners[second] != first {
++                return None;
++            }
++            if first < second {
++                [(first, next_corner(second)), (next_corner(first), second)]
++                    .into_iter()
++                    .try_for_each(|(a, b)| {
++                        let a = contact_vertex_root(&mut parents, a, work)?;
++                        let b = contact_vertex_root(&mut parents, b, work)?;
++                        parents[a.max(b)] = a.min(b);
++                        Some(())
++                    })?;
++            }
++            Some(())
++        })?;
++    let mut representatives = HashMap::default();
++    let mut normalized = Vec::new();
++    let corners = indexed
++        .iter()
++        .enumerate()
++        .map(|(face, (_, _, indices))| {
++            indices
++                .iter()
++                .enumerate()
++                .map(|(corner, &vertex)| {
++                    let root = contact_vertex_root(&mut parents, offsets[face] + corner, work)?;
++                    Some(*representatives.entry(root).or_insert_with(|| {
++                        let index = normalized.len();
++                        normalized.push(Vertex::new(vertices[vertex].point()));
++                        index
++                    }))
++                })
++                .collect::<Option<Vec<_>>>()
++        })
++        .collect::<Option<Vec<_>>>()?;
++    let sectors = indexed
++        .iter()
++        .enumerate()
++        .map(|(face, (_, _, indices))| {
++            (0..indices.len())
++                .map(|corner| {
++                    let index = offsets[face] + corner;
++                    index.min(partners[index])
++                })
++                .collect()
++        })
++        .collect();
++    Some(PlanarContactTopology {
++        vertices: normalized,
++        corners,
++        sectors,
++    })
++}
++
+ /// Assemble one common arrangement of the exact input support planes.
+ ///
+ /// Certification covers the complete surfaces and every trim before any result
+@@ -951,6 +1151,7 @@
+     solid1: &Solid<Point3, C, S>,
+     operation: Operation,
+     reconcile_supports: bool,
++    separate_contacts: bool,
+ ) -> Option<Solid<Point3, C, S>> {
+     let mut work = 262_144_usize;
+     let mut projections = 2048_usize;
+@@ -1032,7 +1233,7 @@
+         });
+     let roundoff = 128.0 * f64::EPSILON * scale;
+     let mut vertices: Vec<Vertex<Point3>> = Vec::new();
+-    let indexed = retained
++    let mut indexed = retained
+         .into_iter()
+         .map(|(source, orientation, points)| {
+             let indices = points
+@@ -1051,19 +1252,38 @@
+             Some((source, orientation, indices))
+         })
+         .collect::<Option<Vec<_>>>()?;
+-    let mut edges: HashMap<(usize, usize), (Edge<Point3, C>, usize, usize)> = HashMap::default();
++    let sectors = if separate_contacts {
++        let topology = planar_contact_topology(&indexed, &cells, &vertices, &mut work)?;
++        vertices = topology.vertices;
++        indexed
++            .iter_mut()
++            .zip(topology.corners)
++            .for_each(|((_, _, indices), corners)| {
++                *indices = corners;
++            });
++        Some(topology.sectors)
++    } else {
++        None
++    };
++    let mut edges: HashMap<(usize, usize, usize), (Edge<Point3, C>, usize, usize)> =
++        HashMap::default();
+     let shell = indexed
+         .into_iter()
+-        .map(|(source, orientation, indices)| {
++        .enumerate()
++        .map(|(face_index, (source, orientation, indices))| {
+             let cell = &cells[source];
+             let wire = indices
+                 .iter()
+                 .zip(indices.iter().cycle().skip(1))
+-                .map(|(&a, &b)| {
++                .enumerate()
++                .map(|(corner, (&a, &b))| {
+                     if a == b {
+                         return None;
+                     }
+-                    let key = (a.min(b), a.max(b));
++                    let sector = sectors
++                        .as_ref()
++                        .map_or(0, |sectors| sectors[face_index][corner]);
++                    let key = (a.min(b), a.max(b), sector);
+                     if let Some((edge, start, count)) = edges.get_mut(&key) {
+                         // More than two incident faces, or equal directions, is
+                         // independently detected nonmanifold output geometry.
+@@ -2066,7 +2286,7 @@
+         Err(ShapeOpsError::InvalidTolerance)
+     } else if solid0.is_empty() || solid1.is_empty() {
+         boolean_classic(solid0, solid1, tol, operation)
+-    } else if let Some(solid) = planar_boolean(solid0, solid1, operation, false) {
++    } else if let Some(solid) = planar_boolean(solid0, solid1, operation, false, false) {
+         // A certified arrangement establishes membership on each open cell.
+         // Its empty boundary is therefore a valid empty result, while failure
+         // to certify or assemble an arrangement still requires marching.
+@@ -2075,8 +2295,9 @@
+         Ok(solid)
+     } else {
+         boolean_classic(solid0, solid1, tol, operation)
+-            .or_else(|error| planar_boolean(solid0, solid1, operation, true).ok_or(error))
++            .or_else(|error| planar_boolean(solid0, solid1, operation, true, false).ok_or(error))
+             .or_else(|error| sweep_boolean(solid0, solid1, operation, tol).ok_or(error))
++            .or_else(|error| planar_boolean(solid0, solid1, operation, true, true).ok_or(error))
+     }
+ }
+ 

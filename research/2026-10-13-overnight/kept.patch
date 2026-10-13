@@ -1,0 +1,2849 @@
+diff --git i/monstertruck-solid/src/transversal/classic/mod.rs w/monstertruck-solid/src/transversal/classic/mod.rs
+index 4296fa09..23420852 100644
+--- i/monstertruck-solid/src/transversal/classic/mod.rs
++++ w/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -11,38 +11,285 @@
+ //! - The Alternative intersection-curve arm is a raw
+ //!   `IntersectionCurve<PolylineCurve<Point3>, S, S>` (0.3.2 wrapped it with
+ //!   parameter polylines the pipeline never consumed).
+-//! - `altshell_to_shell` converts that arm back to `C` via
+-//!   `SurfaceCurve::with_boundaries(..).into()` (the conversion the current
+-//!   `ShapeOpsCurve` bound provides), not `IntersectionCurve::new(..).into()`.
++//! - `altshell_to_shell` fits the projected intersection before converting it
++//!   through `SurfaceCurve::with_boundaries(..).into()`.
+ //! - Failures map onto the current `ShapeOpsError` (`EmptyOutputShell` for a
+ //!   `None` pipeline result, `InvalidOutputShell` for a rejected solid), since
+ //!   the current error enum has no single `Internal` variant.
++//! - Classification sums oriented shell windings and tracks the exterior
++//!   winding explicitly when intersecting with a complement for subtraction.
++//! - Certified planar solids with convex faces use a support-plane arrangement
++//!   before marching, retaining the exact input surfaces.
++//! - Complete positive-weight spline control nets certify separation, including
++//!   planar caps whose wires are enclosed by adjacent supports or straight edges.
++//! - Spline basis positivity certifies curved contacts without shared face patches;
++//!   exact trim subdivision keeps their material sectors separate.
++//! - Two independent separating supports certify lower-dimensional contacts;
++//!   their union retains separate material sectors and exact trim subdivisions.
++//! - Failed planar arrangements reconcile support normals using complete control
++//!   nets, avoiding ill-conditioned comparisons between independently derived normals.
++//! - Failed certified sweeps retain the input trim curves and smooth seam curves;
++//!   only new transverse generators require intersection-curve assembly.
++//! - Sweep trim membership uses known endpoint parameters before inversion,
++//!   avoiding Newton steps outside a closed trim domain at its endpoints.
++//! - Failed assembly can reconstruct all nested trim loops, retaining small
++//!   chart regions and assigning each hole to its immediate containing boundary.
++//! - Failed intersection fits can retain exact rational sections of certified
++//!   translational supports, including oblique cuts by planar supports.
+ 
+ mod divide_face;
+ mod faces_classification;
+ mod intersection_curve;
+ mod loops_store;
+ 
+-use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
+-use crate::alternative::Alternative;
+ use monstertruck_geometry::prelude::*;
+ use monstertruck_meshing::prelude::*;
+ use monstertruck_topology::*;
++use rustc_hash::FxHashMap as HashMap;
++use smallvec::SmallVec;
+ use std::iter;
+ 
++use super::integrate::{ShapeOpsCurve, ShapeOpsError, ShapeOpsSurface};
++use crate::alternative::Alternative;
++use faces_classification::FacesClassification;
++use loops_store::{LoopsStore, ShapesOpStatus};
++
+ type ClassicResult<T> = std::result::Result<T, ShapeOpsError>;
+ 
+ type AltCurve<C, S> = Alternative<C, IntersectionCurve<PolylineCurve<Point3>, S, S>>;
+ type AltCurveShell<C, S> = Shell<Point3, AltCurve<C, S>, S>;
++type PolyShell = Shell<Point3, PolylineCurve<Point3>, Option<PolygonMesh>>;
+ 
+-/// Convert an Alternative-curve shell back to a target-curve shell, approximating
+-/// each intersection-curve arm with a polyline B-spline wrapped in a
+-/// `SurfaceCurve` (uses the `From<SurfaceCurve<BsplineCurve<Point3>, ..>>`
+-/// conversion the current `ShapeOpsCurve` bound guarantees).
++/// Check a leader on both exact supports using continuation in parameter space.
++///
++/// The sampling density follows the spline inclusion check: six samples per
++/// degree per knot span. Hints keep each inverse query local to its predecessor.
++fn leader_on_surfaces<S: ShapeOpsSurface>(
++    curve: &IntersectionCurve<PolylineCurve<Point3>, S, S>,
++    leader: &BsplineCurve<Point3>,
++) -> bool {
++    let surface0 = curve.surface0();
++    let surface1 = curve.surface1();
++    let point = leader.front();
++    let parameters = surface0
++        .search_parameter(point, None, 100)
++        .zip(surface1.search_parameter(point, None, 100));
++    let (knots, _) = leader.knot_vector().to_single_multi();
++    let samples = leader.degree() * 6;
++    parameters
++        .and_then(|parameters| {
++            knots
++                .windows(2)
++                .flat_map(|span| {
++                    (1..=samples).map(move |index| {
++                        span[0] + (span[1] - span[0]) * index as f64 / samples as f64
++                    })
++                })
++                .try_fold(parameters, |(hint0, hint1), parameter| {
++                    let point = leader.evaluate(parameter);
++                    let uv0 = surface0.search_parameter(point, Some(hint0), 100)?;
++                    let uv1 = surface1.search_parameter(point, Some(hint1), 100)?;
++                    (surface0.evaluate(uv0.0, uv0.1).near(&point)
++                        && surface1.evaluate(uv1.0, uv1.1).near(&point))
++                    .then_some((uv0, uv1))
++                })
++        })
++        .is_some()
++}
++
++/// Fit one intersection span with bounded refinement and fallible projections.
++///
++/// Endpoints are shared between children and kept at the original edge vertices.
++/// Two subdivision levels bound the work per span; the shared projection budget
++/// also bounds the work for all intersection edges in an output shell.
++fn intersection_segment<S: ShapeOpsSurface>(
++    curve: &IntersectionCurve<PolylineCurve<Point3>, S, S>,
++    range: (f64, f64),
++    endpoints: (Point3, Point3),
++    depth: usize,
++    projections: &mut usize,
++) -> Option<BsplineCurve<Point3>> {
++    let (start, end) = range;
++    let (a, d) = endpoints;
++    let width = end - start;
++    *projections = projections.checked_sub(2)?;
++    let b = curve.search_triple(start + width / 3.0, 100)?.0;
++    let c = curve.search_triple(start + width * 2.0 / 3.0, 100)?.0;
++    let controls = vec![
++        a,
++        a + ((b - a) * 18.0 - (c - a) * 9.0 + (d - a) * 2.0) / 6.0,
++        d + ((c - d) * 18.0 - (b - d) * 9.0 + (a - d) * 2.0) / 6.0,
++        d,
++    ];
++    let mut knots = KnotVector::bezier_knot(3);
++    knots.transform(width, start);
++    let segment = BsplineCurve::new(knots, controls);
++    if leader_on_surfaces(curve, &segment) {
++        Some(segment)
++    } else if depth == 0 {
++        None
++    } else {
++        *projections = projections.checked_sub(1)?;
++        let middle = (start + end) / 2.0;
++        let point = curve.search_triple(middle, 100)?.0;
++        let left =
++            intersection_segment(curve, (start, middle), (a, point), depth - 1, projections)?;
++        let right = intersection_segment(curve, (middle, end), (point, d), depth - 1, projections)?;
++        left.try_concat(&right).ok()
++    }
++}
++
++/// Preserve valid leaders, refining only those that miss their exact supports.
++fn intersection_leader<S: ShapeOpsSurface>(
++    curve: &IntersectionCurve<PolylineCurve<Point3>, S, S>,
++    projections: &mut usize,
++) -> Option<BsplineCurve<Point3>> {
++    let points = curve.leader().as_slice();
++    let denominator = (points.len() - 1) as f64;
++    let knots = KnotVector::from(
++        iter::once(0.0)
++            .chain((0..points.len()).map(|index| index as f64 / denominator))
++            .chain(iter::once(1.0))
++            .collect::<Vec<_>>(),
++    );
++    let leader = BsplineCurve::new(knots, points.to_vec());
++    if leader_on_surfaces(curve, &leader) {
++        Some(leader)
++    } else {
++        let first =
++            intersection_segment(curve, (0.0, 1.0), (points[0], points[1]), 2, projections)?;
++        (1..points.len() - 1).try_fold(first, |spline, index| {
++            let segment = intersection_segment(
++                curve,
++                (index as f64, (index + 1) as f64),
++                (points[index], points[index + 1]),
++                2,
++                projections,
++            )?;
++            spline.try_concat(&segment).ok()
++        })
++    }
++}
++
++/// Recover a rational plane section from a certified translational control net.
++///
++/// If a support is `P(t) + h * D`, its intersection with a transverse plane is
++/// `P(t) + D * (O - P(t)).dot(N) / D.dot(N)`. This affine map acts directly on
++/// homogeneous control points and preserves the knots and rational weights.
++/// Positive weights also bound the required translation over the entire trim.
++/// No polygonal approximation is used to construct the resulting curve.
++fn rational_intersection_leader<S: ShapeOpsSurface>(
++    intersection: &IntersectionCurve<PolylineCurve<Point3>, S, S>,
++    projections: &mut usize,
++) -> Option<NurbsCurve<Vector4>> {
++    let surface0 = intersection.surface0();
++    let surface1 = intersection.surface1();
++    [(surface0, surface1), (surface1, surface0)]
++        .into_iter()
++        .find_map(|(support, planar)| {
++            let plane = certified_plane(planar)?;
++            if !support.supports_exact_patch_domains() {
++                return None;
++            }
++            let spline = support.try_into_homogeneous_bspline_surface()?;
++            let controls = spline.control_points();
++            if controls.iter().map(Vec::len).sum::<usize>() > 4096
++                || !spline.knot_vector_u().is_clamped(spline.udegree())
++                || !spline.knot_vector_v().is_clamped(spline.vdegree())
++            {
++                return None;
++            }
++            let (base, top) = if spline.udegree() == 1 && controls.len() == 2 {
++                (spline.curve_v(0), spline.curve_v(1))
++            } else if spline.vdegree() == 1 && controls.iter().all(|row| row.len() == 2) {
++                (spline.curve_u(0), spline.curve_u(1))
++            } else {
++                return None;
++            };
++            let translation = top.control_point(0).to_point() - base.control_point(0).to_point();
++            let normal = plane.normal();
++            let denominator = translation.dot(normal);
++            if !denominator.is_finite()
++                || denominator.abs()
++                    <= 32.0 * f64::EPSILON * translation.magnitude() * normal.magnitude()
++                || !base
++                    .control_points()
++                    .iter()
++                    .zip(top.control_points())
++                    .all(|(a, b)| {
++                        let scale = a.to_point().to_vec().magnitude()
++                            + b.to_point().to_vec().magnitude()
++                            + translation.magnitude();
++                        a.w.is_finite()
++                            && a.w > 0.0
++                            && a.w == b.w
++                            && (b.to_point() - a.to_point() - translation).magnitude()
++                                <= 32.0 * f64::EPSILON * scale
++                    })
++            {
++                return None;
++            }
++            let projected = base
++                .control_points()
++                .iter()
++                .map(|control| {
++                    let height = (plane.origin() - control.to_point()).dot(normal) / denominator;
++                    let point = control.to_point() + translation * height;
++                    (height.is_finite() && point.to_vec().magnitude2().is_finite())
++                        .then_some(point.to_homogeneous() * control.w)
++                })
++                .collect::<Option<Vec<_>>>()?;
++            let section =
++                NurbsCurve::new(BsplineCurve::try_new(base.knot_vector().clone(), projected).ok()?);
++            let front = intersection.leader().front();
++            let back = intersection.leader().back();
++            let start = sweep_parameter(&section, front)?;
++            let end = sweep_parameter(&section, back)?;
++            let lower = start.min(end);
++            let upper = start.max(end);
++            let source = section_trim(&NurbsCurve::new(base), lower, upper)?;
++            // The signed height is affine in Euclidean space. Its extrema are
++            // bounded by the positive-weight control hull of the trimmed source.
++            if !source.control_points().iter().all(|control| {
++                let (distance, error) = plane_distance(control.to_point(), plane.origin(), normal);
++                let height = -distance / denominator;
++                let roundoff = error / denominator.abs();
++                height.is_finite() && height >= -roundoff && height <= 1.0 + roundoff
++            }) {
++                return None;
++            }
++            let mut section = section_trim(&section, lower, upper)?;
++            if start > end {
++                section.invert();
++            }
++            // Endpoint agreement selects the bounded arc. Continuation checks
++            // reject a different intersection branch with the same endpoints.
++            let (first, last) = intersection.leader().range_tuple();
++            let (start, end) = section.range_tuple();
++            let samples = intersection.leader().as_slice().len().clamp(3, 16);
++            (1..samples).try_fold(start, |previous, index| {
++                *projections = projections.checked_sub(1)?;
++                let fraction = index as f64 / samples as f64;
++                let point = intersection
++                    .search_triple(first + (last - first) * fraction, 100)?
++                    .0;
++                let parameter = section.search_parameter(point, Some(previous), 100)?;
++                (parameter >= previous
++                    && parameter <= end
++                    && section.evaluate(parameter).near(&point))
++                .then_some(parameter)
++            })?;
++            (section.front().near(&front) && section.back().near(&back)).then_some(section)
++        })
++}
++
++/// Convert alternative curves while retaining their exact supporting surfaces.
+ fn altshell_to_shell<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     altshell: &AltCurveShell<C, S>,
+ ) -> Option<Shell<Point3, C, S>> {
+-    altshell.try_mapped(
++    let mut projections = 128;
++    let mut rational_projections = 128;
++    let shell: Shell<Point3, C, S> = altshell.try_mapped(
+         |p| Some(*p),
+         |c| match c {
+             Alternative::FirstType(c) => Some(c.clone()),
+@@ -54,87 +301,1196 @@ fn altshell_to_shell<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+                 if points.len() < 2 {
+                     return None;
+                 }
+-                let denominator = (points.len() - 1) as f64;
+-                let knot_vec = KnotVector::from(
+-                    iter::once(0.0)
+-                        .chain((0..points.len()).map(|index| index as f64 / denominator))
+-                        .chain(iter::once(1.0))
+-                        .collect::<Vec<_>>(),
++                let curve = IntersectionCurve::new(
++                    surface0.clone(),
++                    surface1.clone(),
++                    PolylineCurve(points),
+                 );
+-                let bspline = BsplineCurve::new(knot_vec, points);
+                 let boundary0: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
+                 let boundary1: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
+-                Some(
+-                    SurfaceCurve::with_boundaries(
+-                        surface0, surface1, bspline, boundary0, boundary1,
++                if let Some(bspline) = intersection_leader(&curve, &mut projections) {
++                    Some(
++                        SurfaceCurve::with_boundaries(
++                            surface0, surface1, bspline, boundary0, boundary1,
++                        )
++                        .into(),
+                     )
+-                    .into(),
+-                )
++                } else {
++                    let rational = rational_intersection_leader(&curve, &mut rational_projections)?;
++                    Some(
++                        SurfaceCurve::with_boundaries(
++                            surface0, surface1, rational, boundary0, boundary1,
++                        )
++                        .into(),
++                    )
++                }
+             }
+         },
+         |s| Some(s.clone()),
+-    )
++    )?;
++    let consistent = shell.edge_iter().all(|edge| edge.is_geometric_consistent());
++    consistent.then_some(shell)
+ }
+ 
+-/// Split one pair of shells into `[and_shell, or_shell]` (0.3.2 verbatim): build
+-/// intersection loops, divide faces, classify each divided face as `and`/`or`,
+-/// then ray-cast the remaining `unknown` faces against the other shell.
+-fn process_one_pair_of_shells<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++/// Choose a point in the relative interior of a trimmed face.
++///
++/// A boundary vertex may also lie on the other solid at a mere contact. Use
++/// the parameter centroid of a large tessellation triangle instead, evaluated
++/// on the original surface. The tessellation is only a classification aid.
++fn interior_point<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    face: &Face<Point3, AltCurve<C, S>, S>,
++    tol: f64,
++) -> Option<(Point3, Vector3)> {
++    let shell: AltCurveShell<C, S> = iter::once(face.clone()).collect();
++    let meshed = shell.triangulation(tol);
++    let mesh = meshed.first()?.surface()?;
++    let triangle = mesh
++        .face_iter()
++        .flat_map(|polygon| {
++            (2..polygon.len()).map(move |index| [polygon[0], polygon[index - 1], polygon[index]])
++        })
++        .max_by(|lhs, rhs| {
++            let area = |triangle: &[StandardVertex; 3]| {
++                let [a, b, c] = triangle.map(|vertex| mesh.positions()[vertex.pos]);
++                (b - a).cross(c - a).magnitude2()
++            };
++            area(lhs).total_cmp(&area(rhs))
++        })?;
++    let surface = face.surface();
++    let uv = triangle
++        .iter()
++        .map(|vertex| vertex.uv.map(|index| mesh.uv_coords()[index]))
++        .try_fold(Vector2::zero(), |sum, uv| Some(sum + uv?));
++    let (u, v) = if let Some(uv) = uv {
++        (uv.x / 3.0, uv.y / 3.0)
++    } else {
++        let [a, b, c] = triangle.map(|vertex| mesh.positions()[vertex.pos]);
++        surface.search_nearest_parameter(a + ((b - a) + (c - a)) / 3.0, None, 100)?
++    };
++    let normal = surface.normal(u, v).normalize();
++    Some((
++        surface.evaluate(u, v),
++        if face.orientation() { normal } else { -normal },
++    ))
++}
++
++/// Detect a coincident boundary at a face-interior query using exact surfaces.
++///
++/// The parameter triangles locate the point in the trimmed domain; testing the
++/// supporting surface alone would also accept its unbounded extension.
++fn coincident_boundary<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    candidate: &Face<Point3, AltCurve<C, S>, S>,
++    point: Point3,
++    normal: Vector3,
++    shell: &Shell<Point3, C, S>,
++    polygons: &PolyShell,
++) -> Option<bool> {
++    shell.iter().zip(polygons).find_map(|(face, polygon)| {
++        let surface = face.surface();
++        let (u, v) = surface.search_parameter(point, None, 100)?;
++        let other = surface.normal(u, v).normalize();
++        if !normal.cross(other).near(&Vector3::zero()) {
++            return None;
++        }
++        // A single tangent point does not establish a shared face patch.
++        let shared_support = candidate
++            .boundary_iters()
++            .into_iter()
++            .flatten()
++            .all(|edge| {
++                let curve = edge.curve();
++                let (start, end) = curve.range_tuple();
++                [start, (start + end) / 2.0, end]
++                    .into_iter()
++                    .all(|parameter| {
++                        surface
++                            .search_parameter(curve.evaluate(parameter), None, 100)
++                            .is_some()
++                    })
++            });
++        if !shared_support {
++            return None;
++        }
++        let mesh = polygon.surface()?;
++        let uv = Vector2::new(u, v);
++        let contains = mesh.face_iter().any(|vertices| {
++            (2..vertices.len()).any(|index| {
++                let triangle = [vertices[0], vertices[index - 1], vertices[index]];
++                let [Some(a), Some(b), Some(c)] =
++                    triangle.map(|vertex| vertex.uv.map(|index| mesh.uv_coords()[index]))
++                else {
++                    return false;
++                };
++                let cross = |a: Vector2, b: Vector2| a.x * b.y - a.y * b.x;
++                let area = cross(b - a, c - a);
++                let weights = [
++                    cross(b - uv, c - uv),
++                    cross(c - uv, a - uv),
++                    cross(a - uv, b - uv),
++                ];
++                area != 0.0 && weights.iter().all(|weight| weight * area >= 0.0)
++            })
++        });
++        contains.then(|| (normal.dot(other) > 0.0) == face.orientation())
++    })
++}
++
++/// Classify against the sum of all oriented boundary shells.
++///
++/// An outward shell contributes one inside; a cavity contributes minus one.
++/// Reversing a bounded solid gives minus one inside and zero outside, so its
++/// complement additionally needs a winding of one at infinity.
++fn inside(point: Point3, shell: &PolyShell, at_infinity: isize) -> Option<bool> {
++    let directions = [
++        hash::take_one_unit(point),
++        hash::take_one_unit(point + Vector3::new(1.0, 2.0, 3.0)),
++        hash::take_one_unit(point + Vector3::new(3.0, 1.0, 2.0)),
++    ];
++    let votes = directions.into_iter().try_fold(0, |votes, direction| {
++        let winding = shell.iter().try_fold(at_infinity, |winding, face| {
++            let crossings = face.surface()?.signed_crossing_faces(point, direction);
++            Some(
++                winding
++                    + if face.orientation() {
++                        crossings
++                    } else {
++                        -crossings
++                    },
++            )
++        })?;
++        Some(votes + usize::from(winding > 0))
++    })?;
++    Some(votes >= 2)
++}
++
++/// Test membership in a bounded curve, including the parameter interval.
++fn on_edge<C>(point: Point3, edge: &Edge<Point3, C>) -> bool
++where
++    C: BoundedCurve<Point = Point3> + SearchParameter<CurveParameter, Point = Point3> + Clone,
++{
++    let curve = edge.curve();
++    let (start, end) = curve.range_tuple();
++    curve
++        .search_parameter(point, None, 100)
++        .is_some_and(|t| t >= start && t <= end && curve.evaluate(t).near(&point))
++}
++
++/// Match complete trims in both directions, rather than just their vertices.
++fn matching_edges<C>(a: &Edge<Point3, C>, b: &Edge<Point3, C>, tol: f64) -> bool
++where
++    C: BoundedCurve<Point = Point3>
++        + SearchParameter<CurveParameter, Point = Point3>
++        + ParameterDivision1D<Point = Point3>
++        + Clone,
++{
++    let endpoints_match = (a.front().point().near(&b.front().point())
++        && a.back().point().near(&b.back().point()))
++        || (a.front().point().near(&b.back().point()) && a.back().point().near(&b.front().point()));
++    endpoints_match
++        && [(a, b), (b, a)].into_iter().all(|(source, target)| {
++            let curve = source.curve();
++            let (parameters, points) = curve.parameter_division(curve.range_tuple(), tol);
++            points.into_iter().all(|point| on_edge(point, target))
++                && parameters
++                    .windows(2)
++                    .all(|span| on_edge(curve.evaluate((span[0] + span[1]) / 2.0), target))
++        })
++}
++
++/// Recognize coincident supports from their analytic or exact spline data.
++fn same_support<S: ShapeOpsSurface>(a: &S, b: &S) -> bool {
++    match (
++        a.try_into_analytic_surface_kind(),
++        b.try_into_analytic_surface_kind(),
++    ) {
++        (Some(AnalyticSurfaceKind::Plane(a)), Some(AnalyticSurfaceKind::Plane(b))) => {
++            a.normal().cross(b.normal()).near(&Vector3::zero())
++                && (a.origin() - b.origin()).dot(a.normal()).so_small()
++        }
++        _ => a
++            .try_into_homogeneous_bspline_surface()
++            .zip(b.try_into_homogeneous_bspline_surface())
++            .is_some_and(|(a, b)| a == b),
++    }
++}
++
++/// Detect positive-area overlap of coplanar triangles by separating axes.
++fn coplanar_overlap(a: &PolygonMesh, b: &PolygonMesh, normal: Vector3) -> bool {
++    let triangles = |mesh: &PolygonMesh| {
++        mesh.face_iter()
++            .flat_map(|face| {
++                (2..face.len())
++                    .map(move |i| [face[0], face[i - 1], face[i]].map(|v| mesh.positions()[v.pos]))
++            })
++            .collect::<Vec<_>>()
++    };
++    let triangles0 = triangles(a);
++    let triangles1 = triangles(b);
++    triangles0.iter().any(|a| {
++        triangles1.iter().any(|b| {
++            [a, b].into_iter().all(|triangle| {
++                (0..3).all(|i| {
++                    let axis = normal.cross(triangle[(i + 1) % 3] - triangle[i]);
++                    let interval = |points: &[Point3; 3]| {
++                        points
++                            .iter()
++                            .map(|p| (*p - a[0]).dot(axis))
++                            .fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), x| {
++                                (min.min(x), max.max(x))
++                            })
++                    };
++                    let (min0, max0) = interval(a);
++                    let (min1, max1) = interval(b);
++                    max0.min(max1) > min0.max(min1)
++                })
++            })
++        })
++    })
++}
++
++/// Recognize an already conforming boundary arrangement before marching.
++///
++/// Shared patches must have the same complete trims. All other interference
++/// segments must lie on both existing boundaries. Partial coplanar overlaps
++/// and intersections through face interiors still require subdivision.
++fn conforming_contacts<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     shell0: &Shell<Point3, C, S>,
+     shell1: &Shell<Point3, C, S>,
++    polygons0: &PolyShell,
++    polygons1: &PolyShell,
+     tol: f64,
+-) -> Option<[Shell<Point3, C, S>; 2]> {
+-    if tol <= 0.0 {
++) -> Option<Vec<(usize, usize)>> {
++    let edges0: Vec<Vec<_>> = shell0
++        .iter()
++        .map(|face| face.edge_iter().collect())
++        .collect();
++    let edges1: Vec<Vec<_>> = shell1
++        .iter()
++        .map(|face| face.edge_iter().collect())
++        .collect();
++    let contacts: Vec<_> = shell0
++        .iter()
++        .enumerate()
++        .flat_map(|(i, a)| {
++            let edges0 = &edges0;
++            let edges1 = &edges1;
++            shell1.iter().enumerate().filter_map(move |(j, b)| {
++                // Reject different trims before converting surfaces or intersecting meshes.
++                let matching = edges0[i].len() == edges1[j].len()
++                    && edges0[i].iter().all(|edge0| {
++                        edges1[j]
++                            .iter()
++                            .any(|edge1| matching_edges(edge0, edge1, tol))
++                    })
++                    && edges1[j].iter().all(|edge1| {
++                        edges0[i]
++                            .iter()
++                            .any(|edge0| matching_edges(edge0, edge1, tol))
++                    })
++                    && same_support(&a.surface(), &b.surface());
++                matching.then_some((i, j))
++            })
++        })
++        .collect();
++    // Each patch has one owner in each operand. Ambiguity requires subdivision.
++    if contacts.is_empty()
++        || contacts
++            .iter()
++            .any(|(i, j)| contacts.iter().filter(|(k, l)| i == k || j == l).count() != 1)
++    {
+         return None;
+     }
++    if contacts.len() == shell0.len() && contacts.len() == shell1.len() {
++        return Some(contacts);
++    }
++    shell0.iter().enumerate().try_for_each(|(i, a)| {
++        shell1.iter().enumerate().try_for_each(|(j, b)| {
++            if contacts.contains(&(i, j)) {
++                return Some(());
++            }
++            let mesh0 = polygons0[i].surface()?;
++            let mesh1 = polygons1[j].surface()?;
++            let surface0 = a.surface();
++            let surface1 = b.surface();
++            // Unmatched curved patches require the existing subdivision pipeline.
++            // In particular, a mesh chord is not a separation certificate for them.
++            let (Some(AnalyticSurfaceKind::Plane(plane0)), Some(AnalyticSurfaceKind::Plane(_))) = (
++                surface0.try_into_analytic_surface_kind(),
++                surface1.try_into_analytic_surface_kind(),
++            ) else {
++                return None;
++            };
++            if same_support(&surface0, &surface1)
++                && coplanar_overlap(&mesh0, &mesh1, plane0.normal())
++            {
++                return None;
++            }
++            mesh0
++                .extract_interference(&mesh1)
++                .into_iter()
++                .all(|(p, q)| {
++                    [p, p.midpoint(q), q].into_iter().all(|point| {
++                        edges0[i].iter().any(|edge| on_edge(point, edge))
++                            && edges1[j].iter().any(|edge| on_edge(point, edge))
++                    })
++                })
++                .then_some(())
++        })
++    })?;
++    Some(contacts)
++}
++
++/// Sew only the open seams left by removing shared patches.
++///
++/// Closed components retain their topology, including components meeting only
++/// at a vertex or an edge. Every seam needs one oppositely directed partner.
++fn sew_contacts<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: Shell<Point3, C, S>,
++    tol: f64,
++) -> Option<Shell<Point3, C, S>> {
++    let boundary: Vec<_> = shell.extract_boundaries().into_iter().flatten().collect();
++    if boundary.is_empty() {
++        return Some(shell);
++    }
++    let mut vertices = HashMap::default();
++    let mut representatives: Vec<Vertex<Point3>> = Vec::new();
++    boundary
++        .iter()
++        .flat_map(|edge| [edge.front(), edge.back()])
++        .for_each(|vertex| {
++            let representative = representatives
++                .iter()
++                .find(|other| vertex.point().near(&other.point()))
++                .cloned()
++                .unwrap_or_else(|| {
++                    representatives.push(vertex.clone());
++                    vertex.clone()
++                });
++            vertices.insert(vertex.id(), representative);
++        });
++    let mut replacements = HashMap::default();
++    boundary.iter().try_for_each(|edge| {
++        if replacements.contains_key(&edge.id()) {
++            return Some(());
++        }
++        let mut partners = boundary.iter().filter(|other| {
++            other.id() != edge.id()
++                && edge.front().point().near(&other.back().point())
++                && edge.back().point().near(&other.front().point())
++                && matching_edges(edge, other, tol)
++        });
++        let partner = partners.next()?;
++        if partners.next().is_some() || replacements.contains_key(&partner.id()) {
++            return None;
++        }
++        let joined = Edge::try_new(
++            vertices.get(&edge.front().id())?,
++            vertices.get(&edge.back().id())?,
++            edge.oriented_curve(),
++        )
++        .ok()?;
++        replacements.insert(
++            edge.id(),
++            if edge.orientation() {
++                joined.clone()
++            } else {
++                joined.inverse()
++            },
++        );
++        replacements.insert(
++            partner.id(),
++            if partner.orientation() {
++                joined.inverse()
++            } else {
++                joined
++            },
++        );
++        Some(())
++    })?;
++    shell
++        .iter()
++        .map(|face| {
++            let wires = face
++                .absolute_boundaries()
++                .iter()
++                .map(|wire| {
++                    wire.iter()
++                        .map(|edge| {
++                            if !replacements.contains_key(&edge.id()) {
++                                let front = edge.absolute_front();
++                                let back = edge.absolute_back();
++                                let rebuilt = Edge::try_new(
++                                    vertices.get(&front.id()).unwrap_or(front),
++                                    vertices.get(&back.id()).unwrap_or(back),
++                                    edge.curve(),
++                                )
++                                .ok()?;
++                                replacements.insert(edge.id(), rebuilt);
++                            }
++                            let rebuilt = replacements.get(&edge.id())?;
++                            Some(if edge.orientation() {
++                                rebuilt.clone()
++                            } else {
++                                rebuilt.inverse()
++                            })
++                        })
++                        .collect::<Option<Wire<_, _>>>()
++                })
++                .collect::<Option<Vec<_>>>()?;
++            let mut rebuilt = Face::try_new(wires, face.surface()).ok()?;
++            if !face.orientation() {
++                rebuilt.invert();
++            }
++            Some(rebuilt)
++        })
++        .collect()
++}
++
++/// Select the original divider or a complete nested-boundary reconstruction.
++#[derive(Clone, Copy)]
++enum FaceDivision {
++    Classic,
++    Nested,
++}
++
++/// Locate a point in a polygon without counting a boundary point as interior.
++fn loop_domain(points: &[Point2], point: Point2) -> i8 {
++    let winding =
++        points
++            .iter()
++            .zip(points.iter().cycle().skip(1))
++            .try_fold(0_isize, |winding, (a, b)| {
++                let ab = *b - *a;
++                let ap = point - *a;
++                let cross = ab.x * ap.y - ab.y * ap.x;
++                if cross == 0.0 && ap.dot(point - *b) <= 0.0 {
++                    None
++                } else if a.y <= point.y && b.y > point.y && cross > 0.0 {
++                    Some(winding + 1)
++                } else if b.y <= point.y && a.y > point.y && cross < 0.0 {
++                    Some(winding - 1)
++                } else {
++                    Some(winding)
++                }
++            });
++    match winding {
++        None => 0,
++        Some(0) => -1,
++        Some(_) => 1,
++    }
++}
++
++/// Reconstruct every boundary cell, assigning holes to their immediate container.
++///
++/// A spatial meshing tolerance does not define an area in a surface chart.
++/// Signed area is used only for orientation and containment ordering here.
++/// Every loop must belong to one face; ambiguous or degenerate loops fail the
++/// reconstruction instead of disappearing from an apparently valid result.
++/// Exact input edges and supports carry the output. Polylines only locate the
++/// nesting of trims, using the caller's unchanged subdivision tolerance.
++fn nested_division<C, S>(
++    shell: &Shell<Point3, C, S>,
++    store: &LoopsStore<Point3, C>,
++    tol: f64,
++) -> Option<FacesClassification<Point3, C, S>>
++where
++    C: BoundedCurve<Point = Point3> + ParameterDivision1D<Point = Point3> + Clone,
++    S: ShapeOpsSurface,
++{
++    if shell.len() != store.len() {
++        return None;
++    }
++    let mut result = FacesClassification::default();
++    let mut work = 262_144_usize;
++    let mut projections = 16_384_usize;
++    shell.iter().zip(store).try_for_each(|(face, loops)| {
++        if loops.is_empty() {
++            return None;
++        }
++        let surface = face.surface();
++        let mut samples = HashMap::default();
++        let polygons = loops
++            .iter()
++            .map(|wire| {
++                if !wire.is_closed() || !wire.is_simple() {
++                    return None;
++                }
++                projections = projections.checked_sub(1)?;
++                let front = wire.front_vertex()?.point();
++                let first = surface.search_parameter(front, None, 100)?;
++                let mut hint = first;
++                let mut points = vec![Point2::from(first)];
++                wire.iter().try_for_each(|edge| {
++                    let poly = samples.entry(edge.id()).or_insert_with(|| {
++                        let curve = edge.curve();
++                        curve.parameter_division(curve.range_tuple(), tol).1
++                    });
++                    projections = projections.checked_sub(poly.len())?;
++                    (1..poly.len()).try_for_each(|index| {
++                        let index = if edge.orientation() {
++                            index
++                        } else {
++                            poly.len() - 1 - index
++                        };
++                        hint = surface.search_parameter(poly[index], Some(hint), 100)?;
++                        if !hint.0.is_finite() || !hint.1.is_finite() {
++                            return None;
++                        }
++                        points.push(Point2::from(hint));
++                        Some(())
++                    })
++                })?;
++                if points.len() < 4 || !points.last()?.near(&points[0]) {
++                    return None;
++                }
++                // Close only the inverse-query roundoff at the shared vertex.
++                points.pop();
++                let origin = points[0];
++                let area = points
++                    .iter()
++                    .zip(points.iter().cycle().skip(1))
++                    .map(|(a, b)| {
++                        let a = *a - origin;
++                        let b = *b - origin;
++                        a.x * b.y - a.y * b.x
++                    })
++                    .sum::<f64>()
++                    / 2.0;
++                (area.is_finite() && area != 0.0).then_some((points, area))
++            })
++            .collect::<Option<Vec<_>>>()?;
++        let mut regions = polygons
++            .iter()
++            .enumerate()
++            .filter(|(_, (_, area))| *area > 0.0)
++            .map(|(index, _)| (index, vec![index]))
++            .collect::<Vec<_>>();
++        if regions.is_empty() {
++            return None;
++        }
++        polygons
++            .iter()
++            .enumerate()
++            .filter(|(_, (_, area))| *area < 0.0)
++            .try_for_each(|(hole, (points, area))| {
++                let mut parent: Option<usize> = None;
++                regions
++                    .iter()
++                    .enumerate()
++                    .try_for_each(|(index, (outer, _))| {
++                        let (boundary, outer_area) = &polygons[*outer];
++                        // Independent intersection loops appear in both directions.
++                        // Their positive twin is a neighboring cell, not a parent.
++                        work =
++                            work.checked_sub(loops[hole].len().checked_mul(loops[*outer].len())?)?;
++                        let twin = loops[hole].len() == loops[*outer].len()
++                            && loops[hole].iter().all(|edge| {
++                                loops[*outer].iter().any(|other| {
++                                    edge.id() == other.id()
++                                        && edge.orientation() != other.orientation()
++                                })
++                            });
++                        if twin || *outer_area <= -area {
++                            return Some(());
++                        }
++                        work = work.checked_sub(points.len().checked_mul(boundary.len())?)?;
++                        let contained = points
++                            .iter()
++                            .all(|point| loop_domain(boundary, *point) == 1);
++                        // Vertices inside a concave contour are insufficient:
++                        // a segment may leave the domain and enter it again.
++                        let crossing = contained
++                            && points
++                                .iter()
++                                .zip(points.iter().cycle().skip(1))
++                                .any(|(a, b)| {
++                                    boundary.iter().zip(boundary.iter().cycle().skip(1)).any(
++                                        |(c, d)| {
++                                            let side = |a: Point2, b: Point2, c: Point2| {
++                                                let ab = b - a;
++                                                let ac = c - a;
++                                                ab.x * ac.y - ab.y * ac.x
++                                            };
++                                            let opposite = |a: f64, b: f64| {
++                                                (a < 0.0 && b > 0.0) || (a > 0.0 && b < 0.0)
++                                            };
++                                            opposite(side(*a, *b, *c), side(*a, *b, *d))
++                                                && opposite(side(*c, *d, *a), side(*c, *d, *b))
++                                        },
++                                    )
++                                });
++                        if contained && !crossing {
++                            if parent.is_some_and(|old| *outer_area == polygons[regions[old].0].1) {
++                                return None;
++                            }
++                            if parent.is_none_or(|old| *outer_area < polygons[regions[old].0].1) {
++                                parent = Some(index);
++                            }
++                        }
++                        Some(())
++                    })?;
++                regions.get_mut(parent?)?.1.push(hole);
++                Some(())
++            })?;
++        regions.into_iter().try_for_each(|(_, indices)| {
++            let status = indices
++                .iter()
++                .try_fold(ShapesOpStatus::Unknown, |status, &index| {
++                    let next = loops[index].status();
++                    if status == ShapesOpStatus::Unknown || status == next {
++                        Some(next)
++                    } else if next == ShapesOpStatus::Unknown {
++                        Some(status)
++                    } else {
++                        None
++                    }
++                })?;
++            let wires = indices
++                .into_iter()
++                .map(|index| loops[index].iter().cloned().collect())
++                .collect();
++            let mut rebuilt = Face::try_new(wires, surface.clone()).ok()?;
++            if !face.orientation() {
++                rebuilt.invert();
++            }
++            result.push(rebuilt, status);
++            Some(())
++        })
++    })?;
++    Some(result)
++}
++
++fn divide_boundary_faces<C, S>(
++    shell: &Shell<Point3, C, S>,
++    store: &LoopsStore<Point3, C>,
++    tol: f64,
++    division: FaceDivision,
++) -> Option<FacesClassification<Point3, C, S>>
++where
++    C: BoundedCurve<Point = Point3> + ParameterDivision1D<Point = Point3> + Clone,
++    S: ShapeOpsSurface,
++{
++    match division {
++        FaceDivision::Classic => divide_face::divide_faces(shell, store, tol),
++        FaceDivision::Nested => nested_division(shell, store, tol),
++    }
++}
++
++/// Split the combined boundaries into intersection and union boundaries.
++///
++/// All shells of an operand participate in the same winding query. They are
++/// not successive Boolean operands: inward shells remove cavities, while
++/// disconnected outward shells add material.
++fn process_one_pair_of_shells<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell0: Shell<Point3, C, S>,
++    shell1: Shell<Point3, C, S>,
++    tol: f64,
++    second_at_infinity: isize,
++) -> Option<impl Fn(FaceDivision) -> Option<([AltCurveShell<C, S>; 2], bool)>> {
+     let poly_shell0 = shell0.triangulation(tol);
+     let poly_shell1 = shell1.triangulation(tol);
+     let altshell0: AltCurveShell<C, S> =
+         shell0.mapped(|x| *x, |c| Alternative::FirstType(c.clone()), Clone::clone);
+     let altshell1: AltCurveShell<C, S> =
+         shell1.mapped(|x| *x, |c| Alternative::FirstType(c.clone()), Clone::clone);
+-    let loops_store::LoopsStoreQuadruple {
+-        geom_loops_store0: loops_store0,
+-        geom_loops_store1: loops_store1,
+-        ..
+-    } = loops_store::create_loops_stores(&altshell0, &poly_shell0, &altshell1, &poly_shell1)?;
+-    let mut cls0 = divide_face::divide_faces(&altshell0, &loops_store0, tol)?;
+-    cls0.integrate_by_component();
+-    let mut cls1 = divide_face::divide_faces(&altshell1, &loops_store1, tol)?;
+-    cls1.integrate_by_component();
+-    let [mut and0, mut or0, unknown0] = cls0.and_or_unknown();
+-    unknown0.into_iter().try_for_each(|face| {
+-        let pt = face.boundaries()[0].vertex_iter().next().unwrap().point();
+-        let dir = hash::take_one_unit(pt);
+-        let count = poly_shell1.iter().try_fold(0, |count, face| {
+-            let poly = face.surface()?;
+-            Some(count + poly.signed_crossing_faces(pt, dir))
++    let contacts = conforming_contacts(&shell0, &shell1, &poly_shell0, &poly_shell1, tol);
++    let contact_arrangement = contacts.is_some();
++    let (loops_store0, loops_store1) = if contact_arrangement {
++        (
++            altshell0.face_iter().collect(),
++            altshell1.face_iter().collect(),
++        )
++    } else {
++        let stores =
++            loops_store::create_loops_stores(&altshell0, &poly_shell0, &altshell1, &poly_shell1)?;
++        (stores.geom_loops_store0, stores.geom_loops_store1)
++    };
++    Some(move |division| {
++        let mut cls0 = divide_boundary_faces(&altshell0, &loops_store0, tol, division)?;
++        if cls0.and_or_unknown()[2]
++            .connected_components()
++            .iter()
++            .all(|component| !component.extract_boundaries().is_empty())
++        {
++            cls0.integrate_by_component();
++        }
++        let mut cls1 = divide_boundary_faces(&altshell1, &loops_store1, tol, division)?;
++        if cls1.and_or_unknown()[2]
++            .connected_components()
++            .iter()
++            .all(|component| !component.extract_boundaries().is_empty())
++        {
++            cls1.integrate_by_component();
++        }
++        let [mut and0, mut or0, unknown0] = cls0.and_or_unknown();
++        unknown0.into_iter().try_for_each(|face| {
++            let (point, normal) = interior_point(&face, tol)?;
++            if let Some(same_orientation) =
++                coincident_boundary(&face, point, normal, &shell1, &poly_shell1)
++            {
++                // A shared co-oriented patch belongs to both results, once. Opposed
++                // patches enclose no intersection and are internal to the union.
++                if same_orientation {
++                    and0.push(face.clone());
++                    or0.push(face);
++                }
++            } else if inside(point, &poly_shell1, second_at_infinity)? {
++                and0.push(face);
++            } else {
++                or0.push(face);
++            }
++            Some(())
+         })?;
+-        if count >= 1 {
+-            and0.push(face);
++        let [mut and1, mut or1, unknown1] = cls1.and_or_unknown();
++        unknown1.into_iter().try_for_each(|face| {
++            let (point, normal) = interior_point(&face, tol)?;
++            // The first operand owns coincident patches.
++            if coincident_boundary(&face, point, normal, &shell0, &poly_shell0).is_none() {
++                if inside(point, &poly_shell0, 0)? {
++                    and1.push(face);
++                } else {
++                    or1.push(face);
++                }
++            }
++            Some(())
++        })?;
++        and0.append(&mut and1);
++        or0.append(&mut or1);
++        Some(([and0, or0], contact_arrangement))
++    })
++}
++
++/// A certified convex planar face, with its material-side orientation.
++struct PlanarCell<S> {
++    surface: S,
++    orientation: bool,
++    normal: Vector3,
++    points: Vec<Point3>,
++}
++
++/// Bound arithmetic roundoff in a plane predicate, independently of meshing tolerance.
++fn plane_distance(point: Point3, origin: Point3, normal: Vector3) -> (f64, f64) {
++    let scale = (point.x.abs() + origin.x.abs()) * normal.x.abs()
++        + (point.y.abs() + origin.y.abs()) * normal.y.abs()
++        + (point.z.abs() + origin.z.abs()) * normal.z.abs();
++    ((point - origin).dot(normal), 32.0 * f64::EPSILON * scale)
++}
++
++/// Test a convex planar domain: negative outside, zero on its boundary, positive inside.
++fn planar_domain(points: &[Point3], normal: Vector3, point: Point3) -> i8 {
++    points
++        .iter()
++        .zip(points.iter().cycle().skip(1))
++        .fold(1, |state, (a, b)| {
++            let (distance, error) = plane_distance(point, *a, normal.cross(*b - *a));
++            state.min(if distance < -error {
++                -1
++            } else if distance > error {
++                1
++            } else {
++                0
++            })
++        })
++}
++
++/// Certify entire supports and straight trims, not just a vertex bounding box.
++///
++/// The control net proves planarity. Each trim belongs to two nonparallel
++/// planes and therefore is a line segment for a valid simple input boundary.
++/// Convex faces suffice; the solid may be nonconvex and have oriented cavities.
++fn planar_cells<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++    work: &mut usize,
++) -> Option<Vec<PlanarCell<S>>> {
++    let mut incidence: HashMap<EdgeId<C>, (Vector3, usize)> = HashMap::default();
++    let cells = solid
++        .face_iter()
++        .map(|face| {
++            if face.absolute_boundaries().len() != 1 {
++                return None;
++            }
++            let edge_count = face.edge_iter().count();
++            *work = work.checked_sub(edge_count.checked_mul(edge_count)?)?;
++            let surface = face.surface();
++            let AnalyticSurfaceKind::Plane(plane) = surface.try_into_analytic_surface_kind()?
++            else {
++                return None;
++            };
++            let spline = surface.try_into_homogeneous_bspline_surface()?;
++            *work = work.checked_sub(spline.control_points().iter().map(Vec::len).sum())?;
++            if !spline.control_points().iter().flatten().all(|control| {
++                if !control.w.is_finite() || control.w == 0.0 {
++                    return false;
++                }
++                let (distance, error) =
++                    plane_distance(control.to_point(), plane.origin(), plane.normal());
++                distance.is_finite() && error.is_finite() && distance.abs() <= error
++            }) {
++                return None;
++            }
++            let points = face
++                .edge_iter()
++                .map(|edge| {
++                    let entry = incidence.entry(edge.id()).or_insert((plane.normal(), 0));
++                    if entry.1 > 1 || (entry.1 == 1 && entry.0.cross(plane.normal()).so_small()) {
++                        return None;
++                    }
++                    entry.1 += 1;
++                    Some(edge.front().point())
++                })
++                .collect::<Option<Vec<_>>>()?;
++            if points.len() < 3 {
++                return None;
++            }
++            let area = points[1..].windows(2).fold(Vector3::zero(), |sum, pair| {
++                sum + (pair[0] - points[0]).cross(pair[1] - points[0])
++            });
++            let normal = plane.normal() * area.dot(plane.normal()).signum();
++            if !area.magnitude2().is_finite()
++                || area.magnitude2() == 0.0
++                || !points.iter().all(|point| {
++                    let (distance, error) = plane_distance(*point, plane.origin(), normal);
++                    distance.abs() <= error && planar_domain(&points, normal, *point) >= 0
++                })
++            {
++                return None;
++            }
++            Some(PlanarCell {
++                surface,
++                orientation: face.orientation(),
++                normal,
++                points,
++            })
++        })
++        .collect::<Option<Vec<_>>>()?;
++    incidence
++        .values()
++        .all(|(_, count)| *count == 2)
++        .then_some(cells)
++}
++
++/// Reuse a well-conditioned plane only when it contains the entire other support.
++///
++/// Normalizing the cross product of short chart axes amplifies coordinate
++/// roundoff. Parallel supports can then acquire different unit normals even
++/// though their complete control nets satisfy the same plane equation. Order
++/// candidate charts by their transverse span, and certify each replacement
++/// against every control point and trim vertex with the existing plane predicate.
++/// Original surfaces, trim points, and material-side orientations are retained.
++fn reconcile_planar_supports<S: ShapeOpsSurface>(
++    cells: &mut [PlanarCell<S>],
++    work: &mut usize,
++) -> Option<()> {
++    let mut order = cells
++        .iter()
++        .enumerate()
++        .map(|(index, cell)| {
++            let AnalyticSurfaceKind::Plane(plane) =
++                cell.surface.try_into_analytic_surface_kind()?
++            else {
++                return None;
++            };
++            let u = plane.axis_u();
++            let v = plane.axis_v();
++            let span = u.cross(v).magnitude() / (u.magnitude() + v.magnitude());
++            let quality = span / plane.origin().to_vec().magnitude().max(1.0);
++            (quality.is_finite() && quality > 0.0).then_some((index, quality))
++        })
++        .collect::<Option<Vec<_>>>()?;
++    order.sort_unstable_by(|a, b| b.1.total_cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
++    let mut planes: Vec<(Point3, Vector3)> = Vec::new();
++    order.into_iter().try_for_each(|(index, _)| {
++        let cell = &mut cells[index];
++        let spline = cell.surface.try_into_homogeneous_bspline_surface()?;
++        let controls = spline.control_points();
++        let count = controls.iter().map(Vec::len).sum::<usize>() + cell.points.len();
++        let normal = planes.iter().try_fold(None, |matched, &(origin, normal)| {
++            if matched.is_some() {
++                Some(matched)
++            } else {
++                *work = work.checked_sub(count)?;
++                let coplanar = controls
++                    .iter()
++                    .flatten()
++                    .map(|control| control.to_point())
++                    .chain(cell.points.iter().copied())
++                    .all(|point| {
++                        let (distance, error) = plane_distance(point, origin, normal);
++                        distance.is_finite() && error.is_finite() && distance.abs() <= error
++                    });
++                Some(coplanar.then_some(normal))
++            }
++        })?;
++        if let Some(normal) = normal {
++            let alignment = cell.normal.dot(normal);
++            if !alignment.is_finite() || alignment == 0.0 {
++                return None;
++            }
++            cell.normal = if alignment > 0.0 { normal } else { -normal };
+         } else {
+-            or0.push(face);
++            planes.push((cell.points[0], cell.normal));
+         }
+         Some(())
+-    })?;
+-    let [mut and1, mut or1, unknown1] = cls1.and_or_unknown();
+-    unknown1.into_iter().try_for_each(|face| {
+-        let pt = face.boundaries()[0].vertex_iter().next().unwrap().point();
+-        let dir = hash::take_one_unit(pt);
+-        let count = poly_shell0.iter().try_fold(0, |count, face| {
+-            let poly = face.surface()?;
+-            Some(count + poly.signed_crossing_faces(pt, dir))
++    })
++}
++
++/// Subdivide an exact convex planar domain without discarding small-area cells.
++fn split_planar_cell(points: Vec<Point3>, origin: Point3, normal: Vector3) -> Vec<Vec<Point3>> {
++    let distances: Vec<_> = points
++        .iter()
++        .map(|point| {
++            let (distance, error) = plane_distance(*point, origin, normal);
++            if distance.abs() <= error {
++                0.0
++            } else {
++                distance
++            }
++        })
++        .collect();
++    if !distances.iter().any(|d| *d < 0.0) || !distances.iter().any(|d| *d > 0.0) {
++        vec![points]
++    } else {
++        [-1.0, 1.0]
++            .into_iter()
++            .map(|side| {
++                (0..points.len())
++                    .flat_map(|i| {
++                        let j = (i + 1) % points.len();
++                        let crossing = distances[i] * distances[j] < 0.0;
++                        let point = (distances[i] * side >= 0.0).then_some(points[i]);
++                        let cut = crossing.then(|| {
++                            points[i]
++                                + (points[j] - points[i])
++                                    * (distances[i] / (distances[i] - distances[j]))
++                        });
++                        point.into_iter().chain(cut)
++                    })
++                    .collect()
++            })
++            .collect()
++    }
++}
++
++/// Sum exact planar ray crossings over all oriented shells.
++fn planar_inside<S>(point: Point3, cells: &[PlanarCell<S>]) -> Option<bool> {
++    [
++        Vector3::new(1.0, 0.371, 0.529),
++        Vector3::new(0.239, 1.0, 0.713),
++        Vector3::new(0.617, 0.419, 1.0),
++    ]
++    .into_iter()
++    .find_map(|direction| {
++        let winding = cells.iter().try_fold(0_isize, |winding, cell| {
++            let denominator = cell.normal.dot(direction);
++            if denominator.abs() <= 32.0 * f64::EPSILON {
++                return None;
++            }
++            let parameter = (cell.points[0] - point).dot(cell.normal) / denominator;
++            if parameter <= 0.0 {
++                Some(winding)
++            } else {
++                match planar_domain(&cell.points, cell.normal, point + direction * parameter) {
++                    -1 => Some(winding),
++                    0 => None,
++                    _ => Some(winding + if denominator > 0.0 { 1 } else { -1 }),
++                }
++            }
+         })?;
+-        if count >= 1 {
+-            and1.push(face);
+-        } else {
+-            or1.push(face);
++        match winding {
++            0 => Some(false),
++            1 => Some(true),
++            _ => None,
+         }
+-        Some(())
++    })
++}
++
++/// Assemble one common arrangement of the exact input support planes.
++///
++/// Certification covers the complete surfaces and every trim before any result
++/// is accepted. This allows planar arrangements to precede marching, including
++/// contacts and thin cells that marching cannot reliably resolve. Input surfaces
++/// and exact straight trims are retained. No tessellation enters classification
++/// or output geometry. A bounded work counter limits refinement.
++fn planar_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++    reconcile_supports: bool,
++) -> Option<Solid<Point3, C, S>> {
++    let mut work = 262_144_usize;
++    let mut projections = 2048_usize;
++    let mut cells = planar_cells(solid0, &mut work)?;
++    let first_len = cells.len();
++    cells.extend(planar_cells(solid1, &mut work)?);
++    if reconcile_supports {
++        reconcile_planar_supports(&mut cells, &mut work)?;
++    }
++    let mut retained = Vec::new();
++    cells.iter().enumerate().try_for_each(|(index, source)| {
++        let pieces = cells
++            .iter()
++            .try_fold(vec![source.points.clone()], |pieces, plane| {
++                pieces
++                    .into_iter()
++                    .try_fold(Vec::new(), |mut divided, points| {
++                        work = work.checked_sub(points.len())?;
++                        divided.extend(split_planar_cell(points, plane.points[0], plane.normal));
++                        Some(divided)
++                    })
++            })?;
++        let first = index < first_len;
++        let other = if first {
++            &cells[first_len..]
++        } else {
++            &cells[..first_len]
++        };
++        pieces.into_iter().try_for_each(|mut points| {
++            if points.len() < 3 {
++                return None;
++            }
++            let point = points[0]
++                + points.iter().map(|p| *p - points[0]).sum::<Vector3>() / points.len() as f64;
++            work = work.checked_sub(other.iter().map(|cell| cell.points.len()).sum())?;
++            let shared = other.iter().find(|cell| {
++                let (distance, error) = plane_distance(point, cell.points[0], cell.normal);
++                distance.abs() <= error && planar_domain(&cell.points, cell.normal, point) >= 0
++            });
++            let keep = if let Some(shared) = shared {
++                // Arrangement cells must lie in the relative interior of a shared patch.
++                if planar_domain(&shared.points, shared.normal, point) != 1
++                    || source.normal.cross(shared.normal).magnitude() > 32.0 * f64::EPSILON
++                {
++                    return None;
++                }
++                let same = source.normal.dot(shared.normal) > 0.0;
++                first
++                    && match operation {
++                        Operation::Union | Operation::Intersection => same,
++                        Operation::Difference => !same,
++                    }
++            } else {
++                let inside = planar_inside(point, other)?;
++                match operation {
++                    Operation::Union => !inside,
++                    Operation::Intersection => inside,
++                    Operation::Difference => inside != first,
++                }
++            };
++            if keep {
++                let invert = !first && matches!(operation, Operation::Difference);
++                if invert {
++                    points.reverse();
++                }
++                retained.push((index, source.orientation != invert, points));
++            }
++            Some(())
++        })
+     })?;
+-    and0.append(&mut and1);
+-    or0.append(&mut or1);
+-    Some([altshell_to_shell(&and0)?, altshell_to_shell(&or0)?])
++
++    // Share geometric vertices before constructing any edges. The threshold
++    // accounts for arithmetic roundoff only, never the Boolean tolerance.
++    let scale = cells
++        .iter()
++        .flat_map(|cell| &cell.points)
++        .fold(1.0_f64, |scale, p| {
++            scale.max(p.x.abs()).max(p.y.abs()).max(p.z.abs())
++        });
++    let roundoff = 128.0 * f64::EPSILON * scale;
++    let mut vertices: Vec<Vertex<Point3>> = Vec::new();
++    let indexed = retained
++        .into_iter()
++        .map(|(source, orientation, points)| {
++            let indices = points
++                .into_iter()
++                .map(|point| {
++                    work = work.checked_sub(vertices.len())?;
++                    let index = vertices
++                        .iter()
++                        .position(|vertex| vertex.point().distance2(point) <= roundoff * roundoff);
++                    Some(index.unwrap_or_else(|| {
++                        vertices.push(Vertex::new(point));
++                        vertices.len() - 1
++                    }))
++                })
++                .collect::<Option<Vec<_>>>()?;
++            Some((source, orientation, indices))
++        })
++        .collect::<Option<Vec<_>>>()?;
++    let mut edges: HashMap<(usize, usize), (Edge<Point3, C>, usize, usize)> = HashMap::default();
++    let shell = indexed
++        .into_iter()
++        .map(|(source, orientation, indices)| {
++            let cell = &cells[source];
++            let wire = indices
++                .iter()
++                .zip(indices.iter().cycle().skip(1))
++                .map(|(&a, &b)| {
++                    if a == b {
++                        return None;
++                    }
++                    let key = (a.min(b), a.max(b));
++                    if let Some((edge, start, count)) = edges.get_mut(&key) {
++                        // More than two incident faces, or equal directions, is
++                        // independently detected nonmanifold output geometry.
++                        if *count != 1 || *start == a {
++                            return None;
++                        }
++                        *count = 2;
++                        Some(edge.inverse())
++                    } else {
++                        let front = vertices[a].point();
++                        let back = vertices[b].point();
++                        work = work.checked_sub(cells.len())?;
++                        let support = cells.iter().find_map(|other| {
++                            if cell.normal.cross(other.normal).so_small() {
++                                return None;
++                            }
++                            [front, front.midpoint(back), back]
++                                .into_iter()
++                                .try_for_each(|p| {
++                                    let (distance, error) =
++                                        plane_distance(p, other.points[0], other.normal);
++                                    if distance.abs() > error {
++                                        return None;
++                                    }
++                                    projections = projections.checked_sub(1)?;
++                                    other.surface.search_parameter(p, None, 100).map(|_| ())
++                                })?;
++                            Some(other)
++                        })?;
++                        let leader = BsplineCurve::from(Line(front, back));
++                        let boundary0: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
++                        let boundary1: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
++                        let curve = SurfaceCurve::with_boundaries(
++                            cell.surface.clone(),
++                            support.surface.clone(),
++                            leader,
++                            boundary0,
++                            boundary1,
++                        )
++                        .into();
++                        let edge = Edge::try_new(&vertices[a], &vertices[b], curve).ok()?;
++                        if !edge.is_geometric_consistent() {
++                            return None;
++                        }
++                        edges.insert(key, (edge.clone(), a, 1));
++                        Some(edge)
++                    }
++                })
++                .collect::<Option<Wire<_, _>>>()?;
++            let wire = if orientation { wire } else { wire.inverse() };
++            let mut face = Face::try_new(vec![wire], cell.surface.clone()).ok()?;
++            if !orientation {
++                face.invert();
++            }
++            Some(face)
++        })
++        .collect::<Option<Shell<_, _, _>>>()?;
++    if edges.values().any(|(_, _, count)| *count != 2) {
++        None
++    } else {
++        Solid::try_new(shell.connected_components()).ok()
++    }
+ }
+ 
+ fn finalize<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+@@ -146,30 +1502,1242 @@ fn finalize<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+         .map_err(|source| ShapeOpsError::InvalidOutputShell { operation, source })
+ }
+ 
++/// The bounded operation determines the winding at infinity of the second operand.
++#[derive(Clone, Copy)]
++enum Operation {
++    Intersection,
++    Union,
++    Difference,
++}
++
++/// Enclose a bounded solid using complete supports and certified straight trims.
++///
++/// Positive rational weights put every bounded spline face in the convex hull
++/// of its projected control net. A planar face lies in the convex hull of its
++/// wires. Each of its edges must therefore either border an enclosed spline
++/// face, or lie on two nonparallel planes, making its endpoints sufficient.
++/// This argument includes holes and all oriented shells of the input solid.
++/// Unbounded analytic supports and coplanar seams decline certification.
++fn solid_enclosure<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++) -> Option<(Point3, Point3)> {
++    let mut work = 65_536_usize;
++    let mut incidence: HashMap<EdgeId<C>, (usize, Option<Vector3>)> = HashMap::default();
++    let mut minimum = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
++    let mut maximum = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
++    let mut include = |point: Point3| {
++        if !point.x.is_finite() || !point.y.is_finite() || !point.z.is_finite() {
++            return None;
++        }
++        minimum.x = minimum.x.min(point.x);
++        minimum.y = minimum.y.min(point.y);
++        minimum.z = minimum.z.min(point.z);
++        maximum.x = maximum.x.max(point.x);
++        maximum.y = maximum.y.max(point.y);
++        maximum.z = maximum.z.max(point.z);
++        Some(())
++    };
++    solid.face_iter().try_for_each(|face| {
++        work = work.checked_sub(1)?;
++        let surface = face.surface();
++        let plane = if surface.supports_exact_patch_domains() {
++            // These supports are bounded on their spline knot domains. Do not
++            // use incidental conversion domains of unbounded analytic surfaces.
++            None
++        } else if let Some(AnalyticSurfaceKind::Plane(plane)) =
++            surface.try_into_analytic_surface_kind()
++        {
++            Some(plane)
++        } else {
++            return None;
++        };
++        let spline = surface.try_into_homogeneous_bspline_surface()?;
++        spline
++            .control_points()
++            .iter()
++            .flatten()
++            .try_for_each(|control| {
++                work = work.checked_sub(1)?;
++                if !control.w.is_finite() || control.w <= 0.0 {
++                    return None;
++                }
++                let point = control.to_point();
++                if let Some(plane) = plane.as_ref() {
++                    // An analytic identity can be approximate. Verify the entire
++                    // control net before relying on the support being planar.
++                    let (distance, error) = plane_distance(point, plane.origin(), plane.normal());
++                    (distance.is_finite() && error.is_finite() && distance.abs() <= error)
++                        .then_some(())
++                } else {
++                    include(point)
++                }
++            })?;
++        face.edge_iter().try_for_each(|edge| {
++            work = work.checked_sub(1)?;
++            include(edge.front().point())?;
++            include(edge.back().point())?;
++            let normal = plane.as_ref().map(|plane| plane.normal());
++            let entry = incidence.entry(edge.id()).or_insert((0, normal));
++            if entry.0 > 1
++                || (entry.0 == 1
++                    && entry
++                        .1
++                        .zip(normal)
++                        .is_some_and(|(first, second)| first.cross(second).so_small()))
++            {
++                return None;
++            }
++            entry.0 += 1;
++            Some(())
++        })
++    })?;
++    (!incidence.is_empty() && incidence.values().all(|(count, _)| *count == 2))
++        .then_some((minimum, maximum))
++}
++
++/// Keep independent material sectors at a certified line or point contact.
++///
++/// Two independent separating planes confine the common boundary to their
++/// intersection line. No open face patch can be shared, so union concatenates
++/// the oriented shells, including cavities. The certificate uses complete
++/// planar supports and straight trims from [`planar_cells`], and does not
++/// require either solid to be convex or have a single boundary shell.
++///
++/// Coincident trims belong to different material sectors. Subdividing the
++/// second occurrence retains its exact curve while giving each sector a
++/// distinct edge decomposition instead of a four-face edge at the contact.
++fn lower_dimensional_union<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++) -> Option<Solid<Point3, C, S>> {
++    let mut work = 262_144_usize;
++    let cells0 = planar_cells(solid0, &mut work)?;
++    let cells1 = planar_cells(solid1, &mut work)?;
++    let mut separating_normal: Option<Vector3> = None;
++    let mut line_contact = false;
++    cells0.iter().chain(&cells1).try_for_each(|plane| {
++        if line_contact {
++            return Some(());
++        }
++        // The complete operands must lie on opposite sides of each support.
++        // Boundary roundoff uses the same predicate as the arrangement.
++        let sides = [&cells0, &cells1].map(|cells| {
++            cells.iter().flat_map(|cell| &cell.points).try_fold(
++                (true, true, false, false),
++                |(nonpositive, nonnegative, negative, positive), point| {
++                    work = work.checked_sub(1)?;
++                    let (distance, error) = plane_distance(*point, plane.points[0], plane.normal);
++                    if !distance.is_finite() || !error.is_finite() {
++                        return None;
++                    }
++                    Some((
++                        nonpositive && distance <= error,
++                        nonnegative && distance >= -error,
++                        negative || distance < -error,
++                        positive || distance > error,
++                    ))
++                },
++            )
++        });
++        let [Some(a), Some(b)] = sides else {
++            return None;
++        };
++        if (a.0 && a.2 && b.1 && b.3) || (b.0 && b.2 && a.1 && a.3) {
++            if let Some(normal) = separating_normal {
++                line_contact = !normal.cross(plane.normal).so_small();
++            } else {
++                separating_normal = Some(plane.normal);
++            }
++        }
++        Some(())
++    })?;
++    if !line_contact {
++        return None;
++    }
++
++    let edges0 = solid0.edge_iter().collect::<Vec<_>>();
++    let mut shells1 = solid1.boundaries().clone();
++    let mut visited = HashMap::default();
++    solid1.edge_iter().try_for_each(|edge| {
++        if visited.insert(edge.id(), ()).is_some() {
++            return Some(());
++        }
++        let front = edge.absolute_front().point();
++        let back = edge.absolute_back().point();
++        let coincident = edges0.iter().try_fold(false, |found, other| {
++            work = work.checked_sub(1)?;
++            let a = other.absolute_front().point();
++            let b = other.absolute_back().point();
++            // Certified straight trims with matching endpoints coincide.
++            Some(found || (front.near(&a) && back.near(&b)) || (front.near(&b) && back.near(&a)))
++        })?;
++        if coincident {
++            let curve = edge.curve();
++            let (start, end) = curve.range_tuple();
++            let middle = start + (end - start) / 2.0;
++            if !middle.is_finite() || middle <= start || middle >= end {
++                return None;
++            }
++            let vertex = Vertex::new(curve.evaluate(middle));
++            if vertex.point().near(&front) || vertex.point().near(&back) {
++                return None;
++            }
++            let (first, second) = shells1
++                .iter_mut()
++                .find_map(|shell| shell.cut_edge(edge.id(), &vertex))?;
++            if !first.is_geometric_consistent() || !second.is_geometric_consistent() {
++                return None;
++            }
++        }
++        Some(())
++    })?;
++    Solid::try_new(solid0.boundaries().iter().cloned().chain(shells1).collect()).ok()
++}
++
++/// Exclude an open face patch on a certified separating plane.
++///
++/// On each open knot rectangle, the active tensor-product spline basis is
++/// positive. Since the complete control net is on one side of the plane,
++/// one strictly off-plane active control point excludes a coplanar patch.
++/// Knot lines may still touch the plane; they have no surface interior.
++/// The enclosing hull certificate also covers the wires of analytic planes.
++fn excludes_plane_patch<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++    origin: Point3,
++    normal: Vector3,
++    roundoff: f64,
++    work: &mut usize,
++) -> Option<()> {
++    solid.face_iter().try_for_each(|face| {
++        *work = work.checked_sub(1)?;
++        let surface = face.surface();
++        if !surface.supports_exact_patch_domains() {
++            let plane = certified_plane(&surface)?;
++            let (distance, error) = plane_distance(plane.origin(), origin, normal);
++            (!plane.normal().cross(normal).so_small() || distance.abs() > error.max(roundoff))
++                .then_some(())
++        } else {
++            let spline = surface.try_into_homogeneous_bspline_surface()?;
++            let controls = spline.control_points();
++            let (p, q) = spline.degrees();
++            if !spline.is_clamped() {
++                return None;
++            }
++            let width = controls[0].len();
++            let off_plane = controls
++                .iter()
++                .flatten()
++                .map(|control| {
++                    *work = work.checked_sub(1)?;
++                    if !control.w.is_finite() || control.w <= 0.0 {
++                        return None;
++                    }
++                    let (distance, error) = plane_distance(control.to_point(), origin, normal);
++                    (distance.is_finite() && error.is_finite())
++                        .then_some(distance.abs() > error.max(roundoff))
++                })
++                .collect::<Option<SmallVec<[bool; 64]>>>()?;
++            let uknots = spline.knot_vector_u();
++            let vknots = spline.knot_vector_v();
++            (p..controls.len()).try_for_each(|i| {
++                if uknots[i] == uknots[i + 1] {
++                    return Some(());
++                }
++                (q..controls[0].len()).try_for_each(|j| {
++                    if vknots[j] == vknots[j + 1] {
++                        return Some(());
++                    }
++                    *work = work.checked_sub((p + 1).checked_mul(q + 1)?)?;
++                    ((i - p..=i).any(|u| (j - q..=j).any(|v| off_plane[u * width + v])))
++                        .then_some(())
++                })
++            })
++        }
++    })
++}
++
++/// Assemble a union whose separating plane contains no open boundary patch.
++///
++/// The input enclosures establish disjoint interiors; [`excludes_plane_patch`]
++/// establishes that no face must be cancelled. All oriented shells therefore
++/// remain in the union, including cavity shells. Shared trim occurrences still
++/// belong to independent material sectors and must retain separate topology.
++/// Cutting the second occurrence changes only its exact curve decomposition.
++/// Trim samples select edges for subdivision, never certify solid separation.
++fn curved_contact_union<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    origin: Point3,
++    normal: Vector3,
++    roundoff: f64,
++) -> Option<Solid<Point3, C, S>> {
++    let mut work = 262_144_usize;
++    excludes_plane_patch(solid0, origin, normal, roundoff, &mut work)?;
++    excludes_plane_patch(solid1, origin, normal, roundoff, &mut work)?;
++    let on_plane = |point| {
++        let (distance, error) = plane_distance(point, origin, normal);
++        distance.is_finite() && distance.abs() <= error.max(roundoff)
++    };
++    let edges0 = solid0
++        .edge_iter()
++        .filter(|edge| on_plane(edge.front().point()) && on_plane(edge.back().point()))
++        .collect::<Vec<_>>();
++    if edges0.is_empty() {
++        return None;
++    }
++    let mut shells1 = solid1.boundaries().clone();
++    let mut visited = HashMap::default();
++    let mut subdivisions = 0_usize;
++    solid1.edge_iter().try_for_each(|edge| {
++        work = work.checked_sub(1)?;
++        if visited.insert(edge.id(), ()).is_some()
++            || !on_plane(edge.front().point())
++            || !on_plane(edge.back().point())
++        {
++            return Some(());
++        }
++        let curve = edge.curve();
++        let (start, end) = curve.range_tuple();
++        let middle = start + (end - start) / 2.0;
++        if !middle.is_finite() || middle <= start || middle >= end {
++            return None;
++        }
++        let point = curve.evaluate(middle);
++        if !on_plane(point) {
++            return Some(());
++        }
++        let coincident = edges0.iter().try_fold(false, |found, other| {
++            work = work.checked_sub(1)?;
++            let a = edge.front().point();
++            let b = edge.back().point();
++            let c = other.front().point();
++            let d = other.back().point();
++            Some(
++                found
++                    || (((a.near(&c) && b.near(&d)) || (a.near(&d) && b.near(&c)))
++                        && on_edge(point, other)),
++            )
++        })?;
++        if coincident {
++            if point.near(&edge.front().point()) || point.near(&edge.back().point()) {
++                return None;
++            }
++            let vertex = Vertex::new(point);
++            let (first, second) = shells1
++                .iter_mut()
++                .find_map(|shell| shell.cut_edge(edge.id(), &vertex))?;
++            if !first.is_geometric_consistent() || !second.is_geometric_consistent() {
++                return None;
++            }
++            subdivisions += 1;
++        }
++        Some(())
++    })?;
++    if subdivisions == 0 {
++        None
++    } else {
++        Solid::try_new(solid0.boundaries().iter().cloned().chain(shells1).collect()).ok()
++    }
++}
++
++/// Apply set identities only after a support enclosure separates the interiors.
++///
++/// Weak separation permits boundary contact: regularized intersection is empty
++/// and subtraction retains the first solid, including its cavity orientations.
++/// Union needs either a strict gap or a certificate excluding shared face patches.
++fn separated_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
++    let (min0, max0) = solid_enclosure(solid0)?;
++    let (min1, max1) = solid_enclosure(solid1)?;
++    let separations = [
++        (min1.x - max0.x, min1.x.abs() + max0.x.abs()),
++        (min0.x - max1.x, min0.x.abs() + max1.x.abs()),
++        (min1.y - max0.y, min1.y.abs() + max0.y.abs()),
++        (min0.y - max1.y, min0.y.abs() + max1.y.abs()),
++        (min1.z - max0.z, min1.z.abs() + max0.z.abs()),
++        (min0.z - max1.z, min0.z.abs() + max1.z.abs()),
++    ];
++    if !separations.iter().any(|(gap, _)| *gap >= 0.0) && !matches!(operation, Operation::Union) {
++        return None;
++    }
++    match operation {
++        Operation::Difference => Some(solid0.clone()),
++        Operation::Intersection => Solid::try_new(Vec::new()).ok(),
++        Operation::Union => {
++            let strict = separations
++                .iter()
++                .any(|(gap, scale)| *gap > 32.0 * f64::EPSILON * scale);
++            if strict {
++                Solid::try_new(
++                    solid0
++                        .boundaries()
++                        .iter()
++                        .chain(solid1.boundaries())
++                        .cloned()
++                        .collect(),
++                )
++                .ok()
++            } else {
++                // Hull bounds include all surface controls, not just vertices.
++                // Only arithmetic roundoff is admitted at a weak separation.
++                (0..3).find_map(|axis| {
++                    let scale =
++                        min0[axis].abs() + max0[axis].abs() + min1[axis].abs() + max1[axis].abs();
++                    let roundoff = 64.0 * f64::EPSILON * scale;
++                    [(max0[axis], min1[axis]), (max1[axis], min0[axis])]
++                        .into_iter()
++                        .find_map(|(a, b)| {
++                            let gap = b - a;
++                            if !roundoff.is_finite() || gap.abs() > roundoff {
++                                return None;
++                            }
++                            let mut origin = Point3::origin();
++                            origin[axis] = a + gap / 2.0;
++                            let mut normal = Vector3::zero();
++                            normal[axis] = 1.0;
++                            curved_contact_union(solid0, solid1, origin, normal, roundoff)
++                        })
++                })
++            }
++        }
++    }
++}
++
++/// One exact section arc of a translational side patch.
++struct SweepArc<C, S> {
++    curve: NurbsCurve<Vector4>,
++    surface: S,
++    orientation: bool,
++    lower: Edge<Point3, C>,
++    upper: Edge<Point3, C>,
++    generators: SmallVec<[Edge<Point3, C>; 2]>,
++}
++
++/// Certify a planar support against its complete homogeneous control net.
++fn certified_plane<S: ShapeOpsSurface>(surface: &S) -> Option<Plane> {
++    let AnalyticSurfaceKind::Plane(plane) = surface.try_into_analytic_surface_kind()? else {
++        return None;
++    };
++    let spline = surface.try_into_homogeneous_bspline_surface()?;
++    spline
++        .control_points()
++        .iter()
++        .flatten()
++        .all(|control| {
++            let (distance, error) =
++                plane_distance(control.to_point(), plane.origin(), plane.normal());
++            control.w > 0.0 && distance.is_finite() && error.is_finite() && distance.abs() <= error
++        })
++        .then_some(plane)
++}
++
++/// Trim a rational section without cutting at an existing domain endpoint.
++fn section_trim(curve: &NurbsCurve<Vector4>, start: f64, end: f64) -> Option<NurbsCurve<Vector4>> {
++    let (a, b) = curve.range_tuple();
++    if start < a || end > b || start >= end || start.near(&end) {
++        return None;
++    }
++    let mut result = curve.clone();
++    if !end.near(&b) {
++        let _ = result.cut(end);
++    }
++    if !start.near(&a) {
++        result = result.cut(start);
++    }
++    Some(result)
++}
++
++/// Recover a bounded trim parameter, using the endpoints as exact candidates.
++///
++/// A Newton step can move an endpoint query just outside its closed domain even
++/// when the residual is only roundoff. Evaluate the known endpoint parameters
++/// first, with the same geometric membership predicate as the inverse query.
++/// Interior queries still require a parameter within the original trim domain.
++fn sweep_parameter<C>(curve: &C, point: Point3) -> Option<f64>
++where
++    C: BoundedCurve<Point = Point3> + SearchParameter<CurveParameter, Point = Point3>,
++{
++    let (start, end) = curve.range_tuple();
++    let parameter = if curve.front().near(&point) {
++        Some(start)
++    } else if curve.back().near(&point) {
++        Some(end)
++    } else {
++        curve.search_parameter(point, None, 100)
++    }?;
++    (parameter.is_finite()
++        && parameter >= start
++        && parameter <= end
++        && curve.evaluate(parameter).near(&point))
++    .then_some(parameter)
++}
++
++/// Recover a section from a control net with weights constant along translation.
++///
++/// Both cap incidences and all four side trims are checked. The support identity
++/// proves the sweep between the caps, rather than inferring it from vertices.
++fn sweep_arcs<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++    bottom: &Plane,
++    translation: Vector3,
++) -> Option<Vec<SweepArc<C, S>>> {
++    let normal = translation.normalize();
++    let top_origin = bottom.origin() + translation;
++    let on_plane = |point, origin| {
++        let (distance, error) = plane_distance(point, origin, normal);
++        distance.is_finite() && distance.abs() <= error
++    };
++    let mut cap_edges = HashMap::default();
++    let mut sides = Vec::new();
++    solid.face_iter().try_for_each(|face| {
++        let cap = certified_plane(&face.surface()).and_then(|plane| {
++            if !plane.normal().cross(normal).so_small() {
++                None
++            } else if on_plane(plane.origin(), bottom.origin()) {
++                Some(false)
++            } else if on_plane(plane.origin(), top_origin) {
++                Some(true)
++            } else {
++                None
++            }
++        });
++        if let Some(top) = cap {
++            face.edge_iter()
++                .try_for_each(|edge| cap_edges.insert(edge.id(), top).is_none().then_some(()))
++        } else {
++            sides.push(face);
++            Some(())
++        }
++    })?;
++    if sides.is_empty() || sides.len() > 128 {
++        return None;
++    }
++    let arcs = sides
++        .into_iter()
++        .map(|face| {
++            let edges = face.edge_iter().collect::<Vec<_>>();
++            if edges.len() != 4 || face.absolute_boundaries().len() != 1 {
++                return None;
++            }
++            let lower = edges
++                .iter()
++                .filter(|edge| cap_edges.get(&edge.id()) == Some(&false))
++                .collect::<Vec<_>>();
++            let upper = edges
++                .iter()
++                .filter(|edge| cap_edges.get(&edge.id()) == Some(&true))
++                .collect::<Vec<_>>();
++            if lower.len() != 1 || upper.len() != 1 {
++                return None;
++            }
++            let lower = lower[0];
++            let upper = upper[0];
++            let surface = face.surface();
++            let mut curve = if certified_plane(&surface).is_some() {
++                // Two distinct planes intersect in exactly one straight line.
++                NurbsCurve::new(BsplineCurve::from(Line(
++                    lower.front().point().to_homogeneous(),
++                    lower.back().point().to_homogeneous(),
++                )))
++            } else {
++                if !surface.supports_exact_patch_domains() {
++                    return None;
++                }
++                let spline = surface.try_into_homogeneous_bspline_surface()?;
++                let controls = spline.control_points();
++                if controls.iter().map(Vec::len).sum::<usize>() > 4096
++                    || !spline.knot_vector_u().is_clamped(spline.udegree())
++                    || !spline.knot_vector_v().is_clamped(spline.vdegree())
++                {
++                    return None;
++                }
++                let (a, b) = if spline.udegree() == 1 && controls.len() == 2 {
++                    (spline.curve_v(0), spline.curve_v(1))
++                } else if spline.vdegree() == 1 && controls.iter().all(|row| row.len() == 2) {
++                    (spline.curve_u(0), spline.curve_u(1))
++                } else {
++                    return None;
++                };
++                let is_lower = on_plane(a.control_point(0).to_point(), bottom.origin());
++                let (a, b) = if is_lower { (a, b) } else { (b, a) };
++                if !a
++                    .control_points()
++                    .iter()
++                    .zip(b.control_points())
++                    .all(|(a, b)| {
++                        let scale = a.magnitude() + b.magnitude();
++                        a.w > 0.0
++                            && b.w > 0.0
++                            && (a.w - b.w).abs() <= 32.0 * f64::EPSILON * scale
++                            && on_plane(a.to_point(), bottom.origin())
++                            && (b.to_point() - a.to_point() - translation).magnitude()
++                                <= 64.0 * f64::EPSILON * (scale + translation.magnitude())
++                    })
++                {
++                    return None;
++                }
++                let full = NurbsCurve::new(a);
++                let a = sweep_parameter(&full, lower.front().point())?;
++                let b = sweep_parameter(&full, lower.back().point())?;
++                let mut curve = section_trim(&full, a.min(b), a.max(b))?;
++                if a > b {
++                    curve.invert();
++                }
++                curve
++            };
++            // The input's oriented side boundary fixes the section winding.
++            if !curve.front().near(&lower.front().point()) {
++                curve.invert();
++            }
++            if !curve.front().near(&lower.front().point())
++                || !curve.back().near(&lower.back().point())
++                || !(curve.front() + translation).near(&upper.back().point())
++                || !(curve.back() + translation).near(&upper.front().point())
++            {
++                return None;
++            }
++            let (start, end) = curve.range_tuple();
++            let lower_curve = lower.curve();
++            let upper_curve = upper.curve();
++            [start, (start + end) / 2.0, end]
++                .into_iter()
++                .try_for_each(|t| {
++                    let point = curve.evaluate(t);
++                    sweep_parameter(&lower_curve, point)?;
++                    sweep_parameter(&upper_curve, point + translation)?;
++                    Some(())
++                })?;
++            edges
++                .iter()
++                .filter(|edge| !cap_edges.contains_key(&edge.id()))
++                .try_for_each(|edge| {
++                    let a = edge.front().point();
++                    let b = edge.back().point();
++                    let delta = b - a;
++                    (delta.near(&translation) || delta.near(&-translation)).then_some(())?;
++                    let curve = edge.curve();
++                    let (a, b) = curve.range_tuple();
++                    [0.25, 0.5, 0.75]
++                        .into_iter()
++                        .all(|s| {
++                            let point = curve.evaluate(a + (b - a) * s);
++                            (point - edge.front().point()).cross(translation).so_small()
++                        })
++                        .then_some(())
++                })?;
++            Some(SweepArc {
++                curve,
++                surface,
++                orientation: face.orientation(),
++                lower: (*lower).clone(),
++                upper: (*upper).clone(),
++                generators: edges
++                    .iter()
++                    .filter(|edge| !cap_edges.contains_key(&edge.id()))
++                    .cloned()
++                    .collect(),
++            })
++        })
++        .collect::<Option<Vec<_>>>()?;
++    (arcs.len() * 2 == cap_edges.len()).then_some(arcs)
++}
++
++/// Isolate section intersections with positive-weight rational convex hulls.
++///
++/// Subdivision uses homogeneous de Casteljau, so no chord can certify separation.
++/// Ambiguous, tangent, or unresolved intersections decline the entire fallback.
++fn section_crossings(
++    a: &NurbsCurve<Vector4>,
++    b: &NurbsCurve<Vector4>,
++    normal: Vector3,
++    work: &mut usize,
++) -> Option<Vec<(f64, f64)>> {
++    let spans = |curve: &NurbsCurve<Vector4>| {
++        curve
++            .non_rationalized()
++            .bezier_decomposition()
++            .into_iter()
++            .map(|span| (span.range_tuple(), span.control_points().clone()))
++            .collect::<Vec<_>>()
++    };
++    let spans_a = spans(a);
++    let spans_b = spans(b);
++    *work = work.checked_sub(spans_a.len().checked_mul(spans_b.len())?)?;
++    let mut stack = spans_a
++        .iter()
++        .flat_map(|a| spans_b.iter().map(move |b| (a.clone(), b.clone(), 0)))
++        .collect::<Vec<_>>();
++    let bounds = |controls: &[Vector4]| {
++        controls.iter().try_fold(
++            (
++                Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY),
++                Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY),
++            ),
++            |(min, max), control| {
++                let p = control.to_point();
++                (control.w > 0.0 && p.x.is_finite() && p.y.is_finite() && p.z.is_finite())
++                    .then_some((
++                        Point3::new(min.x.min(p.x), min.y.min(p.y), min.z.min(p.z)),
++                        Point3::new(max.x.max(p.x), max.y.max(p.y), max.z.max(p.z)),
++                    ))
++            },
++        )
++    };
++    let split = |controls: &[Vector4]| {
++        let mut row = controls.to_vec();
++        let mut left = vec![row[0]];
++        let mut right = vec![row[row.len() - 1]];
++        while row.len() > 1 {
++            row = row
++                .windows(2)
++                .map(|pair| (pair[0] + pair[1]) / 2.0)
++                .collect();
++            left.push(row[0]);
++            right.push(row[row.len() - 1]);
++        }
++        right.reverse();
++        (left, right)
++    };
++    let mut roots: Vec<(f64, f64)> = Vec::new();
++    while let Some(((ra, ca), (rb, cb), depth)) = stack.pop() {
++        *work = work.checked_sub(ca.len() + cb.len())?;
++        let (mina, maxa) = bounds(&ca)?;
++        let (minb, maxb) = bounds(&cb)?;
++        let separated = (0..3).any(|axis| {
++            let error = 64.0
++                * f64::EPSILON
++                * (mina[axis].abs() + maxa[axis].abs() + minb[axis].abs() + maxb[axis].abs());
++            maxa[axis] < minb[axis] - error || maxb[axis] < mina[axis] - error
++        });
++        if separated {
++            continue;
++        }
++        if depth >= 48 || (mina.near(&maxa) && minb.near(&maxb)) {
++            let (mut u, mut v) = ((ra.0 + ra.1) / 2.0, (rb.0 + rb.1) / 2.0);
++            (0..12).try_for_each(|_| {
++                let delta = a.evaluate(u) - b.evaluate(v);
++                let da = a.derivative(u);
++                let db = b.derivative(v);
++                let determinant = da.cross(db).dot(normal);
++                if !determinant.is_finite() || determinant.so_small() {
++                    return None;
++                }
++                u -= delta.cross(db).dot(normal) / determinant;
++                v -= delta.cross(da).dot(normal) / determinant;
++                (u.is_finite() && v.is_finite()).then_some(())
++            })?;
++            let within = |value: f64, range: (f64, f64)| {
++                (value >= range.0 || value.near(&range.0))
++                    && (value <= range.1 || value.near(&range.1))
++            };
++            if !within(u, ra) || !within(v, rb) || !a.evaluate(u).near(&b.evaluate(v)) {
++                return None;
++            }
++            let ar = a.range_tuple();
++            let br = b.range_tuple();
++            u = u.clamp(ar.0, ar.1);
++            v = v.clamp(br.0, br.1);
++            if !roots.iter().any(|(s, t)| u.near(s) && v.near(t)) {
++                roots.push((u, v));
++            }
++        } else if (maxa - mina).magnitude2() >= (maxb - minb).magnitude2() {
++            let (left, right) = split(&ca);
++            let middle = (ra.0 + ra.1) / 2.0;
++            stack.push((((middle, ra.1), right), (rb, cb.clone()), depth + 1));
++            stack.push((((ra.0, middle), left), (rb, cb), depth + 1));
++        } else {
++            let (left, right) = split(&cb);
++            let middle = (rb.0 + rb.1) / 2.0;
++            stack.push(((ra, ca.clone()), ((middle, rb.1), right), depth + 1));
++            stack.push(((ra, ca), ((rb.0, middle), left), depth + 1));
++        }
++    }
++    Some(roots)
++}
++
++/// Classify a section cell by signed crossings of exact rational curves.
++///
++/// Convex hulls bound the ray length. A ray through a trim endpoint or tangent
++/// is discarded, avoiding double counts and preserving inward cavity windings.
++fn section_inside<C, S>(
++    point: Point3,
++    arcs: &[SweepArc<C, S>],
++    normal: Vector3,
++    work: &mut usize,
++) -> Option<bool> {
++    let radius = arcs.iter().try_fold(0.0_f64, |radius, arc| {
++        arc.curve
++            .control_points()
++            .iter()
++            .try_fold(radius, |radius, control| {
++                *work = work.checked_sub(1)?;
++                let distance = control.to_point().distance(point);
++                (control.w > 0.0 && distance.is_finite()).then_some(radius.max(distance))
++            })
++    })?;
++    if radius == 0.0 {
++        return None;
++    }
++    [
++        Vector3::zero(),
++        Vector3::new(1.0, 2.0, 3.0),
++        Vector3::new(3.0, 1.0, 2.0),
++    ]
++    .into_iter()
++    .find_map(|offset| {
++        let direction = hash::take_one_unit(point + offset);
++        let direction = direction - normal * direction.dot(normal);
++        if direction.so_small() {
++            return None;
++        }
++        let direction = direction.normalize();
++        let ray = NurbsCurve::new(BsplineCurve::from(Line(
++            point.to_homogeneous(),
++            (point + direction * (2.0 * radius)).to_homogeneous(),
++        )));
++        arcs.iter()
++            .try_fold(0_isize, |winding, arc| {
++                let (start, end) = arc.curve.range_tuple();
++                section_crossings(&arc.curve, &ray, normal, work)?
++                    .into_iter()
++                    .try_fold(winding, |winding, (u, v)| {
++                        if u.near(&start) || u.near(&end) || v.so_small() {
++                            return None;
++                        }
++                        let crossing = direction.cross(arc.curve.derivative(u)).dot(normal);
++                        if !crossing.is_finite() || crossing.so_small() {
++                            None
++                        } else {
++                            Some(winding + if crossing > 0.0 { 1 } else { -1 })
++                        }
++                    })
++            })
++            .map(|winding| winding > 0)
++    })
++}
++
++/// Cut a retained input trim, preserving its original curve representation.
++fn sweep_trim_edge<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    edge: &Edge<Point3, C>,
++    front: &Vertex<Point3>,
++    back: &Vertex<Point3>,
++) -> Option<Edge<Point3, C>> {
++    let mut curve = edge.curve();
++    let (start, end) = curve.range_tuple();
++    let a = sweep_parameter(&curve, front.point())?;
++    let b = sweep_parameter(&curve, back.point())?;
++    if a.near(&b) {
++        return None;
++    }
++    let (lower, upper) = (a.min(b), a.max(b));
++    if !upper.near(&end) {
++        let _ = curve.cut(upper);
++    }
++    if !lower.near(&start) {
++        curve = curve.cut(lower);
++    }
++    if a > b {
++        curve.invert();
++    }
++    let edge = Edge::try_new(front, back, curve).ok()?;
++    edge.is_geometric_consistent().then_some(edge)
++}
++
++/// Retain an exact local chart for a certified affine spline generator.
++///
++/// A degree-one parameter direction with constant rational weights is affine.
++/// The other parameter is fixed, so its endpoints determine the complete line.
++fn sweep_line_boundary<S: ShapeOpsSurface>(
++    surface: &S,
++    front: Point3,
++    back: Point3,
++) -> Option<ParameterCurve<BoundaryCurve2D, S>> {
++    let a = surface.search_parameter(front, None, 100)?;
++    let b = surface.search_parameter(back, Some(a), 100)?;
++    let spline = surface.try_into_homogeneous_bspline_surface()?;
++    let controls = spline.control_points();
++    let affine = if a.0 == b.0 && spline.vdegree() == 1 {
++        controls
++            .iter()
++            .all(|row| row.len() == 2 && row[0].w > 0.0 && row[0].w == row[1].w)
++    } else if a.1 == b.1 && spline.udegree() == 1 && controls.len() == 2 {
++        controls[0]
++            .iter()
++            .zip(&controls[1])
++            .all(|(a, b)| a.w > 0.0 && a.w == b.w)
++    } else {
++        false
++    };
++    affine.then(|| {
++        ParameterCurve::new(
++            BoundaryCurve2D::Line(Line(a.into(), b.into())),
++            surface.clone(),
++        )
++    })
++}
++
++/// Assemble failed common sweeps by cutting input trims and retaining seam identity.
++fn sweep_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++    tol: f64,
++    division: FaceDivision,
++) -> Option<Solid<Point3, C, S>> {
++    if solid0.face_iter().count() > 128 || solid1.face_iter().count() > 128 {
++        return None;
++    }
++    let caps = solid0
++        .face_iter()
++        .filter_map(|face| {
++            let surface = face.surface();
++            // A merged cap may extend past either operand's original trims.
++            // Only an unbounded planar support can carry it without extending
++            // the parameter domain of a bounded spline patch.
++            if surface.supports_exact_patch_domains() {
++                None
++            } else {
++                certified_plane(&surface).map(|plane| (face, plane))
++            }
++        })
++        .collect::<Vec<_>>();
++    let (bottom_face, bottom, top_face, translation, arcs0, arcs1) =
++        caps.iter().enumerate().find_map(|(i, (a, pa))| {
++            caps.iter().skip(i + 1).find_map(|(b, pb)| {
++                if !pa.normal().cross(pb.normal()).so_small() {
++                    return None;
++                }
++                let normal = pa.normal().normalize();
++                let translation = normal * (pb.origin() - pa.origin()).dot(normal);
++                if translation.so_small() {
++                    return None;
++                }
++                let arcs0 = sweep_arcs(solid0, pa, translation)?;
++                let arcs1 = sweep_arcs(solid1, pa, translation)?;
++                Some((*a, *pa, *b, translation, arcs0, arcs1))
++            })
++        })?;
++    let count0 = arcs0.len();
++    let arcs = arcs0.into_iter().chain(arcs1).collect::<Vec<_>>();
++    let mut parameters = arcs
++        .iter()
++        .map(|arc| {
++            let (a, b) = arc.curve.range_tuple();
++            vec![a, b]
++        })
++        .collect::<Vec<_>>();
++    let mut work = 262_144;
++    (0..count0).try_for_each(|i| {
++        (count0..arcs.len()).try_for_each(|j| {
++            section_crossings(&arcs[i].curve, &arcs[j].curve, bottom.normal(), &mut work)?
++                .into_iter()
++                .for_each(|(u, v)| {
++                    parameters[i].push(u);
++                    parameters[j].push(v);
++                });
++            Some(())
++        })
++    })?;
++    let mut patches = Vec::new();
++    arcs.iter()
++        .zip(&mut parameters)
++        .enumerate()
++        .try_for_each(|(index, (arc, parameters))| {
++            parameters.sort_by(f64::total_cmp);
++            parameters.dedup_by(|a, b| (*a).near(&*b));
++            parameters.windows(2).try_for_each(|span| {
++                let point = arc.curve.evaluate((span[0] + span[1]) / 2.0);
++                let in_other = section_inside(
++                    point,
++                    if index < count0 {
++                        &arcs[count0..]
++                    } else {
++                        &arcs[..count0]
++                    },
++                    translation.normalize(),
++                    &mut work,
++                )?;
++                let keep = match operation {
++                    Operation::Intersection => in_other,
++                    Operation::Union => !in_other,
++                    Operation::Difference => in_other == (index >= count0),
++                };
++                if keep {
++                    let reverse = matches!(operation, Operation::Difference) && index >= count0;
++                    let mut curve = section_trim(&arc.curve, span[0], span[1])?;
++                    if reverse {
++                        curve.invert();
++                    }
++                    patches.push(SweepArc {
++                        curve,
++                        surface: arc.surface.clone(),
++                        orientation: arc.orientation != reverse,
++                        lower: arc.lower.clone(),
++                        upper: arc.upper.clone(),
++                        generators: arc.generators.clone(),
++                    });
++                }
++                Some(())
++            })
++        })?;
++    if patches.is_empty() {
++        return if matches!(operation, Operation::Union) {
++            None
++        } else {
++            Solid::try_new(Vec::new()).ok()
++        };
++    }
++    let mut vertices: Vec<(Vertex<Point3>, Vertex<Point3>)> = Vec::new();
++    let indices = patches
++        .iter()
++        .map(|patch| {
++            [patch.curve.front(), patch.curve.back()].map(|point| {
++                if let Some(index) = vertices.iter().position(|(a, _)| a.point().near(&point)) {
++                    index
++                } else {
++                    let index = vertices.len();
++                    vertices.push((Vertex::new(point), Vertex::new(point + translation)));
++                    index
++                }
++            })
++        })
++        .collect::<Vec<_>>();
++    let verticals = vertices
++        .iter()
++        .enumerate()
++        .map(|(index, (a, b))| {
++            let adjacent = indices
++                .iter()
++                .enumerate()
++                .filter(|(_, pair)| pair.contains(&index))
++                .map(|(i, _)| i)
++                .collect::<Vec<_>>();
++            if adjacent.len() != 2 {
++                return None;
++            }
++            let first = &patches[adjacent[0]];
++            let second = &patches[adjacent[1]];
++            let inherited = first.generators.iter().find(|edge| {
++                second
++                    .generators
++                    .iter()
++                    .any(|other| edge.id() == other.id())
++                    && ((edge.front().point().near(&a.point())
++                        && edge.back().point().near(&b.point()))
++                        || (edge.back().point().near(&a.point())
++                            && edge.front().point().near(&b.point())))
++            });
++            let curve = if let Some(edge) = inherited {
++                // A shared input edge already belongs to both incident supports.
++                // In particular, a smooth seam must not become a parameter curve
++                // owned by only one of its distinct surface charts.
++                let mut curve = edge.curve();
++                if !curve.front().near(&a.point()) {
++                    curve.invert();
++                }
++                curve
++            } else {
++                let surface0 = first.surface.clone();
++                let surface1 = second.surface.clone();
++                let uv0 = surface0.search_parameter(a.point(), None, 100)?;
++                let uv1 = surface1.search_parameter(a.point(), None, 100)?;
++                // A new generator needs a transverse intersection. Tangent
++                // contacts cannot acquire an arbitrary SSI parameterization.
++                if surface0
++                    .normal(uv0.0, uv0.1)
++                    .cross(surface1.normal(uv1.0, uv1.1))
++                    .so_small()
++                {
++                    return None;
++                }
++                let boundary0 = sweep_line_boundary(&surface0, a.point(), b.point());
++                let boundary1 = sweep_line_boundary(&surface1, a.point(), b.point());
++                SurfaceCurve::with_boundaries(
++                    surface0,
++                    surface1,
++                    BsplineCurve::from(Line(a.point(), b.point())),
++                    boundary0,
++                    boundary1,
++                )
++                .into()
++            };
++            Edge::try_new(a, b, curve).ok()
++        })
++        .collect::<Option<Vec<Edge<Point3, C>>>>()?;
++    let mut shell = patches
++        .iter()
++        .zip(indices)
++        .map(|(patch, [a, b])| {
++            // Cutting the original trims preserves their spatial geometry and
++            // any exact parameter boundaries supplied by the input API.
++            let lower = sweep_trim_edge::<C, S>(&patch.lower, &vertices[a].0, &vertices[b].0)?;
++            let upper = sweep_trim_edge::<C, S>(&patch.upper, &vertices[a].1, &vertices[b].1)?;
++            let wire = Wire::from(vec![
++                lower,
++                verticals[b].clone(),
++                upper.inverse(),
++                verticals[a].inverse(),
++            ]);
++            let wire = if patch.orientation {
++                wire
++            } else {
++                wire.inverse()
++            };
++            let mut face = Face::try_new(vec![wire], patch.surface.clone()).ok()?;
++            if !patch.orientation {
++                face.invert();
++            }
++            Some(face)
++        })
++        .collect::<Option<Shell<Point3, C, S>>>()?;
++    let boundaries = shell.extract_boundaries();
++    [bottom_face, top_face].into_iter().try_for_each(|cap| {
++        let plane = certified_plane(&cap.surface())?;
++        let wires = boundaries
++            .iter()
++            .filter(|wire| {
++                wire.front_vertex().is_some_and(|vertex| {
++                    let (distance, error) =
++                        plane_distance(vertex.point(), plane.origin(), plane.normal());
++                    distance.abs() <= error
++                })
++            })
++            .map(|wire| {
++                let wire = if cap.orientation() {
++                    wire.inverse()
++                } else {
++                    wire.clone()
++                };
++                loops_store::BoundaryWire::new(wire, loops_store::ShapesOpStatus::And)
++            })
++            .collect::<loops_store::Loops<_, _>>();
++        if wires.is_empty() {
++            return None;
++        }
++        let mut store: loops_store::LoopsStore<_, _> = iter::once(cap).collect();
++        store[0] = wires;
++        let cap_shell = iter::once(cap.clone()).collect();
++        let [mut divided, _, _] =
++            divide_boundary_faces(&cap_shell, &store, tol, division)?.and_or_unknown();
++        shell.append(&mut divided);
++        Some(())
++    })?;
++    if !shell.edge_iter().all(|edge| edge.is_geometric_consistent()) {
++        return None;
++    }
++    Solid::try_new(shell.connected_components()).ok()
++}
++
++fn boolean_classic<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    tol: f64,
++    operation: Operation,
++) -> ClassicResult<Solid<Point3, C, S>> {
++    if !tol.is_finite() || tol <= 0.0 {
++        return Err(ShapeOpsError::InvalidTolerance);
++    }
++    let shell0: Shell<Point3, C, S> = solid0.face_iter().cloned().collect();
++    let mut shell1: Shell<Point3, C, S> = solid1.face_iter().cloned().collect();
++    let (name, at_infinity) = match operation {
++        Operation::Intersection => ("and", 0),
++        Operation::Union => ("or", 0),
++        Operation::Difference => {
++            shell1.iter_mut().for_each(|face| {
++                face.invert();
++            });
++            ("difference", 1)
++        }
++    };
++    if shell0.is_empty() || shell1.is_empty() {
++        // These are set identities for valid empty operands, before any geometric operation.
++        let shell = match operation {
++            Operation::Intersection => Shell::default(),
++            Operation::Difference => shell0,
++            Operation::Union => {
++                if shell0.is_empty() {
++                    shell1
++                } else {
++                    shell0
++                }
++            }
++        };
++        finalize(name, shell)
++    } else {
++        // Prepare intersections once. A failed divider may retry the same
++        // exact loop stores without repeating tessellation or marching.
++        let prepared = process_one_pair_of_shells(shell0, shell1, tol, at_infinity);
++        let assemble = |division| {
++            let divide = prepared
++                .as_ref()
++                .ok_or(ShapeOpsError::EmptyOutputShell { operation: name })?;
++            let ([and_shell, or_shell], contacts) =
++                divide(division).ok_or(ShapeOpsError::EmptyOutputShell { operation: name })?;
++            let selected = match operation {
++                Operation::Union => or_shell,
++                Operation::Intersection | Operation::Difference => and_shell,
++            };
++            let converted = altshell_to_shell(&selected)
++                .ok_or(ShapeOpsError::AltShellConversionFailed { operation: name })?;
++            let shell = if contacts {
++                sew_contacts(converted, tol)
++                    .ok_or(ShapeOpsError::AltShellConversionFailed { operation: name })?
++            } else {
++                converted
++            };
++            // An empty boundary is a valid empty result; pipeline failure is not.
++            finalize(name, shell)
++        };
++        assemble(FaceDivision::Classic)
++            .or_else(|error| planar_boolean(solid0, solid1, operation, true).ok_or(error))
++            .or_else(|error| {
++                sweep_boolean(solid0, solid1, operation, tol, FaceDivision::Classic).ok_or(error)
++            })
++            .or_else(|error| assemble(FaceDivision::Nested).or(Err(error)))
++            .or_else(|error| {
++                sweep_boolean(solid0, solid1, operation, tol, FaceDivision::Nested).ok_or(error)
++            })
++    }
++}
++
++fn boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    tol: f64,
++    operation: Operation,
++) -> ClassicResult<Solid<Point3, C, S>> {
++    if !tol.is_finite() || tol <= 0.0 {
++        Err(ShapeOpsError::InvalidTolerance)
++    } else if solid0.is_empty() || solid1.is_empty() {
++        boolean_classic(solid0, solid1, tol, operation)
++    } else if let Some(solid) = planar_boolean(solid0, solid1, operation, false) {
++        // A certified arrangement establishes membership on each open cell.
++        // Its empty boundary is therefore a valid empty result, while failure
++        // to certify or assemble an arrangement still requires marching.
++        Ok(solid)
++    } else if let Some(solid) = separated_boolean(solid0, solid1, operation) {
++        Ok(solid)
++    } else {
++        boolean_classic(solid0, solid1, tol, operation).or_else(|error| {
++            if matches!(operation, Operation::Union) {
++                lower_dimensional_union(solid0, solid1).ok_or(error)
++            } else {
++                Err(error)
++            }
++        })
++    }
++}
++
+ /// AND operation between two solids (classic backend).
+ pub(crate) fn and<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+-    let operation = "and";
+-    let pair = |a: &Shell<Point3, C, S>, b: &Shell<Point3, C, S>| {
+-        process_one_pair_of_shells(a, b, tol).ok_or(ShapeOpsError::EmptyOutputShell { operation })
+-    };
+-    let mut iter0 = solid0.boundaries().iter();
+-    let mut iter1 = solid1.boundaries().iter();
+-    let shell0 = iter0.next().unwrap();
+-    let shell1 = iter1.next().unwrap();
+-    let [mut and_shell, _] = pair(shell0, shell1)?;
+-    for shell in iter0 {
+-        let [res, _] = pair(&and_shell, shell)?;
+-        and_shell = res;
+-    }
+-    for shell in iter1 {
+-        let [res, _] = pair(&and_shell, shell)?;
+-        and_shell = res;
+-    }
+-    finalize(operation, and_shell)
++    boolean(solid0, solid1, tol, Operation::Intersection)
+ }
+ 
+ /// OR operation between two solids (classic backend).
+@@ -178,24 +2746,7 @@ pub(crate) fn or<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+-    let operation = "or";
+-    let pair = |a: &Shell<Point3, C, S>, b: &Shell<Point3, C, S>| {
+-        process_one_pair_of_shells(a, b, tol).ok_or(ShapeOpsError::EmptyOutputShell { operation })
+-    };
+-    let mut iter0 = solid0.boundaries().iter();
+-    let mut iter1 = solid1.boundaries().iter();
+-    let shell0 = iter0.next().unwrap();
+-    let shell1 = iter1.next().unwrap();
+-    let [_, mut or_shell] = pair(shell0, shell1)?;
+-    for shell in iter0 {
+-        let [_, res] = pair(&or_shell, shell)?;
+-        or_shell = res;
+-    }
+-    for shell in iter1 {
+-        let [_, res] = pair(&or_shell, shell)?;
+-        or_shell = res;
+-    }
+-    finalize(operation, or_shell)
++    boolean(solid0, solid1, tol, Operation::Union)
+ }
+ 
+ /// Difference: the region inside `solid0` but outside `solid1` (classic backend).
+@@ -204,9 +2755,7 @@ pub(crate) fn difference<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+-    let mut neg = solid1.clone();
+-    neg.not();
+-    and(solid0, &neg, tol)
++    boolean(solid0, solid1, tol, Operation::Difference)
+ }
+ 
+ /// Symmetric difference (XOR): the region inside exactly one solid (classic backend).

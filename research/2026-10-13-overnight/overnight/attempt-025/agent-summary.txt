@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate recovers failed common-sweep operations through exact rational cross-section arrangements. Complete spline control nets establish translation between caps; splitting section curves then determines retained side patches. Subtraction reverses retained second-operand patches to preserve cavity orientation. Existing successful paths retain precedence.
+
+This targets general certified spline sweeps, without primitive recognition or mesh replacement. Unresolved risks include sampled classification, trim correspondence, tangent intersections, compilation, and downstream mesh closure.
+
+Formatted and checked patch whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

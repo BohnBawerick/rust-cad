@@ -1,0 +1,117 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -22,6 +22,8 @@
+ //!   before marching, retaining the exact input surfaces.
+ //! - Complete positive-weight spline control nets certify separation, including
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
++//! - Failed planar arrangements reconcile support normals using complete control
++//!   nets, avoiding ill-conditioned comparisons between independently derived normals.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -797,6 +799,71 @@
+         .then_some(cells)
+ }
+ 
++/// Reuse a well-conditioned plane only when it contains the entire other support.
++///
++/// Normalizing the cross product of short chart axes amplifies coordinate
++/// roundoff. Parallel supports can then acquire different unit normals even
++/// though their complete control nets satisfy the same plane equation. Order
++/// candidate charts by their transverse span, and certify each replacement
++/// against every control point and trim vertex with the existing plane predicate.
++/// Original surfaces, trim points, and material-side orientations are retained.
++fn reconcile_planar_supports<S: ShapeOpsSurface>(
++    cells: &mut [PlanarCell<S>],
++    work: &mut usize,
++) -> Option<()> {
++    let mut order = cells
++        .iter()
++        .enumerate()
++        .map(|(index, cell)| {
++            let AnalyticSurfaceKind::Plane(plane) =
++                cell.surface.try_into_analytic_surface_kind()?
++            else {
++                return None;
++            };
++            let u = plane.axis_u();
++            let v = plane.axis_v();
++            let span = u.cross(v).magnitude() / (u.magnitude() + v.magnitude());
++            let quality = span / plane.origin().to_vec().magnitude().max(1.0);
++            (quality.is_finite() && quality > 0.0).then_some((index, quality))
++        })
++        .collect::<Option<Vec<_>>>()?;
++    order.sort_unstable_by(|a, b| b.1.total_cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
++    let mut planes: Vec<(Point3, Vector3)> = Vec::new();
++    order.into_iter().try_for_each(|(index, _)| {
++        let cell = &mut cells[index];
++        let spline = cell.surface.try_into_homogeneous_bspline_surface()?;
++        let controls = spline.control_points();
++        let count = controls.iter().map(Vec::len).sum::<usize>() + cell.points.len();
++        let normal = planes.iter().try_fold(None, |matched, &(origin, normal)| {
++            if matched.is_some() {
++                Some(matched)
++            } else {
++                *work = work.checked_sub(count)?;
++                let coplanar = controls
++                    .iter()
++                    .flatten()
++                    .map(|control| control.to_point())
++                    .chain(cell.points.iter().copied())
++                    .all(|point| {
++                        let (distance, error) = plane_distance(point, origin, normal);
++                        distance.is_finite() && error.is_finite() && distance.abs() <= error
++                    });
++                Some(coplanar.then_some(normal))
++            }
++        })?;
++        if let Some(normal) = normal {
++            let alignment = cell.normal.dot(normal);
++            if !alignment.is_finite() || alignment == 0.0 {
++                return None;
++            }
++            cell.normal = if alignment > 0.0 { normal } else { -normal };
++        } else {
++            planes.push((cell.points[0], cell.normal));
++        }
++        Some(())
++    })
++}
++
+ /// Subdivide an exact convex planar domain without discarding small-area cells.
+ fn split_planar_cell(points: Vec<Point3>, origin: Point3, normal: Vector3) -> Vec<Vec<Point3>> {
+     let distances: Vec<_> = points
+@@ -878,12 +945,16 @@
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+     operation: Operation,
++    reconcile_supports: bool,
+ ) -> Option<Solid<Point3, C, S>> {
+     let mut work = 262_144_usize;
+     let mut projections = 2048_usize;
+     let mut cells = planar_cells(solid0, &mut work)?;
+     let first_len = cells.len();
+     cells.extend(planar_cells(solid1, &mut work)?);
++    if reconcile_supports {
++        reconcile_planar_supports(&mut cells, &mut work)?;
++    }
+     let mut retained = Vec::new();
+     cells.iter().enumerate().try_for_each(|(index, source)| {
+         let pieces = cells
+@@ -1266,7 +1337,7 @@
+         Err(ShapeOpsError::InvalidTolerance)
+     } else if solid0.is_empty() || solid1.is_empty() {
+         boolean_classic(solid0, solid1, tol, operation)
+-    } else if let Some(solid) = planar_boolean(solid0, solid1, operation) {
++    } else if let Some(solid) = planar_boolean(solid0, solid1, operation, false) {
+         // A certified arrangement establishes membership on each open cell.
+         // Its empty boundary is therefore a valid empty result, while failure
+         // to certify or assemble an arrangement still requires marching.
+@@ -1275,6 +1346,7 @@
+         Ok(solid)
+     } else {
+         boolean_classic(solid0, solid1, tol, operation)
++            .or_else(|error| planar_boolean(solid0, solid1, operation, true).ok_or(error))
+     }
+ }
+ 

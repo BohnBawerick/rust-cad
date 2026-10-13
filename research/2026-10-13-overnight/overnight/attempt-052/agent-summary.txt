@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate audits directed trim occurrences after each face division and attempts local nested reconstruction when trims disappear. Counting opposite directions separately detects lost regions that signed boundary sums and shell-closure checks can miss.
+
+This applies across supported surface types and preserves exact geometry and cavity orientation. Earlier intersection failures, periodic reconstruction, and touching-union mesh closure remain unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits performed. Findings saved to `/work/scratch/partial.txt`.

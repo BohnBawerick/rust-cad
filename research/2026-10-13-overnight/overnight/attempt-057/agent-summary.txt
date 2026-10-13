@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate retries failed classification using curve-supplied parameter boundaries. It preserves cavity signs by applying face orientation exactly once and rejects divisions that lose directed trims. Output assembly retains B-rep geometry.
+
+Expected scope: curved and periodic trims across supported solids, including multiple oriented shells. Intersection fitting, touching-union closure, and fallback runtime remain unresolved risks.
+
+Whitespace checked. No builds, tests, or commits performed. Findings saved to `/work/scratch/partial.txt`.

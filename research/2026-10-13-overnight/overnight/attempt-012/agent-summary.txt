@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate recovers shared planar patches rejected by unstable normal comparisons. It verifies that a nondegenerate convex patch lies on both support planes, using existing distance predicates without changing tolerances.
+
+Expected scope: thin or anisotropic planar faces across general solids, without shape recognition. Existing successful paths retain precedence.
+
+Remaining risks include narrow-face meshing and floating-point degeneracy. Curved intersection failures remain unresolved.
+
+Formatted and checked patch whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

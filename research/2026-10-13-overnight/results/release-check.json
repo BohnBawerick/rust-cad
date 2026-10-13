@@ -1,0 +1,13 @@
+{
+  "command": [
+    "cargo",
+    "check",
+    "--release",
+    "--locked",
+    "--offline",
+    "--manifest-path",
+    "/workspace/lab/probe/Cargo.toml"
+  ],
+  "exit": 101,
+  "seconds": 23.81413416104624
+}

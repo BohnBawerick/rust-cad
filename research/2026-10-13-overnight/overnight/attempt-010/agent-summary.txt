@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate certifies separation using complete positive-weight spline control nets and planar boundary incidence. Certified disjoint interiors preserve A under subtraction and yield a valid empty intersection. Union requires a strict gap and preserves all original oriented shells.
+
+This applies to bounded spline solids with certifiable planar caps, without recognizing boxes or replacing B-rep geometry. Existing containment and cavity classification remain intact.
+
+Unresolved risks: floating-point contact predicates, loose bounds, and unsupported analytic surfaces. Uncertified cases retain the existing pipeline.
+
+Formatted and checked patch whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

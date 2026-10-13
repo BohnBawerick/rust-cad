@@ -1,0 +1,302 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -26,6 +26,8 @@
+ //!   nets, avoiding ill-conditioned comparisons between independently derived normals.
+ //! - Failed certified sweeps retain the input trim curves and smooth seam curves;
+ //!   only new transverse generators require intersection-curve assembly.
++//! - Failed sweep caps use rational-loop containment instead of a UV-area cutoff,
++//!   retaining small regions and grouping holes with their immediate outer wires.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -1608,18 +1610,18 @@
+     Some(roots)
+ }
+ 
+-/// Classify a section cell by signed crossings of exact rational curves.
++/// Count signed crossings of exact rational curves in a common section plane.
+ ///
+ /// Convex hulls bound the ray length. A ray through a trim endpoint or tangent
+ /// is discarded, avoiding double counts and preserving inward cavity windings.
+-fn section_inside<C, S>(
++fn section_winding<'a>(
+     point: Point3,
+-    arcs: &[SweepArc<C, S>],
++    curves: impl Iterator<Item = &'a NurbsCurve<Vector4>> + Clone,
+     normal: Vector3,
+     work: &mut usize,
+-) -> Option<bool> {
+-    let radius = arcs.iter().try_fold(0.0_f64, |radius, arc| {
+-        arc.curve
++) -> Option<isize> {
++    let radius = curves.clone().try_fold(0.0_f64, |radius, curve| {
++        curve
+             .control_points()
+             .iter()
+             .try_fold(radius, |radius, control| {
+@@ -1648,25 +1650,132 @@
+             point.to_homogeneous(),
+             (point + direction * (2.0 * radius)).to_homogeneous(),
+         )));
+-        arcs.iter()
+-            .try_fold(0_isize, |winding, arc| {
+-                let (start, end) = arc.curve.range_tuple();
+-                section_crossings(&arc.curve, &ray, normal, work)?
+-                    .into_iter()
+-                    .try_fold(winding, |winding, (u, v)| {
+-                        if u.near(&start) || u.near(&end) || v.so_small() {
++        curves.clone().try_fold(0_isize, |winding, curve| {
++            let (start, end) = curve.range_tuple();
++            section_crossings(curve, &ray, normal, work)?
++                .into_iter()
++                .try_fold(winding, |winding, (u, v)| {
++                    if u.near(&start) || u.near(&end) || v.so_small() {
++                        return None;
++                    }
++                    let crossing = direction.cross(curve.derivative(u)).dot(normal);
++                    if !crossing.is_finite() || crossing.so_small() {
++                        None
++                    } else {
++                        Some(winding + if crossing > 0.0 { 1 } else { -1 })
++                    }
++                })
++        })
++    })
++}
++
++/// Classify material using the sum of all oriented section loops.
++fn section_inside<C, S>(
++    point: Point3,
++    arcs: &[SweepArc<C, S>],
++    normal: Vector3,
++    work: &mut usize,
++) -> Option<bool> {
++    section_winding(point, arcs.iter().map(|arc| &arc.curve), normal, work)
++        .map(|winding| winding > 0)
++}
++
++/// Assemble cap regions from the nesting of their exact rational boundary loops.
++///
++/// A cap boundary is already the boundary of the retained side patches. Its
++/// regularized regions are the even-depth loops, each with its immediate holes.
++/// Ray crossings establish containment without comparing parameter-space area
++/// with a length tolerance. The original wires and supporting plane are retained.
++fn sweep_cap_faces<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    cap: &Face<Point3, C, S>,
++    wires: &[Wire<Point3, C>],
++    sections: &HashMap<EdgeId<C>, usize>,
++    patches: &[SweepArc<C, S>],
++    normal: Vector3,
++    work: &mut usize,
++) -> Option<Shell<Point3, C, S>> {
++    let curves = wires
++        .iter()
++        .map(|wire| {
++            wire.iter()
++                .map(|edge| {
++                    *work = work.checked_sub(1)?;
++                    let mut curve = patches[*sections.get(&edge.id())?].curve.clone();
++                    if !edge.orientation() {
++                        curve.invert();
++                    }
++                    Some(curve)
++                })
++                .collect::<Option<Vec<_>>>()
++        })
++        .collect::<Option<Vec<_>>>()?;
++    let containers = curves
++        .iter()
++        .enumerate()
++        .map(|(index, boundary)| {
++            let point = boundary.first()?.front();
++            curves
++                .iter()
++                .enumerate()
++                .try_fold(Vec::new(), |mut containers, (other, boundary)| {
++                    if other != index {
++                        let winding = section_winding(point, boundary.iter(), normal, work)?;
++                        if !(-1..=1).contains(&winding) {
+                             return None;
+                         }
+-                        let crossing = direction.cross(arc.curve.derivative(u)).dot(normal);
+-                        if !crossing.is_finite() || crossing.so_small() {
+-                            None
+-                        } else {
+-                            Some(winding + if crossing > 0.0 { 1 } else { -1 })
++                        if winding != 0 {
++                            containers.push(other);
+                         }
+-                    })
+-            })
+-            .map(|winding| winding > 0)
+-    })
++                    }
++                    Some(containers)
++                })
++        })
++        .collect::<Option<Vec<_>>>()?;
++    // Strictly nested simple loops have exactly one container at each depth.
++    // A cycle, crossing, or ambiguous nesting relation cannot produce a cap.
++    containers
++        .iter()
++        .enumerate()
++        .try_for_each(|(index, parents)| {
++            let mut depths = parents
++                .iter()
++                .map(|parent| containers[*parent].len())
++                .collect::<Vec<_>>();
++            depths.sort_unstable();
++            (depths.iter().copied().eq(0..parents.len())
++                && parents.iter().all(|parent| {
++                    !containers[*parent].contains(&index)
++                        && containers[*parent]
++                            .iter()
++                            .all(|ancestor| parents.contains(ancestor))
++                }))
++            .then_some(())
++        })?;
++    wires
++        .iter()
++        .enumerate()
++        .filter(|(index, _)| containers[*index].len() % 2 == 0)
++        .map(|(index, outer)| {
++            let depth = containers[index].len();
++            let boundaries = iter::once(outer.clone())
++                .chain(
++                    wires
++                        .iter()
++                        .enumerate()
++                        .filter(|(child, _)| {
++                            containers[*child].len() == depth + 1
++                                && containers[*child].contains(&index)
++                        })
++                        .map(|(_, wire)| wire.clone()),
++                )
++                .collect();
++            let mut face = Face::try_new(boundaries, cap.surface()).ok()?;
++            if !cap.orientation() {
++                face.invert();
++            }
++            Some(face)
++        })
++        .collect()
+ }
+ 
+ /// Cut a retained input trim, preserving its original curve representation.
+@@ -1925,14 +2034,18 @@
+             Edge::try_new(a, b, curve).ok()
+         })
+         .collect::<Option<Vec<Edge<Point3, C>>>>()?;
+-    let mut shell = patches
++    let mut sections = HashMap::default();
++    let side_shell = patches
+         .iter()
+         .zip(indices)
+-        .map(|(patch, [a, b])| {
++        .enumerate()
++        .map(|(index, (patch, [a, b]))| {
+             // Cutting the original trims preserves their spatial geometry and
+             // any exact parameter boundaries supplied by the input API.
+             let lower = sweep_trim_edge::<C, S>(&patch.lower, &vertices[a].0, &vertices[b].0)?;
+             let upper = sweep_trim_edge::<C, S>(&patch.upper, &vertices[a].1, &vertices[b].1)?;
++            sections.insert(lower.id(), index);
++            sections.insert(upper.id(), index);
+             let wire = Wire::from(vec![
+                 lower,
+                 verticals[b].clone(),
+@@ -1951,42 +2064,62 @@
+             Some(face)
+         })
+         .collect::<Option<Shell<Point3, C, S>>>()?;
+-    let boundaries = shell.extract_boundaries();
+-    [bottom_face, top_face].into_iter().try_for_each(|cap| {
+-        let plane = certified_plane(&cap.surface())?;
+-        let wires = boundaries
+-            .iter()
+-            .filter(|wire| {
+-                wire.front_vertex().is_some_and(|vertex| {
+-                    let (distance, error) =
+-                        plane_distance(vertex.point(), plane.origin(), plane.normal());
+-                    distance.abs() <= error
++    let boundaries = side_shell.extract_boundaries();
++    let assemble_caps = |exact: bool, work: &mut usize| {
++        let mut shell = side_shell.clone();
++        [bottom_face, top_face].into_iter().try_for_each(|cap| {
++            let plane = certified_plane(&cap.surface())?;
++            let wires = boundaries
++                .iter()
++                .filter(|wire| {
++                    wire.front_vertex().is_some_and(|vertex| {
++                        let (distance, error) =
++                            plane_distance(vertex.point(), plane.origin(), plane.normal());
++                        distance.abs() <= error
++                    })
+                 })
+-            })
+-            .map(|wire| {
+-                let wire = if cap.orientation() {
+-                    wire.inverse()
+-                } else {
+-                    wire.clone()
+-                };
+-                loops_store::BoundaryWire::new(wire, loops_store::ShapesOpStatus::And)
+-            })
+-            .collect::<loops_store::Loops<_, _>>();
+-        if wires.is_empty() {
++                .map(|wire| {
++                    if cap.orientation() {
++                        wire.inverse()
++                    } else {
++                        wire.clone()
++                    }
++                })
++                .collect::<Vec<_>>();
++            if wires.is_empty() {
++                return None;
++            }
++            let mut divided = if exact {
++                sweep_cap_faces(
++                    cap,
++                    &wires,
++                    &sections,
++                    &patches,
++                    translation.normalize(),
++                    work,
++                )?
++            } else {
++                let mut store: loops_store::LoopsStore<_, _> = iter::once(cap).collect();
++                store[0] = wires
++                    .into_iter()
++                    .map(|wire| {
++                        loops_store::BoundaryWire::new(wire, loops_store::ShapesOpStatus::And)
++                    })
++                    .collect();
++                let cap_shell = iter::once(cap.clone()).collect();
++                let [divided, _, _] =
++                    divide_face::divide_faces(&cap_shell, &store, tol)?.and_or_unknown();
++                divided
++            };
++            shell.append(&mut divided);
++            Some(())
++        })?;
++        if !shell.edge_iter().all(|edge| edge.is_geometric_consistent()) {
+             return None;
+         }
+-        let mut store: loops_store::LoopsStore<_, _> = iter::once(cap).collect();
+-        store[0] = wires;
+-        let cap_shell = iter::once(cap.clone()).collect();
+-        let [mut divided, _, _] =
+-            divide_face::divide_faces(&cap_shell, &store, tol)?.and_or_unknown();
+-        shell.append(&mut divided);
+-        Some(())
+-    })?;
+-    if !shell.edge_iter().all(|edge| edge.is_geometric_consistent()) {
+-        return None;
+-    }
+-    Solid::try_new(shell.connected_components()).ok()
++        Solid::try_new(shell.connected_components()).ok()
++    };
++    assemble_caps(false, &mut work).or_else(|| assemble_caps(true, &mut work))
+ }
+ 
+ fn boolean_classic<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(

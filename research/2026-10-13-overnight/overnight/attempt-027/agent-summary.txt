@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate preserves original trim curves and shared smooth-seam curves during certified sweep assembly. New transverse edges receive intersection curves. Signed rational-curve crossings classify section cells; subtraction reverses retained second-operand patches to preserve cavity orientation.
+
+This targets general certified translational sweeps, including nonconvex sections and multiple oriented shells. Existing successful paths retain precedence.
+
+Unresolved risks include numerical intersection isolation, parameter inversion, trim cutting, runtime, and mesh closure. Ambiguous tangencies and unsupported cap domains decline the fallback.
+
+Rustfmt and whitespace checks completed. No builds, tests, or commits. Findings are recorded in `/work/scratch/partial.txt`.

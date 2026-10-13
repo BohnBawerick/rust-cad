@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added a fallback for concave planar faces and holes. Arranging trim lines makes winding constant within each cell; assembly retains exact surfaces and oriented cavity boundaries. Existing successful paths retain precedence.
+
+Scope: certified affine planar supports with straight trims, including multiple shells. Curved cases and touching-union mesh closure remain unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits performed.

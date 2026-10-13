@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added a final assembly fallback that unwraps periodic trim parameters and aligns holes by whole periods. This addresses corrupted loop orientation and containment caused by inverse queries crossing parameter seams. Exact curves, surfaces, and face orientations are retained.
+
+The repair applies to generic periodic surfaces and native parameter trims. Noncontractible divided loops, singular poles, and failures before face division remain unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits performed. Controller evaluation is pending.

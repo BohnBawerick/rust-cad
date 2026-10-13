@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added strict containment certification using complete support control nets and convex-container half-spaces. Certified union/intersection follow set identities; subtraction preserves nested orientations by reversing every inner shell.
+
+Expected scope includes curved, multi-shell solids inside certified convex planar containers. Touching solids, unsupported analytic domains, and inconclusive enclosures retain existing paths.
+
+Formatted and checked whitespace. No builds, tests, or commits performed. Controller evaluation remains pending.

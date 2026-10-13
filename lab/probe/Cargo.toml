@@ -1,0 +1,13 @@
+[package]
+name = "kernel-probe"
+version = "0.1.0"
+edition = "2024"
+[dependencies]
+monstertruck-modeling = { path = "../kernel/source/monstertruck-modeling", features = ["fillet"] }
+monstertruck-solid = { path = "../kernel/source/monstertruck-solid" }
+monstertruck-meshing = { path = "../kernel/source/monstertruck-meshing" }
+monstertruck-io = { path = "../kernel/source/monstertruck-io" }
+monstertruck-mesh = { path = "../kernel/source/monstertruck-mesh" }
+serde_json = "1"
+monstertruck-assembly = { path = "../kernel/source/monstertruck-assembly" }
+monstertruck-topology = { path = "../kernel/source/monstertruck-topology" }

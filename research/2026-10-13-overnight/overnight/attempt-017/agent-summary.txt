@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate recovers failed common-cap operations using certified straight traces on exact spline supports. Supporting-plane certificates justify reconstructing caps from selected boundary loops. Shared edge subdivisions and shell orientations are preserved.
+
+Expected scope: bounded spline solids with common supporting caps and transverse straight intersections, without primitive recognition. Existing successful results retain precedence.
+
+Risks remain in winding classification, sampled hole nesting, and downstream mesh closure.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

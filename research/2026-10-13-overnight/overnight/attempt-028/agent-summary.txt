@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate refines unresolved rational-curve intersections instead of immediately abandoning Boolean assembly. Complete control-hull projections certify separation, with subdivision roundoff accounted for. Ambiguous candidates continue within existing work and depth limits.
+
+This targets classification failures in certified translational sweeps without primitive recognition or mesh replacement. Exact B-rep geometry, orientation handling, and tolerances are preserved.
+
+Tangencies, unrelated assembly failures, and end-to-end improvement remain unverified. Formatting and whitespace checks completed; no builds, kernel tests, or commits. Findings are in `/work/scratch/partial.txt`.

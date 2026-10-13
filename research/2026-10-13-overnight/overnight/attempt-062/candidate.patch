@@ -1,0 +1,152 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -36,6 +36,8 @@
+ //!   chart regions and assigning each hole to its immediate containing boundary.
+ //! - Failed intersection fits can retain exact rational sections of certified
+ //!   translational supports, including oblique cuts by planar supports.
++//! - Missing classification meshes retry face-local parameter trims in absolute
++//!   surface orientation, preserving the original shared boundary topology.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -332,6 +334,104 @@
+     consistent.then_some(shell)
+ }
+ 
++/// Distinguish a usable face mesh from a failed or collapsed tessellation.
++fn mesh_has_area(mesh: &PolygonMesh) -> bool {
++    mesh.positions()
++        .iter()
++        .all(|point| point.x.is_finite() && point.y.is_finite() && point.z.is_finite())
++        && mesh.face_iter().any(|polygon| {
++            (2..polygon.len()).any(|index| {
++                let [a, b, c] = [polygon[0], polygon[index - 1], polygon[index]]
++                    .map(|vertex| mesh.positions()[vertex.pos]);
++                let area = (b - a).cross(c - a).magnitude2();
++                area.is_finite() && area > 0.0
++            })
++        })
++}
++
++/// Recover missing classification meshes using the input curves' local trims.
++///
++/// The ordinary shell mesher first replaces curves with spatial polylines.
++/// Inverting those polylines can lose a periodic branch or fail at a singular
++/// chart. The compressed mesher can instead use [`ParameterBoundary2D`] before
++/// projecting a boundary. Its meshes remain classification aids; all output
++/// surfaces, curves, and shared topology still come from the exact operands.
++///
++/// [`Shell::compress`] stores absolute wires. Set the temporary faces to the
++/// absolute orientation so that the trim mesher does not reverse those wires.
++/// The original polygon faces retain their signs, which winding applies once.
++fn classification_mesh<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: &Shell<Point3, C, S>,
++    polygons: PolyShell,
++    tol: f64,
++) -> Option<PolyShell> {
++    if shell.len() != polygons.len() {
++        return None;
++    }
++    let missing: SmallVec<[usize; 8]> = polygons
++        .iter()
++        .enumerate()
++        .filter_map(|(index, face)| {
++            (!face.surface().as_ref().is_some_and(mesh_has_area)).then_some(index)
++        })
++        .collect();
++    if missing.is_empty() {
++        return Some(polygons);
++    }
++    let mut work = 16_384_usize;
++    let unresolved = missing
++        .iter()
++        .map(|&index| {
++            let mut face = shell[index].clone();
++            work = work.checked_sub(1)?;
++            work = work.checked_sub(
++                face.absolute_boundaries()
++                    .iter()
++                    .map(|wire| wire.len())
++                    .sum(),
++            )?;
++            if !face.orientation() {
++                face.invert();
++            }
++            Some(face)
++        })
++        .collect::<Option<Shell<_, _, _>>>()?
++        .compress();
++    let mut recovered = unresolved.triangulation(tol);
++    if recovered
++        .faces
++        .iter()
++        .any(|face| !face.surface.as_ref().is_some_and(mesh_has_area))
++    {
++        // Nearest-parameter search is a second chart inversion strategy at the
++        // same tolerance. It never supplies replacement B-rep geometry.
++        let nearest = unresolved.robust_triangulation(tol);
++        recovered
++            .faces
++            .iter_mut()
++            .zip(nearest.faces)
++            .for_each(|(face, retry)| {
++                if !face.surface.as_ref().is_some_and(mesh_has_area) {
++                    face.surface = retry.surface;
++                }
++            });
++    }
++    if recovered.faces.len() != missing.len() {
++        return None;
++    }
++    missing
++        .into_iter()
++        .zip(recovered.faces)
++        .try_for_each(|(index, face)| {
++            let mesh = face.surface.filter(mesh_has_area)?;
++            // Preserve the existing polygon edge identities and decompositions.
++            // The marching stores pair those edges with the exact input edges.
++            polygons[index].set_surface(Some(mesh));
++            Some(())
++        })?;
++    Some(polygons)
++}
++
+ /// Choose a point in the relative interior of a trimmed face.
+ ///
+ /// A boundary vertex may also lie on the other solid at a mere contact. Use
+@@ -343,6 +443,24 @@
+ ) -> Option<(Point3, Vector3)> {
+     let shell: AltCurveShell<C, S> = iter::once(face.clone()).collect();
+     let meshed = shell.triangulation(tol);
++    let meshed = if meshed
++        .iter()
++        .all(|face| face.surface().as_ref().is_some_and(mesh_has_area))
++    {
++        meshed
++    } else {
++        // Uncut faces still carry their input curves and their parameter trims.
++        // Recover their classification mesh without converting any exact edges.
++        let original = shell.try_mapped(
++            |point| Some(*point),
++            |curve| match curve {
++                Alternative::FirstType(curve) => Some(curve.clone()),
++                Alternative::SecondType(_) => None,
++            },
++            |surface| Some(surface.clone()),
++        )?;
++        classification_mesh(&original, meshed, tol)?
++    };
+     let mesh = meshed.first()?.surface()?;
+     let triangle = mesh
+         .face_iter()
+@@ -987,8 +1105,8 @@
+     tol: f64,
+     second_at_infinity: isize,
+ ) -> Option<impl Fn(FaceDivision) -> Option<([AltCurveShell<C, S>; 2], bool)>> {
+-    let poly_shell0 = shell0.triangulation(tol);
+-    let poly_shell1 = shell1.triangulation(tol);
++    let poly_shell0 = classification_mesh(&shell0, shell0.triangulation(tol), tol)?;
++    let poly_shell1 = classification_mesh(&shell1, shell1.triangulation(tol), tol)?;
+     let altshell0: AltCurveShell<C, S> =
+         shell0.mapped(|x| *x, |c| Alternative::FirstType(c.clone()), Clone::clone);
+     let altshell1: AltCurveShell<C, S> =

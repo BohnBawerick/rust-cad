@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate adds a fallback using complete support hulls to certify boundary separation, then oriented winding to classify connected shells. It preserves exact B-rep geometry and reverses retained cutter shells for cavity subtraction.
+
+Expected scope: disjoint and nested planar or bounded spline solids, including multiple oriented shells. Touching boundaries and inconclusive hulls decline the fallback. Compilation, numerical robustness, and runtime remain unverified.
+
+Formatted and checked whitespace. No builds, tests, or commits performed. Findings saved to `/work/scratch/partial.txt`.

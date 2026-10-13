@@ -1,0 +1,242 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -30,6 +30,8 @@
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
+ //! - Failed assembly can reconstruct all nested trim loops, retaining small
+ //!   chart regions and assigning each hole to its immediate containing boundary.
++//! - Failed classification can retry curve-supplied parameter boundaries while
++//!   preserving the absolute surface orientation of classification meshes.
+ //! - Failed intersection fits can retain exact rational sections of certified
+ //!   translational supports, including oblique cuts by planar supports.
+ 
+@@ -328,6 +330,47 @@
+     consistent.then_some(shell)
+ }
+ 
++/// Select how a classification mesh obtains its parameter-space boundary.
++#[derive(Clone, Copy)]
++enum BoundaryMeshing {
++    Sampled,
++    Parametric,
++}
++
++/// Tessellate with curve-supplied trims without changing boundary orientation.
++///
++/// The compressed mesher can retain a curve's parameter boundary, which is
++/// unavailable after replacing the curve by its spatial polyline. In particular,
++/// a periodic seam has distinct parameter values at the same spatial point.
++/// Meshes must follow the absolute surface orientation: [`inside`] applies each
++/// face's material-side orientation separately, including inward cavity faces.
++fn classification_mesh<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: &Shell<Point3, C, S>,
++    tol: f64,
++    meshing: BoundaryMeshing,
++) -> Option<PolyShell> {
++    match meshing {
++        BoundaryMeshing::Sampled => Some(shell.triangulation(tol)),
++        BoundaryMeshing::Parametric => {
++            let mut compressed = shell.compress();
++            compressed.faces.iter_mut().for_each(|face| {
++                face.orientation = true;
++            });
++            let mut polygons = compressed.triangulation(tol);
++            polygons
++                .faces
++                .iter_mut()
++                .zip(shell)
++                .try_for_each(|(polygon, face)| {
++                    polygon.orientation = face.orientation();
++                    // Missing or empty patches cannot represent a complete winding boundary.
++                    polygon.surface.as_ref()?.face_iter().next().map(|_| ())
++                })?;
++            PolyShell::extract(polygons).ok()
++        }
++    }
++}
++
+ /// Choose a point in the relative interior of a trimmed face.
+ ///
+ /// A boundary vertex may also lie on the other solid at a mere contact. Use
+@@ -336,9 +379,17 @@
+ fn interior_point<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     face: &Face<Point3, AltCurve<C, S>, S>,
+     tol: f64,
++    meshing: BoundaryMeshing,
+ ) -> Option<(Point3, Vector3)> {
+     let shell: AltCurveShell<C, S> = iter::once(face.clone()).collect();
+-    let meshed = shell.triangulation(tol);
++    let meshed = match meshing {
++        BoundaryMeshing::Sampled => shell.triangulation(tol),
++        BoundaryMeshing::Parametric => {
++            // Conversion retains input curves and verifies any fitted intersections.
++            let converted = altshell_to_shell(&shell)?;
++            classification_mesh(&converted, tol, meshing)?
++        }
++    };
+     let mesh = meshed.first()?.surface()?;
+     let triangle = mesh
+         .face_iter()
+@@ -972,6 +1023,38 @@
+     }
+ }
+ 
++/// Require every directed trim occurrence to survive a recovered division.
++///
++/// Opposite uses of an intersection edge bound different cells. Counting them
++/// independently detects lost patches even when their signed boundary cancels.
++fn retains_directed_trims<C, S>(
++    divided: &FacesClassification<Point3, C, S>,
++    store: &LoopsStore<Point3, C>,
++) -> bool {
++    let mut occurrences: HashMap<EdgeId<C>, [usize; 2]> = HashMap::default();
++    store
++        .iter()
++        .flat_map(|loops| loops.iter())
++        .for_each(|wire| {
++            wire.iter().for_each(|edge| {
++                occurrences.entry(edge.id()).or_default()[usize::from(edge.orientation())] += 1;
++            });
++        });
++    let complete = divided.and_or_unknown().iter().try_for_each(|shell| {
++        shell.iter().try_for_each(|face| {
++            face.absolute_boundaries().iter().try_for_each(|wire| {
++                wire.iter().try_for_each(|edge| {
++                    let count =
++                        &mut occurrences.get_mut(&edge.id())?[usize::from(edge.orientation())];
++                    *count = count.checked_sub(1)?;
++                    Some(())
++                })
++            })
++        })
++    });
++    complete.is_some() && occurrences.values().all(|counts| *counts == [0, 0])
++}
++
+ /// Split the combined boundaries into intersection and union boundaries.
+ ///
+ /// All shells of an operand participate in the same winding query. They are
+@@ -982,9 +1065,10 @@
+     shell1: Shell<Point3, C, S>,
+     tol: f64,
+     second_at_infinity: isize,
++    meshing: BoundaryMeshing,
+ ) -> Option<impl Fn(FaceDivision) -> Option<([AltCurveShell<C, S>; 2], bool)>> {
+-    let poly_shell0 = shell0.triangulation(tol);
+-    let poly_shell1 = shell1.triangulation(tol);
++    let poly_shell0 = classification_mesh(&shell0, tol, meshing)?;
++    let poly_shell1 = classification_mesh(&shell1, tol, meshing)?;
+     let altshell0: AltCurveShell<C, S> =
+         shell0.mapped(|x| *x, |c| Alternative::FirstType(c.clone()), Clone::clone);
+     let altshell1: AltCurveShell<C, S> =
+@@ -1003,6 +1087,11 @@
+     };
+     Some(move |division| {
+         let mut cls0 = divide_boundary_faces(&altshell0, &loops_store0, tol, division)?;
++        if matches!(meshing, BoundaryMeshing::Parametric)
++            && !retains_directed_trims(&cls0, &loops_store0)
++        {
++            return None;
++        }
+         if cls0.and_or_unknown()[2]
+             .connected_components()
+             .iter()
+@@ -1011,6 +1100,11 @@
+             cls0.integrate_by_component();
+         }
+         let mut cls1 = divide_boundary_faces(&altshell1, &loops_store1, tol, division)?;
++        if matches!(meshing, BoundaryMeshing::Parametric)
++            && !retains_directed_trims(&cls1, &loops_store1)
++        {
++            return None;
++        }
+         if cls1.and_or_unknown()[2]
+             .connected_components()
+             .iter()
+@@ -1020,7 +1114,7 @@
+         }
+         let [mut and0, mut or0, unknown0] = cls0.and_or_unknown();
+         unknown0.into_iter().try_for_each(|face| {
+-            let (point, normal) = interior_point(&face, tol)?;
++            let (point, normal) = interior_point(&face, tol, meshing)?;
+             if let Some(same_orientation) =
+                 coincident_boundary(&face, point, normal, &shell1, &poly_shell1)
+             {
+@@ -1039,7 +1133,7 @@
+         })?;
+         let [mut and1, mut or1, unknown1] = cls1.and_or_unknown();
+         unknown1.into_iter().try_for_each(|face| {
+-            let (point, normal) = interior_point(&face, tol)?;
++            let (point, normal) = interior_point(&face, tol, meshing)?;
+             // The first operand owns coincident patches.
+             if coincident_boundary(&face, point, normal, &shell0, &poly_shell0).is_none() {
+                 if inside(point, &poly_shell0, 0)? {
+@@ -2368,6 +2462,7 @@
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+     operation: Operation,
++    meshing: BoundaryMeshing,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+     if !tol.is_finite() || tol <= 0.0 {
+         return Err(ShapeOpsError::InvalidTolerance);
+@@ -2401,7 +2496,7 @@
+     } else {
+         // Prepare intersections once. A failed divider may retry the same
+         // exact loop stores without repeating tessellation or marching.
+-        let prepared = process_one_pair_of_shells(shell0, shell1, tol, at_infinity);
++        let prepared = process_one_pair_of_shells(shell0, shell1, tol, at_infinity, meshing);
+         let assemble = |division| {
+             let divide = prepared
+                 .as_ref()
+@@ -2423,15 +2518,22 @@
+             // An empty boundary is a valid empty result; pipeline failure is not.
+             finalize(name, shell)
+         };
+-        assemble(FaceDivision::Classic)
+-            .or_else(|error| planar_boolean(solid0, solid1, operation, true).ok_or(error))
+-            .or_else(|error| {
+-                sweep_boolean(solid0, solid1, operation, tol, FaceDivision::Classic).ok_or(error)
+-            })
+-            .or_else(|error| assemble(FaceDivision::Nested).or(Err(error)))
+-            .or_else(|error| {
+-                sweep_boolean(solid0, solid1, operation, tol, FaceDivision::Nested).ok_or(error)
+-            })
++        match meshing {
++            BoundaryMeshing::Sampled => assemble(FaceDivision::Classic)
++                .or_else(|error| planar_boolean(solid0, solid1, operation, true).ok_or(error))
++                .or_else(|error| {
++                    sweep_boolean(solid0, solid1, operation, tol, FaceDivision::Classic)
++                        .ok_or(error)
++                })
++                .or_else(|error| assemble(FaceDivision::Nested).or(Err(error)))
++                .or_else(|error| {
++                    sweep_boolean(solid0, solid1, operation, tol, FaceDivision::Nested).ok_or(error)
++                }),
++            // This retry only changes classification meshes. The independent
++            // support arrangements already failed and need not run a second time.
++            BoundaryMeshing::Parametric => assemble(FaceDivision::Classic)
++                .or_else(|error| assemble(FaceDivision::Nested).or(Err(error))),
++        }
+     }
+ }
+ 
+@@ -2444,7 +2546,7 @@
+     if !tol.is_finite() || tol <= 0.0 {
+         Err(ShapeOpsError::InvalidTolerance)
+     } else if solid0.is_empty() || solid1.is_empty() {
+-        boolean_classic(solid0, solid1, tol, operation)
++        boolean_classic(solid0, solid1, tol, operation, BoundaryMeshing::Sampled)
+     } else if let Some(solid) = planar_boolean(solid0, solid1, operation, false) {
+         // A certified arrangement establishes membership on each open cell.
+         // Its empty boundary is therefore a valid empty result, while failure
+@@ -2453,7 +2555,10 @@
+     } else if let Some(solid) = separated_boolean(solid0, solid1, operation) {
+         Ok(solid)
+     } else {
+-        boolean_classic(solid0, solid1, tol, operation)
++        boolean_classic(solid0, solid1, tol, operation, BoundaryMeshing::Sampled).or_else(|error| {
++            boolean_classic(solid0, solid1, tol, operation, BoundaryMeshing::Parametric)
++                .or(Err(error))
++        })
+     }
+ }
+ 

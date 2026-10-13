@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate extends separation certificates to closed analytic supports using complete rational control nets. It adds strict containment proofs for convex planar containers and reverses every contained cutter shell for subtraction, preserving cavity orientation and exact geometry.
+
+Expected scope includes compact curved supports and multiple oriented shells. Open analytic supports, nonconvex containers, and inconclusive contacts retain existing paths. Domain coverage and numerical robustness require controller evaluation.
+
+Formatted and checked whitespace. No builds, tests, or commits performed.

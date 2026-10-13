@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate pairs coincident edge uses by oriented material sector, then separates vertex fans. This preserves distinct boundary sheets and cavity orientation without changing geometry.
+
+Expected scope: certified planar Boolean arrangements, including nonconvex solids and multiple shells. Curved contacts and downstream mesh welding remain unresolved risks.
+
+Formatting and whitespace checks completed. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`; retention remains with the controller.

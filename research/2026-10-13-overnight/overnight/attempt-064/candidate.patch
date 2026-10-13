@@ -1,0 +1,224 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -30,6 +30,8 @@
+ //!   nets, avoiding ill-conditioned comparisons between independently derived normals.
+ //! - Failed certified sweeps retain the input trim curves and smooth seam curves;
+ //!   only new transverse generators require intersection-curve assembly.
++//! - Refined positive-weight support hulls certify oblique separation with a
++//!   checked supporting plane before any tessellation or intersection assembly.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
+ //! - Failed assembly can reconstruct all nested trim loops, retaining small
+@@ -1840,6 +1842,201 @@
+     }
+ }
+ 
++/// Retain the support hull instead of replacing it with an axis-aligned box.
++///
++/// The incidence proof in [`solid_enclosure`] covers planar wires as well as
++/// bounded rational faces. Subdivision tightens the latter's hull without
++/// changing the surface. Positive homogeneous weights preserve the convex-hull
++/// property on every child, including faces with holes and inward shells.
++fn refined_support_points<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++    refine: bool,
++) -> Option<(Vec<Point3>, f64)> {
++    solid_enclosure(solid)?;
++    let mut work = 16_384_usize;
++    let mut roundoff = 0.0_f64;
++    let points = solid.face_iter().try_fold(Vec::new(), |mut points, face| {
++        let surface = face.surface();
++        if surface.supports_exact_patch_domains() {
++            let spline = surface.try_into_homogeneous_bspline_surface()?;
++            let count = spline.control_points().iter().map(Vec::len).sum::<usize>();
++            work = work.checked_sub(count)?;
++            if !spline.is_clamped() || (refine && (spline.udegree() > 8 || spline.vdegree() > 8)) {
++                return None;
++            }
++            if refine {
++                // Bound subdivision arithmetic using the original homogeneous
++                // scale, including cancellation and unequal rational weights.
++                let (scale, low, high) = spline.control_points().iter().flatten().fold(
++                    (0.0_f64, f64::INFINITY, 0.0_f64),
++                    |(scale, low, high), control| {
++                        (
++                            scale.max(control.to_point().to_vec().magnitude()),
++                            low.min(control.w),
++                            high.max(control.w),
++                        )
++                    },
++                );
++                let error = 65_536.0 * f64::EPSILON * scale * (high / low);
++                if !error.is_finite() {
++                    return None;
++                }
++                roundoff = roundoff.max(error);
++            }
++            let patches = (0..usize::from(refine) * 2).try_fold(vec![spline], |patches, _| {
++                patches
++                    .into_iter()
++                    .try_fold(Vec::new(), |mut children, mut patch| {
++                        let ((u0, u1), (v0, v1)) = patch.range_tuple();
++                        let u = u0 + (u1 - u0) / 2.0;
++                        let v = v0 + (v1 - v0) / 2.0;
++                        if !u.is_finite()
++                            || !v.is_finite()
++                            || u <= u0
++                            || u >= u1
++                            || v <= v0
++                            || v >= v1
++                        {
++                            return None;
++                        }
++                        // Each cut retains both children. No trim or support
++                        // geometry is approximated or discarded by refinement.
++                        let mut right = patch.cut_u(u);
++                        let upper_left = patch.cut_v(v);
++                        let upper_right = right.cut_v(v);
++                        let parts = [patch, right, upper_left, upper_right];
++                        let count = parts
++                            .iter()
++                            .map(|part| part.control_points().iter().map(Vec::len).sum::<usize>())
++                            .sum::<usize>();
++                        work = work.checked_sub(count)?;
++                        children.extend(parts);
++                        Some(children)
++                    })
++            })?;
++            patches.iter().try_for_each(|patch| {
++                patch
++                    .control_points()
++                    .iter()
++                    .flatten()
++                    .try_for_each(|control| {
++                        let point = control.to_point();
++                        if control.w <= 0.0
++                            || !control.w.is_finite()
++                            || !point.to_vec().magnitude2().is_finite()
++                        {
++                            None
++                        } else {
++                            points.push(point);
++                            Some(())
++                        }
++                    })
++            })?;
++        }
++        work = work.checked_sub(face.edge_iter().count().checked_mul(2)?)?;
++        points.extend(
++            face.edge_iter()
++                .flat_map(|edge| [edge.front().point(), edge.back().point()]),
++        );
++        Some(points)
++    })?;
++    Some((points, roundoff))
++}
++
++/// Search the Minkowski difference for a strict supporting-plane certificate.
++///
++/// A closest-point iteration proposes directions only. Every accepted direction
++/// is independently checked against every support point with arithmetic error
++/// bounds, so incomplete convergence cannot assert disjointness. The work cap
++/// and fixed iteration count also apply to intersecting and touching hulls.
++fn support_hulls_separated(first: &[Point3], second: &[Point3], roundoff: f64) -> Option<()> {
++    let mut closest = *first.first()? - *second.first()?;
++    let mut work = 262_144_usize;
++    let mut active = true;
++    (0..64).find_map(|_| {
++        if !active {
++            return None;
++        }
++        let count = first.len().checked_add(second.len())?.checked_mul(2)?;
++        let Some(remaining) = work.checked_sub(count) else {
++            active = false;
++            return None;
++        };
++        work = remaining;
++        let norm = closest.magnitude();
++        if !norm.is_finite() || norm == 0.0 {
++            active = false;
++            return None;
++        }
++        let normal = closest / norm;
++        let anchor = first[0];
++        let projection = |point: &Point3| (*point - anchor).dot(normal);
++        let a = *first
++            .iter()
++            .min_by(|a, b| projection(a).total_cmp(&projection(b)))?;
++        let b = *second
++            .iter()
++            .max_by(|a, b| projection(a).total_cmp(&projection(b)))?;
++        let origin = a + (b - a) / 2.0;
++        let strict = first.iter().all(|point| {
++            let (distance, error) = plane_distance(*point, origin, normal);
++            distance.is_finite() && error.is_finite() && distance > error + roundoff
++        }) && second.iter().all(|point| {
++            let (distance, error) = plane_distance(*point, origin, normal);
++            distance.is_finite() && error.is_finite() && distance < -error - roundoff
++        });
++        if strict {
++            Some(())
++        } else {
++            let support = a - b;
++            let delta = support - closest;
++            let denominator = delta.magnitude2();
++            if !denominator.is_finite() || denominator == 0.0 {
++                active = false;
++            } else {
++                let step = (-closest.dot(delta) / denominator).clamp(0.0, 1.0);
++                if !step.is_finite() || step == 0.0 {
++                    active = false;
++                } else {
++                    closest += delta * step;
++                }
++            }
++            None
++        }
++    })
++}
++
++/// Apply disjoint set identities after an arbitrary supporting plane is proved.
++///
++/// Refinement is a fallback for loose rational control hulls. It changes only
++/// the certificate: output boundaries retain all exact input surfaces, trims,
++/// and orientations. A failed certificate leaves containment and contact to
++/// the existing classification and assembly paths.
++fn oblique_separated_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
++    [false, true].into_iter().find_map(|refine| {
++        let (first, first_error) = refined_support_points(solid0, refine)?;
++        let (second, second_error) = refined_support_points(solid1, refine)?;
++        support_hulls_separated(&first, &second, first_error.max(second_error))
++    })?;
++    match operation {
++        Operation::Difference => Some(solid0.clone()),
++        Operation::Intersection => Solid::try_new(Vec::new()).ok(),
++        Operation::Union => Solid::try_new(
++            solid0
++                .boundaries()
++                .iter()
++                .chain(solid1.boundaries())
++                .cloned()
++                .collect(),
++        )
++        .ok(),
++    }
++}
++
+ /// Apply set identities only after a support enclosure separates the interiors.
+ ///
+ /// Weak separation permits boundary contact: regularized intersection is empty
+@@ -2718,7 +2915,9 @@
+         // Its empty boundary is therefore a valid empty result, while failure
+         // to certify or assemble an arrangement still requires marching.
+         Ok(solid)
+-    } else if let Some(solid) = separated_boolean(solid0, solid1, operation) {
++    } else if let Some(solid) = separated_boolean(solid0, solid1, operation)
++        .or_else(|| oblique_separated_boolean(solid0, solid1, operation))
++    {
+         Ok(solid)
+     } else {
+         boolean_classic(solid0, solid1, tol, operation).or_else(|error| {

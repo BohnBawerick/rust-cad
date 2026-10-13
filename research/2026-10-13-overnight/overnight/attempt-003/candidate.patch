@@ -1,0 +1,537 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -11,12 +11,13 @@
+ //! - The Alternative intersection-curve arm is a raw
+ //!   `IntersectionCurve<PolylineCurve<Point3>, S, S>` (0.3.2 wrapped it with
+ //!   parameter polylines the pipeline never consumed).
+-//! - `altshell_to_shell` converts that arm back to `C` via
+-//!   `SurfaceCurve::with_boundaries(..).into()` (the conversion the current
+-//!   `ShapeOpsCurve` bound provides), not `IntersectionCurve::new(..).into()`.
++//! - `altshell_to_shell` fits the projected intersection before converting it
++//!   through `SurfaceCurve::with_boundaries(..).into()`.
+ //! - Failures map onto the current `ShapeOpsError` (`EmptyOutputShell` for a
+ //!   `None` pipeline result, `InvalidOutputShell` for a rejected solid), since
+ //!   the current error enum has no single `Internal` variant.
++//! - Classification sums oriented shell windings and tracks the exterior
++//!   winding explicitly when intersecting with a complement for subtraction.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -34,15 +35,125 @@
+ 
+ type AltCurve<C, S> = Alternative<C, IntersectionCurve<PolylineCurve<Point3>, S, S>>;
+ type AltCurveShell<C, S> = Shell<Point3, AltCurve<C, S>, S>;
+-
+-/// Convert an Alternative-curve shell back to a target-curve shell, approximating
+-/// each intersection-curve arm with a polyline B-spline wrapped in a
+-/// `SurfaceCurve` (uses the `From<SurfaceCurve<BsplineCurve<Point3>, ..>>`
+-/// conversion the current `ShapeOpsCurve` bound guarantees).
++type PolyShell = Shell<Point3, PolylineCurve<Point3>, Option<PolygonMesh>>;
++
++/// Check a leader on both exact supports using continuation in parameter space.
++///
++/// The sampling density follows the spline inclusion check: six samples per
++/// degree per knot span. Hints keep each inverse query local to its predecessor.
++fn leader_on_surfaces<S: ShapeOpsSurface>(
++    curve: &IntersectionCurve<PolylineCurve<Point3>, S, S>,
++    leader: &BsplineCurve<Point3>,
++) -> bool {
++    let surface0 = curve.surface0();
++    let surface1 = curve.surface1();
++    let point = leader.front();
++    let parameters = surface0
++        .search_parameter(point, None, 100)
++        .zip(surface1.search_parameter(point, None, 100));
++    let (knots, _) = leader.knot_vector().to_single_multi();
++    let samples = leader.degree() * 6;
++    parameters
++        .and_then(|parameters| {
++            knots
++                .windows(2)
++                .flat_map(|span| {
++                    (1..=samples).map(move |index| {
++                        span[0] + (span[1] - span[0]) * index as f64 / samples as f64
++                    })
++                })
++                .try_fold(parameters, |(hint0, hint1), parameter| {
++                    let point = leader.evaluate(parameter);
++                    let uv0 = surface0.search_parameter(point, Some(hint0), 100)?;
++                    let uv1 = surface1.search_parameter(point, Some(hint1), 100)?;
++                    (surface0.evaluate(uv0.0, uv0.1).near(&point)
++                        && surface1.evaluate(uv1.0, uv1.1).near(&point))
++                    .then_some((uv0, uv1))
++                })
++        })
++        .is_some()
++}
++
++/// Fit one intersection span with bounded refinement and fallible projections.
++///
++/// Endpoints are shared between children and kept at the original edge vertices.
++/// Two subdivision levels bound the work per span; the shared projection budget
++/// also bounds the work for all intersection edges in an output shell.
++fn intersection_segment<S: ShapeOpsSurface>(
++    curve: &IntersectionCurve<PolylineCurve<Point3>, S, S>,
++    range: (f64, f64),
++    endpoints: (Point3, Point3),
++    depth: usize,
++    projections: &mut usize,
++) -> Option<BsplineCurve<Point3>> {
++    let (start, end) = range;
++    let (a, d) = endpoints;
++    let width = end - start;
++    *projections = projections.checked_sub(2)?;
++    let b = curve.search_triple(start + width / 3.0, 100)?.0;
++    let c = curve.search_triple(start + width * 2.0 / 3.0, 100)?.0;
++    let controls = vec![
++        a,
++        a + ((b - a) * 18.0 - (c - a) * 9.0 + (d - a) * 2.0) / 6.0,
++        d + ((c - d) * 18.0 - (b - d) * 9.0 + (a - d) * 2.0) / 6.0,
++        d,
++    ];
++    let mut knots = KnotVector::bezier_knot(3);
++    knots.transform(width, start);
++    let segment = BsplineCurve::new(knots, controls);
++    if leader_on_surfaces(curve, &segment) {
++        Some(segment)
++    } else if depth == 0 {
++        None
++    } else {
++        *projections = projections.checked_sub(1)?;
++        let middle = (start + end) / 2.0;
++        let point = curve.search_triple(middle, 100)?.0;
++        let left =
++            intersection_segment(curve, (start, middle), (a, point), depth - 1, projections)?;
++        let right = intersection_segment(curve, (middle, end), (point, d), depth - 1, projections)?;
++        left.try_concat(&right).ok()
++    }
++}
++
++/// Preserve valid leaders, refining only those that miss their exact supports.
++fn intersection_leader<S: ShapeOpsSurface>(
++    curve: &IntersectionCurve<PolylineCurve<Point3>, S, S>,
++    projections: &mut usize,
++) -> Option<BsplineCurve<Point3>> {
++    let points = curve.leader().as_slice();
++    let denominator = (points.len() - 1) as f64;
++    let knots = KnotVector::from(
++        iter::once(0.0)
++            .chain((0..points.len()).map(|index| index as f64 / denominator))
++            .chain(iter::once(1.0))
++            .collect::<Vec<_>>(),
++    );
++    let leader = BsplineCurve::new(knots, points.to_vec());
++    if leader_on_surfaces(curve, &leader) {
++        Some(leader)
++    } else {
++        let first =
++            intersection_segment(curve, (0.0, 1.0), (points[0], points[1]), 2, projections)?;
++        (1..points.len() - 1).try_fold(first, |spline, index| {
++            let segment = intersection_segment(
++                curve,
++                (index as f64, (index + 1) as f64),
++                (points[index], points[index + 1]),
++                2,
++                projections,
++            )?;
++            spline.try_concat(&segment).ok()
++        })
++    }
++}
++
++/// Convert alternative curves while retaining their exact supporting surfaces.
+ fn altshell_to_shell<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     altshell: &AltCurveShell<C, S>,
+ ) -> Option<Shell<Point3, C, S>> {
+-    altshell.try_mapped(
++    let mut projections = 128;
++    let shell: Shell<Point3, C, S> = altshell.try_mapped(
+         |p| Some(*p),
+         |c| match c {
+             Alternative::FirstType(c) => Some(c.clone()),
+@@ -54,14 +165,12 @@
+                 if points.len() < 2 {
+                     return None;
+                 }
+-                let denominator = (points.len() - 1) as f64;
+-                let knot_vec = KnotVector::from(
+-                    iter::once(0.0)
+-                        .chain((0..points.len()).map(|index| index as f64 / denominator))
+-                        .chain(iter::once(1.0))
+-                        .collect::<Vec<_>>(),
++                let curve = IntersectionCurve::new(
++                    surface0.clone(),
++                    surface1.clone(),
++                    PolylineCurve(points),
+                 );
+-                let bspline = BsplineCurve::new(knot_vec, points);
++                let bspline = intersection_leader(&curve, &mut projections)?;
+                 let boundary0: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
+                 let boundary1: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
+                 Some(
+@@ -73,20 +182,153 @@
+             }
+         },
+         |s| Some(s.clone()),
+-    )
+-}
+-
+-/// Split one pair of shells into `[and_shell, or_shell]` (0.3.2 verbatim): build
+-/// intersection loops, divide faces, classify each divided face as `and`/`or`,
+-/// then ray-cast the remaining `unknown` faces against the other shell.
++    )?;
++    let consistent = shell.edge_iter().all(|edge| edge.is_geometric_consistent());
++    consistent.then_some(shell)
++}
++
++/// Choose a point in the relative interior of a trimmed face.
++///
++/// A boundary vertex may also lie on the other solid at a mere contact. Use
++/// the parameter centroid of a large tessellation triangle instead, evaluated
++/// on the original surface. The tessellation is only a classification aid.
++fn interior_point<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    face: &Face<Point3, AltCurve<C, S>, S>,
++    tol: f64,
++) -> Option<(Point3, Vector3)> {
++    let shell: AltCurveShell<C, S> = iter::once(face.clone()).collect();
++    let meshed = shell.triangulation(tol);
++    let mesh = meshed.first()?.surface()?;
++    let triangle = mesh
++        .face_iter()
++        .flat_map(|polygon| {
++            (2..polygon.len()).map(move |index| [polygon[0], polygon[index - 1], polygon[index]])
++        })
++        .max_by(|lhs, rhs| {
++            let area = |triangle: &[StandardVertex; 3]| {
++                let [a, b, c] = triangle.map(|vertex| mesh.positions()[vertex.pos]);
++                (b - a).cross(c - a).magnitude2()
++            };
++            area(lhs).total_cmp(&area(rhs))
++        })?;
++    let surface = face.surface();
++    let uv = triangle
++        .iter()
++        .map(|vertex| vertex.uv.map(|index| mesh.uv_coords()[index]))
++        .try_fold(Vector2::zero(), |sum, uv| Some(sum + uv?));
++    let (u, v) = if let Some(uv) = uv {
++        (uv.x / 3.0, uv.y / 3.0)
++    } else {
++        let [a, b, c] = triangle.map(|vertex| mesh.positions()[vertex.pos]);
++        surface.search_nearest_parameter(a + ((b - a) + (c - a)) / 3.0, None, 100)?
++    };
++    let normal = surface.normal(u, v).normalize();
++    Some((
++        surface.evaluate(u, v),
++        if face.orientation() { normal } else { -normal },
++    ))
++}
++
++/// Detect a coincident boundary at a face-interior query using exact surfaces.
++///
++/// The parameter triangles locate the point in the trimmed domain; testing the
++/// supporting surface alone would also accept its unbounded extension.
++fn coincident_boundary<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    candidate: &Face<Point3, AltCurve<C, S>, S>,
++    point: Point3,
++    normal: Vector3,
++    shell: &Shell<Point3, C, S>,
++    polygons: &PolyShell,
++) -> Option<bool> {
++    shell.iter().zip(polygons).find_map(|(face, polygon)| {
++        let surface = face.surface();
++        let (u, v) = surface.search_parameter(point, None, 100)?;
++        let other = surface.normal(u, v).normalize();
++        if !normal.cross(other).near(&Vector3::zero()) {
++            return None;
++        }
++        // A single tangent point does not establish a shared face patch.
++        let shared_support = candidate
++            .boundary_iters()
++            .into_iter()
++            .flatten()
++            .all(|edge| {
++                let curve = edge.curve();
++                let (start, end) = curve.range_tuple();
++                [start, (start + end) / 2.0, end]
++                    .into_iter()
++                    .all(|parameter| {
++                        surface
++                            .search_parameter(curve.evaluate(parameter), None, 100)
++                            .is_some()
++                    })
++            });
++        if !shared_support {
++            return None;
++        }
++        let mesh = polygon.surface()?;
++        let uv = Vector2::new(u, v);
++        let contains = mesh.face_iter().any(|vertices| {
++            (2..vertices.len()).any(|index| {
++                let triangle = [vertices[0], vertices[index - 1], vertices[index]];
++                let [Some(a), Some(b), Some(c)] =
++                    triangle.map(|vertex| vertex.uv.map(|index| mesh.uv_coords()[index]))
++                else {
++                    return false;
++                };
++                let cross = |a: Vector2, b: Vector2| a.x * b.y - a.y * b.x;
++                let area = cross(b - a, c - a);
++                let weights = [
++                    cross(b - uv, c - uv),
++                    cross(c - uv, a - uv),
++                    cross(a - uv, b - uv),
++                ];
++                area != 0.0 && weights.iter().all(|weight| weight * area >= 0.0)
++            })
++        });
++        contains.then(|| (normal.dot(other) > 0.0) == face.orientation())
++    })
++}
++
++/// Classify against the sum of all oriented boundary shells.
++///
++/// An outward shell contributes one inside; a cavity contributes minus one.
++/// Reversing a bounded solid gives minus one inside and zero outside, so its
++/// complement additionally needs a winding of one at infinity.
++fn inside(point: Point3, shell: &PolyShell, at_infinity: isize) -> Option<bool> {
++    let directions = [
++        hash::take_one_unit(point),
++        hash::take_one_unit(point + Vector3::new(1.0, 2.0, 3.0)),
++        hash::take_one_unit(point + Vector3::new(3.0, 1.0, 2.0)),
++    ];
++    let votes = directions.into_iter().try_fold(0, |votes, direction| {
++        let winding = shell.iter().try_fold(at_infinity, |winding, face| {
++            let crossings = face.surface()?.signed_crossing_faces(point, direction);
++            Some(
++                winding
++                    + if face.orientation() {
++                        crossings
++                    } else {
++                        -crossings
++                    },
++            )
++        })?;
++        Some(votes + usize::from(winding > 0))
++    })?;
++    Some(votes >= 2)
++}
++
++/// Split the combined boundaries into intersection and union boundaries.
++///
++/// All shells of an operand participate in the same winding query. They are
++/// not successive Boolean operands: inward shells remove cavities, while
++/// disconnected outward shells add material.
+ fn process_one_pair_of_shells<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     shell0: &Shell<Point3, C, S>,
+     shell1: &Shell<Point3, C, S>,
+     tol: f64,
+-) -> Option<[Shell<Point3, C, S>; 2]> {
+-    if tol <= 0.0 {
+-        return None;
+-    }
++    second_at_infinity: isize,
++) -> Option<[AltCurveShell<C, S>; 2]> {
+     let poly_shell0 = shell0.triangulation(tol);
+     let poly_shell1 = shell1.triangulation(tol);
+     let altshell0: AltCurveShell<C, S> =
+@@ -99,18 +341,34 @@
+         ..
+     } = loops_store::create_loops_stores(&altshell0, &poly_shell0, &altshell1, &poly_shell1)?;
+     let mut cls0 = divide_face::divide_faces(&altshell0, &loops_store0, tol)?;
+-    cls0.integrate_by_component();
++    if cls0.and_or_unknown()[2]
++        .connected_components()
++        .iter()
++        .all(|component| !component.extract_boundaries().is_empty())
++    {
++        cls0.integrate_by_component();
++    }
+     let mut cls1 = divide_face::divide_faces(&altshell1, &loops_store1, tol)?;
+-    cls1.integrate_by_component();
++    if cls1.and_or_unknown()[2]
++        .connected_components()
++        .iter()
++        .all(|component| !component.extract_boundaries().is_empty())
++    {
++        cls1.integrate_by_component();
++    }
+     let [mut and0, mut or0, unknown0] = cls0.and_or_unknown();
+     unknown0.into_iter().try_for_each(|face| {
+-        let pt = face.boundaries()[0].vertex_iter().next().unwrap().point();
+-        let dir = hash::take_one_unit(pt);
+-        let count = poly_shell1.iter().try_fold(0, |count, face| {
+-            let poly = face.surface()?;
+-            Some(count + poly.signed_crossing_faces(pt, dir))
+-        })?;
+-        if count >= 1 {
++        let (point, normal) = interior_point(&face, tol)?;
++        if let Some(same_orientation) =
++            coincident_boundary(&face, point, normal, shell1, &poly_shell1)
++        {
++            // A shared co-oriented patch belongs to both results, once. Opposed
++            // patches enclose no intersection and are internal to the union.
++            if same_orientation {
++                and0.push(face.clone());
++                or0.push(face);
++            }
++        } else if inside(point, &poly_shell1, second_at_infinity)? {
+             and0.push(face);
+         } else {
+             or0.push(face);
+@@ -119,22 +377,20 @@
+     })?;
+     let [mut and1, mut or1, unknown1] = cls1.and_or_unknown();
+     unknown1.into_iter().try_for_each(|face| {
+-        let pt = face.boundaries()[0].vertex_iter().next().unwrap().point();
+-        let dir = hash::take_one_unit(pt);
+-        let count = poly_shell0.iter().try_fold(0, |count, face| {
+-            let poly = face.surface()?;
+-            Some(count + poly.signed_crossing_faces(pt, dir))
+-        })?;
+-        if count >= 1 {
+-            and1.push(face);
+-        } else {
+-            or1.push(face);
++        let (point, normal) = interior_point(&face, tol)?;
++        // The first operand owns coincident patches.
++        if coincident_boundary(&face, point, normal, shell0, &poly_shell0).is_none() {
++            if inside(point, &poly_shell0, 0)? {
++                and1.push(face);
++            } else {
++                or1.push(face);
++            }
+         }
+         Some(())
+     })?;
+     and0.append(&mut and1);
+     or0.append(&mut or1);
+-    Some([altshell_to_shell(&and0)?, altshell_to_shell(&or0)?])
++    Some([and0, or0])
+ }
+ 
+ fn finalize<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+@@ -144,6 +400,62 @@
+     let boundaries = shell.connected_components();
+     Solid::try_new(boundaries)
+         .map_err(|source| ShapeOpsError::InvalidOutputShell { operation, source })
++}
++
++/// The bounded operation determines the winding at infinity of the second operand.
++#[derive(Clone, Copy)]
++enum Operation {
++    Intersection,
++    Union,
++    Difference,
++}
++
++fn boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    tol: f64,
++    operation: Operation,
++) -> ClassicResult<Solid<Point3, C, S>> {
++    if !tol.is_finite() || tol <= 0.0 {
++        return Err(ShapeOpsError::InvalidTolerance);
++    }
++    let shell0: Shell<Point3, C, S> = solid0.face_iter().cloned().collect();
++    let mut shell1: Shell<Point3, C, S> = solid1.face_iter().cloned().collect();
++    let (name, at_infinity) = match operation {
++        Operation::Intersection => ("and", 0),
++        Operation::Union => ("or", 0),
++        Operation::Difference => {
++            shell1.iter_mut().for_each(|face| {
++                face.invert();
++            });
++            ("difference", 1)
++        }
++    };
++    let shell = if shell0.is_empty() || shell1.is_empty() {
++        // These are set identities for valid empty operands, before any geometric operation.
++        match operation {
++            Operation::Intersection => Shell::default(),
++            Operation::Difference => shell0,
++            Operation::Union => {
++                if shell0.is_empty() {
++                    shell1
++                } else {
++                    shell0
++                }
++            }
++        }
++    } else {
++        let [and_shell, or_shell] = process_one_pair_of_shells(&shell0, &shell1, tol, at_infinity)
++            .ok_or(ShapeOpsError::EmptyOutputShell { operation: name })?;
++        let selected = match operation {
++            Operation::Union => or_shell,
++            Operation::Intersection | Operation::Difference => and_shell,
++        };
++        altshell_to_shell(&selected)
++            .ok_or(ShapeOpsError::AltShellConversionFailed { operation: name })?
++    };
++    // An empty boundary is a valid empty result; only pipeline failure is an error.
++    finalize(name, shell)
+ }
+ 
+ /// AND operation between two solids (classic backend).
+@@ -152,24 +464,7 @@
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+-    let operation = "and";
+-    let pair = |a: &Shell<Point3, C, S>, b: &Shell<Point3, C, S>| {
+-        process_one_pair_of_shells(a, b, tol).ok_or(ShapeOpsError::EmptyOutputShell { operation })
+-    };
+-    let mut iter0 = solid0.boundaries().iter();
+-    let mut iter1 = solid1.boundaries().iter();
+-    let shell0 = iter0.next().unwrap();
+-    let shell1 = iter1.next().unwrap();
+-    let [mut and_shell, _] = pair(shell0, shell1)?;
+-    for shell in iter0 {
+-        let [res, _] = pair(&and_shell, shell)?;
+-        and_shell = res;
+-    }
+-    for shell in iter1 {
+-        let [res, _] = pair(&and_shell, shell)?;
+-        and_shell = res;
+-    }
+-    finalize(operation, and_shell)
++    boolean(solid0, solid1, tol, Operation::Intersection)
+ }
+ 
+ /// OR operation between two solids (classic backend).
+@@ -178,24 +473,7 @@
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+-    let operation = "or";
+-    let pair = |a: &Shell<Point3, C, S>, b: &Shell<Point3, C, S>| {
+-        process_one_pair_of_shells(a, b, tol).ok_or(ShapeOpsError::EmptyOutputShell { operation })
+-    };
+-    let mut iter0 = solid0.boundaries().iter();
+-    let mut iter1 = solid1.boundaries().iter();
+-    let shell0 = iter0.next().unwrap();
+-    let shell1 = iter1.next().unwrap();
+-    let [_, mut or_shell] = pair(shell0, shell1)?;
+-    for shell in iter0 {
+-        let [_, res] = pair(&or_shell, shell)?;
+-        or_shell = res;
+-    }
+-    for shell in iter1 {
+-        let [_, res] = pair(&or_shell, shell)?;
+-        or_shell = res;
+-    }
+-    finalize(operation, or_shell)
++    boolean(solid0, solid1, tol, Operation::Union)
+ }
+ 
+ /// Difference: the region inside `solid0` but outside `solid1` (classic backend).
+@@ -204,9 +482,7 @@
+     solid1: &Solid<Point3, C, S>,
+     tol: f64,
+ ) -> ClassicResult<Solid<Point3, C, S>> {
+-    let mut neg = solid1.clone();
+-    neg.not();
+-    and(solid0, &neg, tol)
++    boolean(solid0, solid1, tol, Operation::Difference)
+ }
+ 
+ /// Symmetric difference (XOR): the region inside exactly one solid (classic backend).

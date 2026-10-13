@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Hypothesis: adjacent faces can describe the same seam with different edge subdivisions. The fallback refines open edges to a common partition before sewing, preserving original curves, surfaces, and cavity orientations. Existing successful assembly retains precedence.
+
+This applies to general trimmed boundaries. Ambiguous matches, earlier intersection failures, and touching-union mesh closure remain unresolved.
+
+Formatting and whitespace checks completed. No builds, tests, or commits were performed. Findings are saved in `/work/scratch/partial.txt`.

@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The fallback partitions certified planar faces by support planes, then uses signed trim-wire winding to retain cells. This extends exact assembly to concave faces and polygonal holes while preserving cavity orientation across multiple shells. Existing successful paths retain precedence.
+
+Curved trims, coplanar seams, and touching-edge mesh closure remain unresolved. No gain is claimed.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

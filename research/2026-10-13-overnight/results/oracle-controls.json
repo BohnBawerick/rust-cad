@@ -1,0 +1,11 @@
+{
+  "valid_cube": true,
+  "reject_empty": true,
+  "reject_missing_face": true,
+  "reject_wrong_centroid": true,
+  "reject_inward_volume": true,
+  "reject_open_brep": true,
+  "disjoint_formula_difference": true,
+  "disjoint_formula_union": true,
+  "disjoint_formula_intersection": true
+}

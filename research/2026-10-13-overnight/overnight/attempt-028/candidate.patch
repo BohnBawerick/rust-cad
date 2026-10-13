@@ -1,0 +1,164 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -26,6 +26,8 @@
+ //!   nets, avoiding ill-conditioned comparisons between independently derived normals.
+ //! - Failed certified sweeps retain the input trim curves and smooth seam curves;
+ //!   only new transverse generators require intersection-curve assembly.
++//! - Unresolved section intersections refine their rational control hulls before
++//!   rejecting assembly; a failed Newton step alone does not certify a crossing.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -1495,6 +1497,75 @@
+     (arcs.len() * 2 == cap_edges.len()).then_some(arcs)
+ }
+ 
++/// Bound accumulated subdivision and rational projection roundoff in world space.
++///
++/// Original homogeneous controls bound the arithmetic even when subdivision
++/// cancels large coordinates. The positive weight lower bound also accounts
++/// for amplification during projection back to Euclidean coordinates.
++fn section_subdivision_error(controls: &[Vector4], depth: usize, work: &mut usize) -> Option<f64> {
++    *work = work.checked_sub(controls.len())?;
++    let (min_weight, max_weight, size) = controls.iter().try_fold(
++        (f64::INFINITY, 0.0_f64, 0.0_f64),
++        |(min_weight, max_weight, size), control| {
++            let magnitude = control.x.abs() + control.y.abs() + control.z.abs();
++            (control.w > 0.0 && control.w.is_finite() && magnitude.is_finite()).then_some((
++                min_weight.min(control.w),
++                max_weight.max(control.w),
++                size.max(3.0 * magnitude),
++            ))
++        },
++    )?;
++    let accumulated = 4.0 * (depth + 1) as f64 * controls.len() as f64 * f64::EPSILON;
++    let relative_error = accumulated / (1.0 - accumulated);
++    let weight_error = relative_error * max_weight;
++    let denominator = min_weight - weight_error;
++    let point_bound = size / min_weight;
++    let error = (relative_error * size + point_bound * weight_error) / denominator
++        + f64::EPSILON * point_bound;
++    (accumulated < 1.0 && denominator > 0.0 && error.is_finite()).then_some(error)
++}
++
++/// Certify separation using projections of complete rational Bézier control hulls.
++///
++/// Every computed axis is a valid separating-axis candidate, even when it is
++/// not a hull-edge normal. Positive weights enclose each entire curve in its
++/// projected control hull. Arithmetic error expands the projection intervals;
++/// overlapping intervals remain unresolved rather than becoming intersections.
++fn section_hulls_separated(
++    a: &[Vector4],
++    b: &[Vector4],
++    normal: Vector3,
++    subdivision_error: [f64; 2],
++    work: &mut usize,
++) -> Option<bool> {
++    let origin = a.first()?.to_point();
++    [a, b]
++        .into_iter()
++        .flat_map(|controls| controls.windows(2))
++        .try_fold(false, |separated, pair| {
++            if separated {
++                return Some(true);
++            }
++            let axis = (pair[1].to_point() - pair[0].to_point()).cross(normal);
++            *work = work.checked_sub(a.len().checked_add(b.len())?)?;
++            let interval = |controls: &[Vector4], subdivision_error: f64| {
++                let padding = subdivision_error * axis.magnitude();
++                controls.iter().try_fold(
++                    (f64::INFINITY, f64::NEG_INFINITY),
++                    |(min, max), control| {
++                        let (distance, error) = plane_distance(control.to_point(), origin, axis);
++                        let error = error + padding;
++                        (control.w > 0.0 && distance.is_finite() && error.is_finite())
++                            .then_some((min.min(distance - error), max.max(distance + error)))
++                    },
++                )
++            };
++            let (mina, maxa) = interval(a, subdivision_error[0])?;
++            let (minb, maxb) = interval(b, subdivision_error[1])?;
++            Some(maxa < minb || maxb < mina)
++        })
++}
++
+ /// Isolate section intersections with positive-weight rational convex hulls.
+ ///
+ /// Subdivision uses homogeneous de Casteljau, so no chord can certify separation.
+@@ -1566,34 +1637,52 @@
+             continue;
+         }
+         if depth >= 48 || (mina.near(&maxa) && minb.near(&maxb)) {
+-            let (mut u, mut v) = ((ra.0 + ra.1) / 2.0, (rb.0 + rb.1) / 2.0);
+-            (0..12).try_for_each(|_| {
+-                let delta = a.evaluate(u) - b.evaluate(v);
+-                let da = a.derivative(u);
+-                let db = b.derivative(v);
+-                let determinant = da.cross(db).dot(normal);
+-                if !determinant.is_finite() || determinant.so_small() {
++            let root = (|| {
++                let (mut u, mut v) = ((ra.0 + ra.1) / 2.0, (rb.0 + rb.1) / 2.0);
++                (0..12).try_for_each(|_| {
++                    let delta = a.evaluate(u) - b.evaluate(v);
++                    let da = a.derivative(u);
++                    let db = b.derivative(v);
++                    let determinant = da.cross(db).dot(normal);
++                    if !determinant.is_finite() || determinant.so_small() {
++                        return None;
++                    }
++                    u -= delta.cross(db).dot(normal) / determinant;
++                    v -= delta.cross(da).dot(normal) / determinant;
++                    (u.is_finite() && v.is_finite()).then_some(())
++                })?;
++                let within = |value: f64, range: (f64, f64)| {
++                    (value >= range.0 || value.near(&range.0))
++                        && (value <= range.1 || value.near(&range.1))
++                };
++                if !within(u, ra) || !within(v, rb) || !a.evaluate(u).near(&b.evaluate(v)) {
+                     return None;
+                 }
+-                u -= delta.cross(db).dot(normal) / determinant;
+-                v -= delta.cross(da).dot(normal) / determinant;
+-                (u.is_finite() && v.is_finite()).then_some(())
+-            })?;
+-            let within = |value: f64, range: (f64, f64)| {
+-                (value >= range.0 || value.near(&range.0))
+-                    && (value <= range.1 || value.near(&range.1))
+-            };
+-            if !within(u, ra) || !within(v, rb) || !a.evaluate(u).near(&b.evaluate(v)) {
++                let ar = a.range_tuple();
++                let br = b.range_tuple();
++                Some((u.clamp(ar.0, ar.1), v.clamp(br.0, br.1)))
++            })();
++            if let Some((u, v)) = root {
++                if !roots.iter().any(|(s, t)| u.near(s) && v.near(t)) {
++                    roots.push((u, v));
++                }
++                continue;
++            }
++            // Small overlapping boxes need not contain a crossing. A failed
++            // local solve therefore requires either a separation certificate
++            // or further subdivision, not rejection of the whole arrangement.
++            let subdivision_error = [
++                section_subdivision_error(a.control_points(), depth, work)?,
++                section_subdivision_error(b.control_points(), depth, work)?,
++            ];
++            if section_hulls_separated(&ca, &cb, normal, subdivision_error, work)? {
++                continue;
++            }
++            if depth >= 48 {
+                 return None;
+             }
+-            let ar = a.range_tuple();
+-            let br = b.range_tuple();
+-            u = u.clamp(ar.0, ar.1);
+-            v = v.clamp(br.0, br.1);
+-            if !roots.iter().any(|(s, t)| u.near(s) && v.near(t)) {
+-                roots.push((u, v));
+-            }
+-        } else if (maxa - mina).magnitude2() >= (maxb - minb).magnitude2() {
++        }
++        if (maxa - mina).magnitude2() >= (maxb - minb).magnitude2() {
+             let (left, right) = split(&ca);
+             let middle = (ra.0 + ra.1) / 2.0;
+             stack.push((((middle, ra.1), right), (rb, cb.clone()), depth + 1));

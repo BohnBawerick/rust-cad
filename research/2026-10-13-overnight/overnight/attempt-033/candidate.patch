@@ -1,0 +1,196 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -28,6 +28,8 @@
+ //!   only new transverse generators require intersection-curve assembly.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
++//! - Convex planar shells classify complete support enclosures before marching,
++//!   preserving exact nested boundaries and reversing every subtracted shell.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -1153,24 +1155,18 @@
+ /// face, or lie on two nonparallel planes, making its endpoints sufficient.
+ /// This argument includes holes and all oriented shells of the input solid.
+ /// Unbounded analytic supports and coplanar seams decline certification.
+-fn solid_enclosure<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++fn visit_solid_enclosure<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid: &Solid<Point3, C, S>,
+-) -> Option<(Point3, Point3)> {
++    mut visit: impl FnMut(Point3) -> Option<()>,
++) -> Option<()> {
+     let mut work = 65_536_usize;
+     let mut incidence: HashMap<EdgeId<C>, (usize, Option<Vector3>)> = HashMap::default();
+-    let mut minimum = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+-    let mut maximum = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+     let mut include = |point: Point3| {
+-        if !point.x.is_finite() || !point.y.is_finite() || !point.z.is_finite() {
+-            return None;
++        if point.x.is_finite() && point.y.is_finite() && point.z.is_finite() {
++            visit(point)
++        } else {
++            None
+         }
+-        minimum.x = minimum.x.min(point.x);
+-        minimum.y = minimum.y.min(point.y);
+-        minimum.z = minimum.z.min(point.z);
+-        maximum.x = maximum.x.max(point.x);
+-        maximum.y = maximum.y.max(point.y);
+-        maximum.z = maximum.z.max(point.z);
+-        Some(())
+     };
+     solid.face_iter().try_for_each(|face| {
+         work = work.checked_sub(1)?;
+@@ -1226,8 +1222,141 @@
+             Some(())
+         })
+     })?;
+-    (!incidence.is_empty() && incidence.values().all(|(count, _)| *count == 2))
+-        .then_some((minimum, maximum))
++    (!incidence.is_empty() && incidence.values().all(|(count, _)| *count == 2)).then_some(())
++}
++
++/// Bound the same complete support enclosure along the coordinate axes.
++fn solid_enclosure<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++) -> Option<(Point3, Point3)> {
++    let mut minimum = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
++    let mut maximum = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
++    visit_solid_enclosure(solid, |point| {
++        minimum.x = minimum.x.min(point.x);
++        minimum.y = minimum.y.min(point.y);
++        minimum.z = minimum.z.min(point.z);
++        maximum.x = maximum.x.max(point.x);
++        maximum.y = maximum.y.max(point.y);
++        maximum.z = maximum.z.max(point.z);
++        Some(())
++    })?;
++    Some((minimum, maximum))
++}
++
++/// A certified relation to a bounded convex material region.
++#[derive(Clone, Copy)]
++enum EnclosureRelation {
++    Contained,
++    Separated,
++}
++
++/// Certify containment or separation using all outward support halfspaces.
++///
++/// A closed planar shell is convex when every face plane supports every other
++/// face. Complete rational control hulls and certified straight trims then
++/// bound the candidate in each of those halfspaces. Strict inequalities leave
++/// no shared patch to assemble. Unresolved relations require intersection work.
++fn convex_enclosure_relation<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    container: &Solid<Point3, C, S>,
++    candidate: &Solid<Point3, C, S>,
++) -> Option<EnclosureRelation> {
++    if container.boundaries().len() != 1 {
++        return None;
++    }
++    let mut work = 262_144_usize;
++    let cells = planar_cells(container, &mut work)?;
++    if cells.len() < 4 {
++        return None;
++    }
++    cells.iter().try_for_each(|plane| {
++        cells
++            .iter()
++            .flat_map(|cell| &cell.points)
++            .try_for_each(|point| {
++                work = work.checked_sub(1)?;
++                let (distance, error) = plane_distance(*point, plane.points[0], plane.normal);
++                (distance.is_finite() && error.is_finite() && distance <= error).then_some(())
++            })
++    })?;
++    let mut intervals = cells
++        .iter()
++        .map(|_| (f64::INFINITY, f64::NEG_INFINITY))
++        .collect::<Vec<_>>();
++    visit_solid_enclosure(candidate, |point| {
++        cells
++            .iter()
++            .zip(&mut intervals)
++            .try_for_each(|(plane, interval)| {
++                work = work.checked_sub(1)?;
++                let (distance, error) = plane_distance(point, plane.points[0], plane.normal);
++                if !distance.is_finite() || !error.is_finite() {
++                    return None;
++                }
++                interval.0 = interval.0.min(distance - error);
++                interval.1 = interval.1.max(distance + error);
++                Some(())
++            })
++    })?;
++    if intervals.iter().all(|(_, maximum)| *maximum < 0.0) {
++        Some(EnclosureRelation::Contained)
++    } else if intervals.iter().any(|(minimum, _)| *minimum > 0.0) {
++        Some(EnclosureRelation::Separated)
++    } else {
++        None
++    }
++}
++
++/// Apply certified region identities without discarding oriented inner shells.
++///
++/// For a strictly contained candidate, subtraction reverses its entire boundary
++/// chain. Its cavity shells consequently become material islands in the result.
++fn convex_enclosure_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
++    [false, true].into_iter().find_map(|swapped| {
++        let (container, candidate) = if swapped {
++            (solid1, solid0)
++        } else {
++            (solid0, solid1)
++        };
++        match convex_enclosure_relation(container, candidate)? {
++            EnclosureRelation::Contained => match operation {
++                Operation::Union => Some(container.clone()),
++                Operation::Intersection => Some(candidate.clone()),
++                Operation::Difference if swapped => Solid::try_new(Vec::new()).ok(),
++                Operation::Difference => {
++                    let cavities = candidate
++                        .boundaries()
++                        .iter()
++                        .map(|shell| shell.iter().map(|face| face.inverse()).collect());
++                    Solid::try_new(
++                        container
++                            .boundaries()
++                            .iter()
++                            .cloned()
++                            .chain(cavities)
++                            .collect(),
++                    )
++                    .ok()
++                }
++            },
++            EnclosureRelation::Separated => match operation {
++                Operation::Difference => Some(solid0.clone()),
++                Operation::Intersection => Solid::try_new(Vec::new()).ok(),
++                Operation::Union => Solid::try_new(
++                    solid0
++                        .boundaries()
++                        .iter()
++                        .chain(solid1.boundaries())
++                        .cloned()
++                        .collect(),
++                )
++                .ok(),
++            },
++        }
++    })
+ }
+ 
+ /// Apply set identities only after a support enclosure separates the interiors.
+@@ -2073,6 +2202,8 @@
+         Ok(solid)
+     } else if let Some(solid) = separated_boolean(solid0, solid1, operation) {
+         Ok(solid)
++    } else if let Some(solid) = convex_enclosure_boolean(solid0, solid1, operation) {
++        Ok(solid)
+     } else {
+         boolean_classic(solid0, solid1, tol, operation)
+             .or_else(|error| planar_boolean(solid0, solid1, operation, true).ok_or(error))

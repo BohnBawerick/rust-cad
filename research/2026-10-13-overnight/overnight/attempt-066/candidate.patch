@@ -1,0 +1,172 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -36,6 +36,8 @@
+ //!   chart regions and assigning each hole to its immediate containing boundary.
+ //! - Failed intersection fits can retain exact rational sections of certified
+ //!   translational supports, including oblique cuts by planar supports.
++//! - Failed polynomial fits can retain certified rational isoparametric sections
++//!   of general spline supports without replacing their exact geometry.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -283,12 +285,148 @@
+         })
+ }
+ 
++/// Extract an exact isoparametric curve lying on a plane.
++///
++/// Fixing one parameter of a tensor-product spline combines its homogeneous
++/// controls linearly. If every resulting control satisfies the plane equation,
++/// the entire rational curve lies in that plane. Newton iteration only proposes
++/// the fixed parameter; the complete control net supplies the certificate.
++fn planar_isocurve(
++    spline: &BsplineSurface<Vector4>,
++    plane: &Plane,
++    seed: (f64, f64),
++    fixed_u: bool,
++) -> Option<NurbsCurve<Vector4>> {
++    let surface = NurbsSurface::new(spline.clone());
++    let (urange, vrange) = surface.range_tuple();
++    let (start, end) = if fixed_u { urange } else { vrange };
++    let initial = if fixed_u { seed.0 } else { seed.1 };
++    let normal = plane.normal();
++    let parameter = (0..16).try_fold(initial, |parameter, _| {
++        if !parameter.is_finite() || parameter < start || parameter > end {
++            return None;
++        }
++        let (u, v) = if fixed_u {
++            (parameter, seed.1)
++        } else {
++            (seed.0, parameter)
++        };
++        let point = surface.evaluate(u, v);
++        let tangent = if fixed_u {
++            surface.derivative_u(u, v)
++        } else {
++            surface.derivative_v(u, v)
++        };
++        let derivative = tangent.dot(normal);
++        let error = 32.0 * f64::EPSILON * tangent.magnitude() * normal.magnitude();
++        if !derivative.is_finite() || !error.is_finite() || derivative.abs() <= error {
++            None
++        } else {
++            Some(parameter - (point - plane.origin()).dot(normal) / derivative)
++        }
++    })?;
++    if !parameter.is_finite() || parameter < start || parameter > end {
++        return None;
++    }
++    let controls = spline.control_points();
++    let (knots, points) = if fixed_u {
++        (
++            spline.knot_vector_v().clone(),
++            (0..controls[0].len())
++                .map(|index| spline.curve_u(index).evaluate(parameter))
++                .collect::<Vec<_>>(),
++        )
++    } else {
++        (
++            spline.knot_vector_u().clone(),
++            (0..controls.len())
++                .map(|index| spline.curve_v(index).evaluate(parameter))
++                .collect::<Vec<_>>(),
++        )
++    };
++    points
++        .iter()
++        .all(|control| {
++            let (distance, error) = plane_distance(control.to_point(), plane.origin(), normal);
++            control.w.is_finite()
++                && control.w > 0.0
++                && distance.is_finite()
++                && error.is_finite()
++                && distance.abs() <= error
++        })
++        .then_some(())?;
++    Some(NurbsCurve::new(BsplineCurve::try_new(knots, points).ok()?))
++}
++
++/// Recover a plane section that follows an isoparameter of an exact rational net.
++///
++/// Conversion may change the parameter frame, especially for analytic surfaces.
++/// All inverse queries therefore use the converted surface's own coordinates.
++/// Only the retained section needs to lie in the conversion domain; its hull
++/// is never used as an enclosure of an unbounded analytic support or a solid.
++/// Endpoint and continuation checks select the existing intersection branch.
++fn isoparametric_intersection_leader<S: ShapeOpsSurface>(
++    intersection: &IntersectionCurve<PolylineCurve<Point3>, S, S>,
++    projections: &mut usize,
++) -> Option<NurbsCurve<Vector4>> {
++    let surface0 = intersection.surface0();
++    let surface1 = intersection.surface1();
++    [(surface0, surface1), (surface1, surface0)]
++        .into_iter()
++        .find_map(|(support, planar)| {
++            let plane = certified_plane(planar)?;
++            let spline = support.try_into_homogeneous_bspline_surface()?;
++            if spline.control_points().iter().map(Vec::len).sum::<usize>() > 4096
++                || !spline.is_clamped()
++                || !spline.control_points().iter().flatten().all(|control| {
++                    control.w.is_finite()
++                        && control.w > 0.0
++                        && control.to_point().to_vec().magnitude2().is_finite()
++                })
++            {
++                return None;
++            }
++            let (first, last) = intersection.leader().range_tuple();
++            *projections = projections.checked_sub(2)?;
++            let middle = intersection.search_triple((first + last) / 2.0, 100)?.0;
++            let seed = NurbsSurface::new(spline.clone()).search_parameter(middle, None, 100)?;
++            [true, false].into_iter().find_map(|fixed_u| {
++                let section = planar_isocurve(&spline, &plane, seed, fixed_u)?;
++                let front = intersection.leader().front();
++                let back = intersection.leader().back();
++                *projections = projections.checked_sub(2)?;
++                let start = sweep_parameter(&section, front)?;
++                let end = sweep_parameter(&section, back)?;
++                let mut section = section_trim(&section, start.min(end), start.max(end))?;
++                if start > end {
++                    section.invert();
++                }
++                let (start, end) = section.range_tuple();
++                let samples = intersection.leader().as_slice().len().clamp(3, 16);
++                (1..samples).try_fold(start, |previous, index| {
++                    *projections = projections.checked_sub(2)?;
++                    let fraction = index as f64 / samples as f64;
++                    let point = intersection
++                        .search_triple(first + (last - first) * fraction, 100)?
++                        .0;
++                    let parameter = section.search_parameter(point, Some(previous), 100)?;
++                    (parameter >= previous
++                        && parameter <= end
++                        && section.evaluate(parameter).near(&point))
++                    .then_some(parameter)
++                })?;
++                (section.front().near(&front) && section.back().near(&back)).then_some(section)
++            })
++        })
++}
++
+ /// Convert alternative curves while retaining their exact supporting surfaces.
+ fn altshell_to_shell<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     altshell: &AltCurveShell<C, S>,
+ ) -> Option<Shell<Point3, C, S>> {
+     let mut projections = 128;
+     let mut rational_projections = 128;
++    let mut section_projections = 128;
+     let shell: Shell<Point3, C, S> = altshell.try_mapped(
+         |p| Some(*p),
+         |c| match c {
+@@ -316,7 +454,10 @@
+                         .into(),
+                     )
+                 } else {
+-                    let rational = rational_intersection_leader(&curve, &mut rational_projections)?;
++                    let rational = rational_intersection_leader(&curve, &mut rational_projections)
++                        .or_else(|| {
++                            isoparametric_intersection_leader(&curve, &mut section_projections)
++                        })?;
+                     Some(
+                         SurfaceCurve::with_boundaries(
+                             surface0, surface1, rational, boundary0, boundary1,

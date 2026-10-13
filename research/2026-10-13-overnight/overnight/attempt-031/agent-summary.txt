@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The new fallback clips a certified taller sweep to the first operand’s slab. For \(A \subseteq H\), subtraction and intersection depend only on \(B \cap H\). Exact rational curves, original supports, and cavity orientation are preserved. Existing successful paths retain precedence.
+
+Scope includes general certified translational sweeps and through-cuts. Partial axial overlap, tangencies, touching-union closure, and downstream mesh consistency remain unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits were performed. Findings are in `/work/scratch/partial.txt`.

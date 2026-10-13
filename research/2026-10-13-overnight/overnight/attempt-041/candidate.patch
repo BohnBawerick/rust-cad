@@ -1,0 +1,236 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -26,6 +26,8 @@
+ //!   nets, avoiding ill-conditioned comparisons between independently derived normals.
+ //! - Failed certified sweeps retain the input trim curves and smooth seam curves;
+ //!   only new transverse generators require intersection-curve assembly.
++//! - Planar contact edges pair boundary uses by material sector; vertex fans
++//!   preserve distinct sheets even when their geometry coincides.
+ //! - Sweep trim membership uses known endpoint parameters before inversion,
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
+ 
+@@ -1065,13 +1067,14 @@
+                     }
+                     let key = (a.min(b), a.max(b));
+                     if let Some((edge, start, count)) = edges.get_mut(&key) {
+-                        // More than two incident faces, or equal directions, is
+-                        // independently detected nonmanifold output geometry.
+-                        if *count != 1 || *start == a {
+-                            return None;
+-                        }
+-                        *count = 2;
+-                        Some(edge.inverse())
++                        // Coincident geometry may carry several boundary sheets.
++                        // Defer their topological pairing until every use is known.
++                        *count += 1;
++                        Some(if *start == a {
++                            edge.clone()
++                        } else {
++                            edge.inverse()
++                        })
+                     } else {
+                         let front = vertices[a].point();
+                         let back = vertices[b].point();
+@@ -1121,11 +1124,199 @@
+             Some(face)
+         })
+         .collect::<Option<Shell<_, _, _>>>()?;
+-    if edges.values().any(|(_, _, count)| *count != 2) {
++    if edges
++        .values()
++        .any(|(_, _, count)| *count < 2 || !count.is_multiple_of(2))
++    {
+         None
+     } else {
+-        Solid::try_new(shell.connected_components()).ok()
+-    }
++        Solid::try_new(shell.connected_components())
++            .ok()
++            .or_else(|| contact_sheets(&shell))
++    }
++}
++
++/// One oriented occurrence of an edge, with its successor in the same wire.
++struct SheetEdge<C> {
++    edge: Edge<Point3, C>,
++    face: usize,
++    next: usize,
++}
++
++/// Find a vertex fan representative, compressing its parent chain.
++fn sheet_root(parents: &mut [usize], mut index: usize) -> usize {
++    while parents[index] != index {
++        parents[index] = parents[parents[index]];
++        index = parents[index];
++    }
++    index
++}
++
++/// Normalize boundary sheets at certified planar contacts without moving geometry.
++///
++/// Around a directed edge, material occupies the counterclockwise sector from
++/// a reverse use to the next forward use. Pair these uses, rather than merging
++/// every coincident edge. Vertex identities then follow connected corner fans,
++/// including distinct fans on a shell that touches itself only at a vertex.
++/// Curved or ambiguous multiple incidences decline this normalization.
++fn contact_sheets<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    shell: &Shell<Point3, C, S>,
++) -> Option<Solid<Point3, C, S>> {
++    let mut uses = Vec::new();
++    let wires = shell
++        .iter()
++        .enumerate()
++        .map(|(face, patch)| {
++            patch
++                .boundaries()
++                .into_iter()
++                .map(|wire| {
++                    let start = uses.len();
++                    let len = wire.len();
++                    uses.extend(wire.into_iter().enumerate().map(|(index, edge)| SheetEdge {
++                        edge,
++                        face,
++                        next: start + (index + 1) % len,
++                    }));
++                    start..uses.len()
++                })
++                .collect::<Vec<_>>()
++        })
++        .collect::<Vec<_>>();
++    let mut lookup = HashMap::default();
++    let mut incidence: Vec<SmallVec<[usize; 2]>> = Vec::new();
++    uses.iter().enumerate().for_each(|(index, usage)| {
++        let group = *lookup.entry(usage.edge.id()).or_insert_with(|| {
++            incidence.push(SmallVec::new());
++            incidence.len() - 1
++        });
++        incidence[group].push(index);
++    });
++    let mut normals = HashMap::default();
++    let pairs = incidence
++        .iter()
++        .map(|group| {
++            if group.len() == 2 {
++                let [a, b] = [group[0], group[1]];
++                return (uses[a].edge.orientation() != uses[b].edge.orientation())
++                    .then(|| iter::once([a, b]).collect::<SmallVec<[[usize; 2]; 2]>>());
++            }
++            if group.len() < 4 || !group.len().is_multiple_of(2) {
++                return None;
++            }
++            let edge = &uses[group[0]].edge;
++            let tangent = edge.absolute_back().point() - edge.absolute_front().point();
++            if !tangent.magnitude2().is_finite() || tangent.magnitude2() == 0.0 {
++                return None;
++            }
++            let tangent = tangent.normalize();
++            let rays = group
++                .iter()
++                .map(|&index| {
++                    let usage = &uses[index];
++                    let normal = *normals.entry(usage.face).or_insert_with(|| {
++                        let face = &shell[usage.face];
++                        certified_plane(&face.surface()).map(|plane| {
++                            plane.normal().normalize() * if face.orientation() { 1.0 } else { -1.0 }
++                        })
++                    });
++                    let normal = normal?;
++                    // The complete planar supports make the transverse order
++                    // constant along this straight arrangement edge.
++                    if !normal.magnitude2().is_finite()
++                        || normal.dot(tangent).abs() > 128.0 * f64::EPSILON
++                    {
++                        return None;
++                    }
++                    let ray =
++                        normal.cross(tangent) * if usage.edge.orientation() { 1.0 } else { -1.0 };
++                    Some((index, ray))
++                })
++                .collect::<Option<SmallVec<[(usize, Vector3); 4]>>>()?;
++            let reference = rays[0].1;
++            let transverse = tangent.cross(reference);
++            let mut ordered = rays
++                .into_iter()
++                .map(|(index, ray)| {
++                    let angle = ray.dot(transverse).atan2(ray.dot(reference));
++                    (index, ray, angle)
++                })
++                .collect::<SmallVec<[(usize, Vector3, f64); 4]>>();
++            ordered.sort_by(|a, b| a.2.total_cmp(&b.2));
++            ordered.iter().zip(ordered.iter().cycle().skip(1)).try_fold(
++                SmallVec::new(),
++                |mut pairs, (a, b)| {
++                    if uses[a.0].edge.orientation() == uses[b.0].edge.orientation()
++                        || (a.1.dot(b.1) > 0.0
++                            && a.1.cross(b.1).magnitude() <= 128.0 * f64::EPSILON)
++                    {
++                        return None;
++                    }
++                    if !uses[a.0].edge.orientation() {
++                        pairs.push([a.0, b.0]);
++                    }
++                    Some(pairs)
++                },
++            )
++        })
++        .collect::<Option<Vec<SmallVec<[[usize; 2]; 2]>>>>()?;
++    let mut parents = (0..uses.len()).collect::<Vec<_>>();
++    pairs.iter().flatten().for_each(|&[a, b]| {
++        [(a, uses[b].next), (uses[a].next, b)]
++            .into_iter()
++            .for_each(|(a, b)| {
++                let a = sheet_root(&mut parents, a);
++                let b = sheet_root(&mut parents, b);
++                parents[a.max(b)] = a.min(b);
++            });
++    });
++    let mut vertices = HashMap::default();
++    let corners = (0..uses.len())
++        .map(|index| {
++            let root = sheet_root(&mut parents, index);
++            vertices
++                .entry(root)
++                .or_insert_with(|| Vertex::new(uses[root].edge.front().point()))
++                .clone()
++        })
++        .collect::<Vec<_>>();
++    let mut edges = HashMap::default();
++    pairs.iter().flatten().try_for_each(|&[a, b]| {
++        let edge = Edge::try_new(
++            &corners[a],
++            &corners[uses[a].next],
++            uses[a].edge.oriented_curve(),
++        )
++        .ok()?;
++        edges.insert(a, edge.clone());
++        edges.insert(b, edge.inverse());
++        Some(())
++    })?;
++    let rebuilt = shell
++        .iter()
++        .zip(wires)
++        .map(|(source, wires)| {
++            let boundaries = wires
++                .into_iter()
++                .map(|range| {
++                    let wire = range
++                        .map(|index| edges.get(&index).cloned())
++                        .collect::<Option<Wire<_, _>>>()?;
++                    Some(if source.orientation() {
++                        wire
++                    } else {
++                        wire.inverse()
++                    })
++                })
++                .collect::<Option<Vec<_>>>()?;
++            let mut face = Face::try_new(boundaries, source.surface()).ok()?;
++            if !source.orientation() {
++                face.invert();
++            }
++            Some(face)
++        })
++        .collect::<Option<Shell<_, _, _>>>()?;
++    Solid::try_new(rebuilt.connected_components()).ok()
+ }
+ 
+ fn finalize<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(

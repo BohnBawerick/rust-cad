@@ -1,0 +1,279 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -30,6 +30,8 @@
+ //!   avoiding Newton steps outside a closed trim domain at its endpoints.
+ //! - Failed assembly can reconstruct all nested trim loops, retaining small
+ //!   chart regions and assigning each hole to its immediate containing boundary.
++//! - Periodic trim reconstruction lifts inverse queries to a continuous chart
++//!   and compares nested loops after whole-period translations.
+ //! - Failed intersection fits can retain exact rational sections of certified
+ //!   translational supports, including oblique cuts by planar supports.
+ 
+@@ -742,11 +744,12 @@
+         .collect()
+ }
+ 
+-/// Select the original divider or a complete nested-boundary reconstruction.
++/// Select the original divider or a nested reconstruction in a local chart.
+ #[derive(Clone, Copy)]
+ enum FaceDivision {
+     Classic,
+     Nested,
++    Periodic,
+ }
+ 
+ /// Locate a point in a polygon without counting a boundary point as interior.
+@@ -776,6 +779,109 @@
+     }
+ }
+ 
++/// Lift a principal inverse value to the chart containing the previous sample.
++///
++/// Inverse queries may ignore the periodic coordinate of their hint. Integer
++/// period shifts preserve the exact surface point; half-period ties are
++/// ambiguous and must not choose a boundary orientation arbitrarily.
++fn lift_parameter(value: f64, previous: f64, period: Option<f64>) -> Option<f64> {
++    if !value.is_finite() || !previous.is_finite() {
++        return None;
++    }
++    if let Some(period) = period {
++        if !period.is_finite() || period <= 0.0 {
++            return None;
++        }
++        let lifted = value + ((previous - value) / period).round() * period;
++        (lifted.is_finite() && (lifted - previous).abs() < period / 2.0).then_some(lifted)
++    } else {
++        Some(value)
++    }
++}
++
++/// Bound a contractible loop in a chart shorter than each period.
++///
++/// A loop that winds around an entire period needs a cut and additional seam
++/// topology. Do not close such a loop with an invented parameter-space chord.
++fn chart_bounds(points: &[Point2], periods: [Option<f64>; 2]) -> Option<[Point2; 2]> {
++    let first = *points.first()?;
++    let bounds = points.iter().fold([first; 2], |[minimum, maximum], point| {
++        [
++            Point2::new(minimum.x.min(point.x), minimum.y.min(point.y)),
++            Point2::new(maximum.x.max(point.x), maximum.y.max(point.y)),
++        ]
++    });
++    periods
++        .iter()
++        .enumerate()
++        .all(|(axis, period)| {
++            period.is_none_or(|period| bounds[1][axis] - bounds[0][axis] < period)
++        })
++        .then_some(bounds)
++}
++
++/// Place two independently lifted loops in the same chart for containment.
++///
++/// Both spans are shorter than a period, so at most one integer translation
++/// can put the inner bounding interval inside the outer bounding interval.
++fn chart_translation(
++    inner: &[Point2],
++    outer: &[Point2],
++    periods: [Option<f64>; 2],
++) -> Option<Vector2> {
++    let [inner_min, inner_max] = chart_bounds(inner, periods)?;
++    let [outer_min, outer_max] = chart_bounds(outer, periods)?;
++    let mut shift = Vector2::zero();
++    periods.iter().enumerate().try_for_each(|(axis, period)| {
++        if let Some(period) = period {
++            let difference = (outer_min[axis] - inner_min[axis]) / 2.0
++                + (outer_max[axis] - inner_max[axis]) / 2.0;
++            shift[axis] = (difference / period).round() * period;
++        }
++        (shift[axis].is_finite()
++            && inner_min[axis] + shift[axis] >= outer_min[axis]
++            && inner_max[axis] + shift[axis] <= outer_max[axis])
++            .then_some(())
++    })?;
++    Some(shift)
++}
++
++/// Reject crossings in a lifted chart before using its signed area.
++fn simple_chart(points: &[Point2], work: &mut usize) -> Option<()> {
++    let count = points.len();
++    *work = work.checked_sub(count.checked_mul(count)?)?;
++    let cross = |a: Point2, b: Point2, c: Point2| {
++        let ab = b - a;
++        let ac = c - a;
++        ab.x * ac.y - ab.y * ac.x
++    };
++    let opposite = |a: f64, b: f64| (a < 0.0 && b > 0.0) || (a > 0.0 && b < 0.0);
++    (0..count)
++        .all(|i| {
++            let (a, b) = (points[i], points[(i + 1) % count]);
++            a != b
++                && (i + 1..count).all(|j| {
++                    if j == i + 1 || (i == 0 && j == count - 1) {
++                        true
++                    } else {
++                        let (c, d) = (points[j], points[(j + 1) % count]);
++                        let sides = [
++                            cross(a, b, c),
++                            cross(a, b, d),
++                            cross(c, d, a),
++                            cross(c, d, b),
++                        ];
++                        let touches = (sides[0] == 0.0 && (c - a).dot(c - b) <= 0.0)
++                            || (sides[1] == 0.0 && (d - a).dot(d - b) <= 0.0)
++                            || (sides[2] == 0.0 && (a - c).dot(a - d) <= 0.0)
++                            || (sides[3] == 0.0 && (b - c).dot(b - d) <= 0.0);
++                        !touches && !(opposite(sides[0], sides[1]) && opposite(sides[2], sides[3]))
++                    }
++                })
++        })
++        .then_some(())
++}
++
+ /// Reconstruct every boundary cell, assigning holes to their immediate container.
+ ///
+ /// A spatial meshing tolerance does not define an area in a surface chart.
+@@ -788,6 +894,7 @@
+     shell: &Shell<Point3, C, S>,
+     store: &LoopsStore<Point3, C>,
+     tol: f64,
++    periodic: bool,
+ ) -> Option<FacesClassification<Point3, C, S>>
+ where
+     C: BoundedCurve<Point = Point3> + ParameterDivision1D<Point = Point3> + Clone,
+@@ -804,6 +911,12 @@
+             return None;
+         }
+         let surface = face.surface();
++        let periods = if periodic {
++            [surface.period_u(), surface.period_v()]
++        } else {
++            [None; 2]
++        };
++        let lifted = periods.iter().any(Option::is_some);
+         let mut samples = HashMap::default();
+         let polygons = loops
+             .iter()
+@@ -819,7 +932,25 @@
+                 wire.iter().try_for_each(|edge| {
+                     let poly = samples.entry(edge.id()).or_insert_with(|| {
+                         let curve = edge.curve();
+-                        curve.parameter_division(curve.range_tuple(), tol).1
++                        let (parameters, points) =
++                            curve.parameter_division(curve.range_tuple(), tol);
++                        if lifted {
++                            // Midpoints disambiguate a half-period span without
++                            // changing the caller's geometric subdivision tolerance.
++                            points
++                                .first()
++                                .copied()
++                                .into_iter()
++                                .chain(parameters.windows(2).flat_map(|span| {
++                                    [
++                                        curve.evaluate((span[0] + span[1]) / 2.0),
++                                        curve.evaluate(span[1]),
++                                    ]
++                                }))
++                                .collect()
++                        } else {
++                            points
++                        }
+                     });
+                     projections = projections.checked_sub(poly.len())?;
+                     (1..poly.len()).try_for_each(|index| {
+@@ -828,8 +959,19 @@
+                         } else {
+                             poly.len() - 1 - index
+                         };
+-                        hint = surface.search_parameter(poly[index], Some(hint), 100)?;
++                        let next = surface.search_parameter(poly[index], Some(hint), 100)?;
++                        hint = if lifted {
++                            (
++                                lift_parameter(next.0, hint.0, periods[0])?,
++                                lift_parameter(next.1, hint.1, periods[1])?,
++                            )
++                        } else {
++                            next
++                        };
+                         if !hint.0.is_finite() || !hint.1.is_finite() {
++                            return None;
++                        }
++                        if lifted && !surface.evaluate(hint.0, hint.1).near(&poly[index]) {
+                             return None;
+                         }
+                         points.push(Point2::from(hint));
+@@ -841,6 +983,10 @@
+                 }
+                 // Close only the inverse-query roundoff at the shared vertex.
+                 points.pop();
++                if lifted {
++                    chart_bounds(&points, periods)?;
++                    simple_chart(&points, &mut work)?;
++                }
+                 let origin = points[0];
+                 let area = points
+                     .iter()
+@@ -890,9 +1036,17 @@
+                             return Some(());
+                         }
+                         work = work.checked_sub(points.len().checked_mul(boundary.len())?)?;
++                        let shift = if lifted {
++                            let Some(shift) = chart_translation(points, boundary, periods) else {
++                                return Some(());
++                            };
++                            shift
++                        } else {
++                            Vector2::zero()
++                        };
+                         let contained = points
+                             .iter()
+-                            .all(|point| loop_domain(boundary, *point) == 1);
++                            .all(|point| loop_domain(boundary, *point + shift) == 1);
+                         // Vertices inside a concave contour are insufficient:
+                         // a segment may leave the domain and enter it again.
+                         let crossing = contained
+@@ -910,8 +1064,9 @@
+                                             let opposite = |a: f64, b: f64| {
+                                                 (a < 0.0 && b > 0.0) || (a > 0.0 && b < 0.0)
+                                             };
+-                                            opposite(side(*a, *b, *c), side(*a, *b, *d))
+-                                                && opposite(side(*c, *d, *a), side(*c, *d, *b))
++                                            let (a, b) = (*a + shift, *b + shift);
++                                            opposite(side(a, b, *c), side(a, b, *d))
++                                                && opposite(side(*c, *d, a), side(*c, *d, b))
+                                         },
+                                     )
+                                 });
+@@ -968,7 +1123,8 @@
+ {
+     match division {
+         FaceDivision::Classic => divide_face::divide_faces(shell, store, tol),
+-        FaceDivision::Nested => nested_division(shell, store, tol),
++        FaceDivision::Nested => nested_division(shell, store, tol, false),
++        FaceDivision::Periodic => nested_division(shell, store, tol, true),
+     }
+ }
+ 
+@@ -1002,6 +1158,14 @@
+         (stores.geom_loops_store0, stores.geom_loops_store1)
+     };
+     Some(move |division| {
++        if matches!(division, FaceDivision::Periodic)
++            && !shell0.iter().chain(&shell1).any(|face| {
++                let surface = face.surface();
++                surface.period_u().is_some() || surface.period_v().is_some()
++            })
++        {
++            return None;
++        }
+         let mut cls0 = divide_boundary_faces(&altshell0, &loops_store0, tol, division)?;
+         if cls0.and_or_unknown()[2]
+             .connected_components()
+@@ -2432,6 +2596,7 @@
+             .or_else(|error| {
+                 sweep_boolean(solid0, solid1, operation, tol, FaceDivision::Nested).ok_or(error)
+             })
++            .or_else(|error| assemble(FaceDivision::Periodic).or(Err(error)))
+     }
+ }
+ 

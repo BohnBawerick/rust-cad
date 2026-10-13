@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate certifies line or point contact using two independent separating planes. Failed unions then retain separate oriented shells and exactly subdivide coincident trims, preserving geometry and cavities.
+
+Scope includes certified nonconvex polyhedral solids with multiple shells. Curved tangencies and downstream contact-mesh closure remain unresolved risks.
+
+Formatted and checked whitespace. No builds, tests, or commits performed. Findings saved to `/work/scratch/partial.txt`.

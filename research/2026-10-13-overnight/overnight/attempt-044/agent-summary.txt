@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added an exact rational plane-section fallback for ruled surfaces. It constructs `L(B)A − L(A)B` using Bernstein products, then checks bounded ruling membership, positive weights, endpoints, and arc correspondence. Existing fits retain precedence; original surfaces and shell orientations remain intact.
+
+Expected scope includes cones and other rational ruled supports. Earlier classification failures, non-ruled intersections, periodic seams, and touching-union mesh closure remain unresolved.
+
+Formatted and checked whitespace. No builds, repository tests, or commits were performed. Findings are in `/work/scratch/partial.txt`.

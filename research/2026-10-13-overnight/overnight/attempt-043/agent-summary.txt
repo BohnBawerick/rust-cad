@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added a fallback for failed intersection fits: a plane section of a certified rational extrusion is an affine transformation of its control points, preserving exact rational geometry. The fallback checks bounded trim membership and arc correspondence, retains shell orientations, and bounds projection work. Existing successful fits take precedence.
+
+Expected scope: general rational extrusion profiles, including oblique plane cuts. Earlier classification failures, tangent intersections, unsupported surface pairs, and touching-union mesh closure remain unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

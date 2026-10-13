@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Hypothesis: Newton inversion can move valid endpoint queries outside closed trim domains. The patch checks known endpoint parameters first, preserving existing tolerances and exact geometry.
+
+This targets certification failures in general translational sweeps. Tangencies, other assembly failures, and mesh closure remain unresolved.
+
+Formatting and whitespace checks completed. No builds, tests, or commits were performed.

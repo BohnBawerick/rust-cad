@@ -1,0 +1,289 @@
+[
+  {
+    "id": "public-007",
+    "original_mesh_closed": true,
+    "subdivided_edges": 1,
+    "normalized_mesh_closed": false,
+    "bad_segments": [
+      {
+        "endpoints": [
+          [
+            6.13222584,
+            1.80155422,
+            -4.23033771
+          ],
+          [
+            6.13222584,
+            1.80155422,
+            -2.96129568
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      },
+      {
+        "endpoints": [
+          [
+            6.13222584,
+            1.80155422,
+            -1.69225365
+          ],
+          [
+            6.13222584,
+            1.80155422,
+            -2.96129568
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      }
+    ]
+  },
+  {
+    "id": "public-046",
+    "original_mesh_closed": true,
+    "subdivided_edges": 1,
+    "normalized_mesh_closed": false,
+    "bad_segments": [
+      {
+        "endpoints": [
+          [
+            -1.51310347,
+            3.27963139,
+            2.07508753
+          ],
+          [
+            -1.51310347,
+            3.27963139,
+            3.48798909
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      },
+      {
+        "endpoints": [
+          [
+            -1.51310347,
+            3.27963139,
+            4.90089065
+          ],
+          [
+            -1.51310347,
+            3.27963139,
+            3.48798909
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      }
+    ]
+  },
+  {
+    "id": "public-085",
+    "original_mesh_closed": true,
+    "subdivided_edges": 1,
+    "normalized_mesh_closed": false,
+    "bad_segments": [
+      {
+        "endpoints": [
+          [
+            2.88675018,
+            -1.78146199,
+            1.14534867
+          ],
+          [
+            2.88675018,
+            -1.78146199,
+            1.61103073
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      },
+      {
+        "endpoints": [
+          [
+            2.88675018,
+            -1.78146199,
+            2.07671279
+          ],
+          [
+            2.88675018,
+            -1.78146199,
+            1.61103073
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      }
+    ]
+  },
+  {
+    "id": "public-124",
+    "original_mesh_closed": true,
+    "subdivided_edges": 1,
+    "normalized_mesh_closed": false,
+    "bad_segments": [
+      {
+        "endpoints": [
+          [
+            -4.53869809,
+            -3.23293518,
+            -4.90468879
+          ],
+          [
+            -4.53869809,
+            -3.23293518,
+            -4.52437811
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      },
+      {
+        "endpoints": [
+          [
+            -4.53869809,
+            -3.23293518,
+            -4.14406742
+          ],
+          [
+            -4.53869809,
+            -3.23293518,
+            -4.52437811
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      }
+    ]
+  },
+  {
+    "id": "public-166",
+    "original_mesh_closed": true,
+    "subdivided_edges": 1,
+    "normalized_mesh_closed": false,
+    "bad_segments": [
+      {
+        "endpoints": [
+          [
+            0.16911662,
+            0.90994985,
+            0.77445188
+          ],
+          [
+            0.16911662,
+            0.90994985,
+            1.5254569
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      },
+      {
+        "endpoints": [
+          [
+            0.16911662,
+            0.90994985,
+            2.27646193
+          ],
+          [
+            0.16911662,
+            0.90994985,
+            1.5254569
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      }
+    ]
+  },
+  {
+    "id": "public-178",
+    "original_mesh_closed": true,
+    "subdivided_edges": 1,
+    "normalized_mesh_closed": false,
+    "bad_segments": [
+      {
+        "endpoints": [
+          [
+            -0.66296609,
+            0.40379287,
+            -1.96243539
+          ],
+          [
+            -0.66296609,
+            0.40379287,
+            -1.35219812
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      },
+      {
+        "endpoints": [
+          [
+            -0.66296609,
+            0.40379287,
+            -0.74196085
+          ],
+          [
+            -0.66296609,
+            0.40379287,
+            -1.35219812
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      }
+    ]
+  },
+  {
+    "id": "public-229",
+    "original_mesh_closed": true,
+    "subdivided_edges": 1,
+    "normalized_mesh_closed": false,
+    "bad_segments": [
+      {
+        "endpoints": [
+          [
+            0.00460628,
+            1.56863058,
+            1.02034047
+          ],
+          [
+            0.00460628,
+            1.56863058,
+            1.93780594
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      },
+      {
+        "endpoints": [
+          [
+            0.00460628,
+            1.56863058,
+            2.85527141
+          ],
+          [
+            0.00460628,
+            1.56863058,
+            1.93780594
+          ]
+        ],
+        "uses": 4,
+        "winding": 0
+      }
+    ]
+  },
+  {
+    "id": "public-315",
+    "original_mesh_closed": true,
+    "subdivided_edges": 0,
+    "normalized_mesh_closed": true,
+    "bad_segments": []
+  }
+]

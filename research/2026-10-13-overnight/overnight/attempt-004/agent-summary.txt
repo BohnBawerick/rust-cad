@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate classifies matching whole patches before intersection loops can cancel them. Co-oriented shared patches survive once; opposed patches cancel. Assembly then sews exposed seams using the original B-rep curves and surfaces. Retained winding logic handles complements and oriented shells.
+
+Expected gains: identical solids and conforming face contacts, without box-specific recognition. Partial coplanar overlaps and unmatched curved patches retain the existing pipeline.
+
+Risks remain in sampled trim matching, tessellation-based overlap detection, and ambiguous seams.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

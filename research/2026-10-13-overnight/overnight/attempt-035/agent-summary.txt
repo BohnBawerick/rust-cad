@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate retries failed assembly using trim-domain orientation and containment. UV area depends on parameterization, so its magnitude cannot determine whether a physical face exists. The fallback retains original curves, surfaces, and cavity orientations, and cancels only topologically opposed loops.
+
+Expected scope: general trimmed faces with holes and periodic charts. Intersection extraction, ambiguous contacts, touching-edge mesh closure, and retry runtime remain unresolved risks.
+
+Formatting and whitespace checks completed. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+The candidate extends union assembly to certified curved contacts. Complete support enclosures establish separation; positive spline basis weights exclude shared face patches. Exact trim subdivision preserves independent material sectors and cavity orientations.
+
+Expected scope: tangent spline solids with matching contact trims, including multiple shells. Nonaligned separation and tangencies without matching trims remain unresolved. Mesh closure requires controller evaluation.
+
+Formatted and checked whitespace. No builds, tests, or commits performed. Findings saved to `/work/scratch/partial.txt`.

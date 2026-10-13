@@ -1,0 +1,9 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs:700).
+
+The retry preserves neighboring edge subdivisions, reconstructs face regions, verifies oriented boundary conservation, and classifies each region independently. This avoids propagating ambiguous tangent-intersection labels while retaining exact curves, surfaces, and cavity orientations.
+
+Expected scope: classification and assembly failures involving general supported solids with multiple oriented shells. Existing nonempty successes retain precedence.
+
+Risks remain in intersection-loop generation, UV projection, sampled nesting, and winding classification. No improvement is established here.
+
+Formatted and checked patch whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

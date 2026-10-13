@@ -1,0 +1,147 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -24,6 +24,8 @@
+ //!   planar caps whose wires are enclosed by adjacent supports or straight edges.
+ //! - Failed planar arrangements reconcile support normals using complete control
+ //!   nets, avoiding ill-conditioned comparisons between independently derived normals.
++//! - Failed unions retain separate oriented shells when support enclosures and
++//!   knot-span certificates restrict contact to curves or isolated points.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -1327,6 +1329,118 @@
+     finalize(name, shell)
+ }
+ 
++/// Certify that a solid boundary has no open patch in a given plane.
++///
++/// Positive spline weights reduce plane incidence to a polynomial numerator on
++/// each knot rectangle. The active basis is linearly independent, so a control
++/// coefficient separated from zero proves that the numerator is not identically
++/// zero there. Its zero set has no surface interior. Checking every rectangle
++/// matters: a curved spline can also contain an entire planar span.
++fn boundary_has_no_planar_patch<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++    origin: Point3,
++    normal: Vector3,
++    work: &mut usize,
++) -> Option<()> {
++    solid.face_iter().try_for_each(|face| {
++        *work = work.checked_sub(1)?;
++        let surface = face.surface();
++        let spline = surface.try_into_homogeneous_bspline_surface()?;
++        let controls = spline.control_points();
++        let separated = |control: &Vector4| {
++            let (distance, error) = plane_distance(control.to_point(), origin, normal);
++            distance.is_finite() && error.is_finite() && distance.abs() > error
++        };
++        if surface.supports_exact_patch_domains() {
++            let (udegree, vdegree) = spline.degrees();
++            let (uknots, vknots) = spline.knot_vectors();
++            let nu = controls.len();
++            let nv = controls.first()?.len();
++            if !uknots.is_clamped(udegree) || !vknots.is_clamped(vdegree) {
++                return None;
++            }
++            let count = nu
++                .checked_mul(nv)?
++                .checked_mul(udegree.checked_add(1)?)?
++                .checked_mul(vdegree.checked_add(1)?)?;
++            *work = work.checked_sub(count)?;
++            (udegree < nu
++                && vdegree < nv
++                && (udegree..nu)
++                    .filter(|&u| uknots[u] < uknots[u + 1])
++                    .all(|u| {
++                        (vdegree..nv)
++                            .filter(|&v| vknots[v] < vknots[v + 1])
++                            .all(|v| {
++                                controls[u - udegree..=u]
++                                    .iter()
++                                    .any(|row| row[v - vdegree..=v].iter().any(separated))
++                            })
++                    }))
++            .then_some(())
++        } else {
++            // The enclosure certificate admits only planes in this branch.
++            // Their finite conversion charts establish the identity of the
++            // complete analytic support, including trims outside those charts.
++            let AnalyticSurfaceKind::Plane(_) = surface.try_into_analytic_surface_kind()? else {
++                return None;
++            };
++            *work = work.checked_sub(controls.iter().map(Vec::len).sum())?;
++            controls.iter().flatten().any(separated).then_some(())
++        }
++    })
++}
++
++/// Recover a union whose operands meet only in lower-dimensional boundary sets.
++///
++/// A supporting separator excludes an overlap of material interiors. If at
++/// least one operand has no open boundary patch in that plane, there is no
++/// shared face to remove. The regularized union is then represented by the
++/// original closed oriented shells, even at tangencies. In particular, cavity
++/// shells must not be inverted or merged according to component order.
++/// This certificate uses complete supports, never a box of boundary vertices.
++fn contact_union<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++) -> Option<Solid<Point3, C, S>> {
++    let (min0, max0) = solid_enclosure(solid0)?;
++    let (min1, max1) = solid_enclosure(solid1)?;
++    let mut work = 65_536_usize;
++    let certified = [
++        (max0, min1, Vector3::unit_x()),
++        (max1, min0, Vector3::unit_x()),
++        (max0, min1, Vector3::unit_y()),
++        (max1, min0, Vector3::unit_y()),
++        (max0, min1, Vector3::unit_z()),
++        (max1, min0, Vector3::unit_z()),
++    ]
++    .into_iter()
++    .any(|(lower, upper, normal)| {
++        let (gap, _) = plane_distance(upper, lower, normal);
++        if !gap.is_finite() || gap < 0.0 {
++            return false;
++        }
++        // Require weak separation without enlarging either enclosure. A
++        // negative gap, however small, still requires intersection assembly.
++        let origin = lower + (upper - lower) * 0.5;
++        boundary_has_no_planar_patch(solid0, origin, normal, &mut work).is_some()
++            || boundary_has_no_planar_patch(solid1, origin, normal, &mut work).is_some()
++    });
++    if certified {
++        Solid::try_new(
++            solid0
++                .boundaries()
++                .iter()
++                .chain(solid1.boundaries())
++                .cloned()
++                .collect(),
++        )
++        .ok()
++    } else {
++        None
++    }
++}
++
+ fn boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+@@ -1345,8 +1459,14 @@
+     } else if let Some(solid) = separated_boolean(solid0, solid1, operation) {
+         Ok(solid)
+     } else {
+-        boolean_classic(solid0, solid1, tol, operation)
+-            .or_else(|error| planar_boolean(solid0, solid1, operation, true).ok_or(error))
++        boolean_classic(solid0, solid1, tol, operation).or_else(|error| {
++            planar_boolean(solid0, solid1, operation, true)
++                .or_else(|| match operation {
++                    Operation::Union => contact_union(solid0, solid1),
++                    Operation::Intersection | Operation::Difference => None,
++                })
++                .ok_or(error)
++        })
+     }
+ }
+ 

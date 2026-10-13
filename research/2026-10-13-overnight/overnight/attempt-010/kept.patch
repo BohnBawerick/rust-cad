@@ -1,0 +1,159 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -20,6 +20,8 @@
+ //!   winding explicitly when intersecting with a complement for subtraction.
+ //! - Certified planar solids with convex faces use a support-plane arrangement
+ //!   before marching, retaining the exact input surfaces.
++//! - Complete positive-weight spline control nets certify separation, including
++//!   planar caps whose wires are enclosed by adjacent supports or straight edges.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -1067,6 +1069,138 @@
+     Difference,
+ }
+ 
++/// Enclose a bounded solid using complete supports and certified straight trims.
++///
++/// Positive rational weights put every bounded spline face in the convex hull
++/// of its projected control net. A planar face lies in the convex hull of its
++/// wires. Each of its edges must therefore either border an enclosed spline
++/// face, or lie on two nonparallel planes, making its endpoints sufficient.
++/// This argument includes holes and all oriented shells of the input solid.
++/// Unbounded analytic supports and coplanar seams decline certification.
++fn solid_enclosure<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid: &Solid<Point3, C, S>,
++) -> Option<(Point3, Point3)> {
++    let mut work = 65_536_usize;
++    let mut incidence: HashMap<EdgeId<C>, (usize, Option<Vector3>)> = HashMap::default();
++    let mut minimum = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
++    let mut maximum = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
++    let mut include = |point: Point3| {
++        if !point.x.is_finite() || !point.y.is_finite() || !point.z.is_finite() {
++            return None;
++        }
++        minimum.x = minimum.x.min(point.x);
++        minimum.y = minimum.y.min(point.y);
++        minimum.z = minimum.z.min(point.z);
++        maximum.x = maximum.x.max(point.x);
++        maximum.y = maximum.y.max(point.y);
++        maximum.z = maximum.z.max(point.z);
++        Some(())
++    };
++    solid.face_iter().try_for_each(|face| {
++        work = work.checked_sub(1)?;
++        let surface = face.surface();
++        let plane = if surface.supports_exact_patch_domains() {
++            // These supports are bounded on their spline knot domains. Do not
++            // use incidental conversion domains of unbounded analytic surfaces.
++            None
++        } else if let Some(AnalyticSurfaceKind::Plane(plane)) =
++            surface.try_into_analytic_surface_kind()
++        {
++            Some(plane)
++        } else {
++            return None;
++        };
++        let spline = surface.try_into_homogeneous_bspline_surface()?;
++        spline
++            .control_points()
++            .iter()
++            .flatten()
++            .try_for_each(|control| {
++                work = work.checked_sub(1)?;
++                if !control.w.is_finite() || control.w <= 0.0 {
++                    return None;
++                }
++                let point = control.to_point();
++                if let Some(plane) = plane.as_ref() {
++                    // An analytic identity can be approximate. Verify the entire
++                    // control net before relying on the support being planar.
++                    let (distance, error) = plane_distance(point, plane.origin(), plane.normal());
++                    (distance.is_finite() && error.is_finite() && distance.abs() <= error)
++                        .then_some(())
++                } else {
++                    include(point)
++                }
++            })?;
++        face.edge_iter().try_for_each(|edge| {
++            work = work.checked_sub(1)?;
++            include(edge.front().point())?;
++            include(edge.back().point())?;
++            let normal = plane.as_ref().map(|plane| plane.normal());
++            let entry = incidence.entry(edge.id()).or_insert((0, normal));
++            if entry.0 > 1
++                || (entry.0 == 1
++                    && entry
++                        .1
++                        .zip(normal)
++                        .is_some_and(|(first, second)| first.cross(second).so_small()))
++            {
++                return None;
++            }
++            entry.0 += 1;
++            Some(())
++        })
++    })?;
++    (!incidence.is_empty() && incidence.values().all(|(count, _)| *count == 2))
++        .then_some((minimum, maximum))
++}
++
++/// Apply set identities only after a support enclosure separates the interiors.
++///
++/// Weak separation permits boundary contact: regularized intersection is empty
++/// and subtraction retains the first solid, including its cavity orientations.
++/// Union requires a strict gap here because shared faces need seam assembly.
++fn separated_boolean<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    solid0: &Solid<Point3, C, S>,
++    solid1: &Solid<Point3, C, S>,
++    operation: Operation,
++) -> Option<Solid<Point3, C, S>> {
++    let (min0, max0) = solid_enclosure(solid0)?;
++    let (min1, max1) = solid_enclosure(solid1)?;
++    let separations = [
++        (min1.x - max0.x, min1.x.abs() + max0.x.abs()),
++        (min0.x - max1.x, min0.x.abs() + max1.x.abs()),
++        (min1.y - max0.y, min1.y.abs() + max0.y.abs()),
++        (min0.y - max1.y, min0.y.abs() + max1.y.abs()),
++        (min1.z - max0.z, min1.z.abs() + max0.z.abs()),
++        (min0.z - max1.z, min0.z.abs() + max1.z.abs()),
++    ];
++    if !separations.iter().any(|(gap, _)| *gap >= 0.0) {
++        return None;
++    }
++    match operation {
++        Operation::Difference => Some(solid0.clone()),
++        Operation::Intersection => Solid::try_new(Vec::new()).ok(),
++        Operation::Union => {
++            let strict = separations
++                .iter()
++                .any(|(gap, scale)| *gap > 32.0 * f64::EPSILON * scale);
++            if strict {
++                Solid::try_new(
++                    solid0
++                        .boundaries()
++                        .iter()
++                        .chain(solid1.boundaries())
++                        .cloned()
++                        .collect(),
++                )
++                .ok()
++            } else {
++                None
++            }
++        }
++    }
++}
++
+ fn boolean_classic<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     solid0: &Solid<Point3, C, S>,
+     solid1: &Solid<Point3, C, S>,
+@@ -1137,6 +1271,8 @@
+         // Its empty boundary is therefore a valid empty result, while failure
+         // to certify or assemble an arrangement still requires marching.
+         Ok(solid)
++    } else if let Some(solid) = separated_boolean(solid0, solid1, operation) {
++        Ok(solid)
+     } else {
+         boolean_classic(solid0, solid1, tol, operation)
+     }

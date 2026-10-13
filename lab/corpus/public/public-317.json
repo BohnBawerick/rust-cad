@@ -1,0 +1,1 @@
+{"a": {"kind": "box", "origin": [0, 0, 0], "size": [1, 1, 1]}, "boolean_tol": 0.05, "fixture": "nist_ctc_01_asme1_ap242-e1.stp", "group": "step", "id": "public-317", "mesh_tol": 0.002, "op": "step_import", "regression": "engine-path empty-success assembly traversal"}

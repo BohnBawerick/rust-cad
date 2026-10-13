@@ -1,0 +1,103 @@
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -26,6 +26,8 @@
+ //!   nets, avoiding ill-conditioned comparisons between independently derived normals.
+ //! - Failed certified sweeps retain the input trim curves and smooth seam curves;
+ //!   only new transverse generators require intersection-curve assembly.
++//! - Sweep trim membership uses known endpoint parameters before inversion,
++//!   avoiding Newton steps outside a closed trim domain at its endpoints.
+ 
+ mod divide_face;
+ mod faces_classification;
+@@ -1319,6 +1321,31 @@
+     Some(result)
+ }
+ 
++/// Recover a bounded trim parameter, using the endpoints as exact candidates.
++///
++/// A Newton step can move an endpoint query just outside its closed domain even
++/// when the residual is only roundoff. Evaluate the known endpoint parameters
++/// first, with the same geometric membership predicate as the inverse query.
++/// Interior queries still require a parameter within the original trim domain.
++fn sweep_parameter<C>(curve: &C, point: Point3) -> Option<f64>
++where
++    C: BoundedCurve<Point = Point3> + SearchParameter<CurveParameter, Point = Point3>,
++{
++    let (start, end) = curve.range_tuple();
++    let parameter = if curve.front().near(&point) {
++        Some(start)
++    } else if curve.back().near(&point) {
++        Some(end)
++    } else {
++        curve.search_parameter(point, None, 100)
++    }?;
++    (parameter.is_finite()
++        && parameter >= start
++        && parameter <= end
++        && curve.evaluate(parameter).near(&point))
++    .then_some(parameter)
++}
++
+ /// Recover a section from a control net with weights constant along translation.
+ ///
+ /// Both cap incidences and all four side trims are checked. The support identity
+@@ -1424,18 +1451,8 @@
+                     return None;
+                 }
+                 let full = NurbsCurve::new(a);
+-                let (start, end) = full.range_tuple();
+-                let parameter = |point| {
+-                    if full.front().near(&point) {
+-                        Some(start)
+-                    } else if full.back().near(&point) {
+-                        Some(end)
+-                    } else {
+-                        full.search_parameter(point, None, 100)
+-                    }
+-                };
+-                let a = parameter(lower.front().point())?;
+-                let b = parameter(lower.back().point())?;
++                let a = sweep_parameter(&full, lower.front().point())?;
++                let b = sweep_parameter(&full, lower.back().point())?;
+                 let mut curve = section_trim(&full, a.min(b), a.max(b))?;
+                 if a > b {
+                     curve.invert();
+@@ -1454,11 +1471,15 @@
+                 return None;
+             }
+             let (start, end) = curve.range_tuple();
++            let lower_curve = lower.curve();
++            let upper_curve = upper.curve();
+             [start, (start + end) / 2.0, end]
+                 .into_iter()
+                 .try_for_each(|t| {
+                     let point = curve.evaluate(t);
+-                    (on_edge(point, lower) && on_edge(point + translation, upper)).then_some(())
++                    sweep_parameter(&lower_curve, point)?;
++                    sweep_parameter(&upper_curve, point + translation)?;
++                    Some(())
+                 })?;
+             edges
+                 .iter()
+@@ -1677,18 +1698,9 @@
+ ) -> Option<Edge<Point3, C>> {
+     let mut curve = edge.curve();
+     let (start, end) = curve.range_tuple();
+-    let parameter = |point| {
+-        if curve.front().near(&point) {
+-            Some(start)
+-        } else if curve.back().near(&point) {
+-            Some(end)
+-        } else {
+-            curve.search_parameter(point, None, 100)
+-        }
+-    };
+-    let a = parameter(front.point())?;
+-    let b = parameter(back.point())?;
+-    if a < start || a > end || b < start || b > end || a.near(&b) {
++    let a = sweep_parameter(&curve, front.point())?;
++    let b = sweep_parameter(&curve, back.point())?;
++    if a.near(&b) {
+         return None;
+     }
+     let (lower, upper) = (a.min(b), a.max(b));

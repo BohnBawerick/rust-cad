@@ -1,0 +1,7 @@
+Modified only [classic/mod.rs](/work/kernel/monstertruck-solid/src/transversal/classic/mod.rs).
+
+Added a fallback that reconstructs nested boundary regions, assigns holes to their smallest containing loop, and preserves exact curves, surfaces, and cavity orientations. Spatial tolerance no longer determines which chart regions survive in this fallback. Existing successful paths retain precedence; retries reuse prepared intersections.
+
+Expected scope: assembly failures involving small regions and nested holes in general trimmed solids. Periodic charts, missed intersections, and touching-solid mesh closure remain unresolved.
+
+Formatted and checked whitespace. No builds, tests, or commits. Findings saved to `/work/scratch/partial.txt`.

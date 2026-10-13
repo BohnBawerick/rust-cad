@@ -1,0 +1,676 @@
+{
+  "evaluator": "oracle-v2",
+  "gate_packages": [
+    "monstertruck",
+    "monstertruck-solid"
+  ],
+  "baseline": {
+    "public_passed": 122,
+    "heldout_passed": 39,
+    "combined_score": 59.73643730996672
+  },
+  "prefixes": [
+    {
+      "prefix": [
+        3
+      ],
+      "patched_lines": 497,
+      "build_exit": 0,
+      "public_passed": 184,
+      "heldout_passed": 53,
+      "combined_passed": 237,
+      "combined_score": 64.68448490507313,
+      "groups": {
+        "boxes": 117,
+        "cylinders": 47,
+        "extrude": 17,
+        "revolve": 16,
+        "fillet": 0,
+        "chamfer": 17,
+        "holes": 0,
+        "patterns": 17,
+        "step": 6
+      },
+      "public": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "heldout": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 78.417,
+        "failures": [
+          "test transversal::integrate::tests::punched_cube ... FAILED",
+          "test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.11s",
+          "error: test failed, to rerun pass `-p monstertruck-solid --lib`",
+          "error: 1 target failed:"
+        ]
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 17.755
+      },
+      "passes_all_gates": false,
+      "seconds": 222.8
+    },
+    {
+      "prefix": [
+        3,
+        4
+      ],
+      "patched_lines": 795,
+      "build_exit": 0,
+      "public_passed": 222,
+      "heldout_passed": 69,
+      "combined_passed": 291,
+      "combined_score": 68.90142809260456,
+      "groups": {
+        "boxes": 147,
+        "cylinders": 71,
+        "extrude": 17,
+        "revolve": 16,
+        "fillet": 0,
+        "chamfer": 17,
+        "holes": 0,
+        "patterns": 17,
+        "step": 6
+      },
+      "public": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "heldout": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 38.919,
+        "failures": [
+          "test transversal::integrate::tests::punched_cube ... FAILED",
+          "test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.79s",
+          "error: test failed, to rerun pass `-p monstertruck-solid --lib`",
+          "error: 1 target failed:"
+        ]
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.715
+      },
+      "passes_all_gates": false,
+      "seconds": 128.4
+    },
+    {
+      "prefix": [
+        3,
+        4,
+        6
+      ],
+      "patched_lines": 1174,
+      "build_exit": 0,
+      "public_passed": 260,
+      "heldout_passed": 81,
+      "combined_passed": 341,
+      "combined_score": 71.57236826354473,
+      "groups": {
+        "boxes": 197,
+        "cylinders": 71,
+        "extrude": 17,
+        "revolve": 16,
+        "fillet": 0,
+        "chamfer": 17,
+        "holes": 0,
+        "patterns": 17,
+        "step": 6
+      },
+      "public": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "heldout": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 22.041,
+        "failures": [
+          "test transversal::integrate::tests::punched_cube ... FAILED",
+          "test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.02s",
+          "error: test failed, to rerun pass `-p monstertruck-solid --lib`",
+          "error: 1 target failed:"
+        ]
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.615
+      },
+      "passes_all_gates": false,
+      "seconds": 127.9
+    },
+    {
+      "prefix": [
+        3,
+        4,
+        6,
+        9
+      ],
+      "patched_lines": 1181,
+      "build_exit": 0,
+      "public_passed": 262,
+      "heldout_passed": 82,
+      "combined_passed": 344,
+      "combined_score": 71.73262467380114,
+      "groups": {
+        "boxes": 200,
+        "cylinders": 71,
+        "extrude": 17,
+        "revolve": 16,
+        "fillet": 0,
+        "chamfer": 17,
+        "holes": 0,
+        "patterns": 17,
+        "step": 6
+      },
+      "public": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "heldout": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 13.453,
+        "failures": [
+          "test transversal::integrate::tests::adjacent_cubes_or ... FAILED",
+          "test transversal::integrate::tests::punched_cube ... FAILED",
+          "test result: FAILED. 7 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.82s",
+          "error: test failed, to rerun pass `-p monstertruck-solid --lib`",
+          "error: 1 target failed:"
+        ]
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.565
+      },
+      "passes_all_gates": false,
+      "seconds": 96.6
+    },
+    {
+      "prefix": [
+        3,
+        4,
+        6,
+        9,
+        10
+      ],
+      "patched_lines": 1317,
+      "build_exit": 0,
+      "public_passed": 263,
+      "heldout_passed": 83,
+      "combined_passed": 346,
+      "combined_score": 71.95048959754843,
+      "groups": {
+        "boxes": 200,
+        "cylinders": 73,
+        "extrude": 17,
+        "revolve": 16,
+        "fillet": 0,
+        "chamfer": 17,
+        "holes": 0,
+        "patterns": 17,
+        "step": 6
+      },
+      "public": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "heldout": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 16.804,
+        "failures": [
+          "test transversal::integrate::tests::adjacent_cubes_or ... FAILED",
+          "test transversal::integrate::tests::punched_cube ... FAILED",
+          "test result: FAILED. 7 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.88s",
+          "error: test failed, to rerun pass `-p monstertruck-solid --lib`",
+          "error: 1 target failed:"
+        ]
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.615
+      },
+      "passes_all_gates": false,
+      "seconds": 93.8
+    },
+    {
+      "prefix": [
+        3,
+        4,
+        6,
+        9,
+        10,
+        20
+      ],
+      "patched_lines": 1389,
+      "build_exit": 0,
+      "public_passed": 266,
+      "heldout_passed": 83,
+      "combined_passed": 349,
+      "combined_score": 72.11074600780483,
+      "groups": {
+        "boxes": 203,
+        "cylinders": 73,
+        "extrude": 17,
+        "revolve": 16,
+        "fillet": 0,
+        "chamfer": 17,
+        "holes": 0,
+        "patterns": 17,
+        "step": 6
+      },
+      "public": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "heldout": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 20.106,
+        "failures": [
+          "test transversal::integrate::tests::adjacent_cubes_or ... FAILED",
+          "test transversal::integrate::tests::punched_cube ... FAILED",
+          "test result: FAILED. 7 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.28s",
+          "error: test failed, to rerun pass `-p monstertruck-solid --lib`",
+          "error: 1 target failed:"
+        ]
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.716
+      },
+      "passes_all_gates": false,
+      "seconds": 95.0
+    },
+    {
+      "prefix": [
+        3,
+        4,
+        6,
+        9,
+        10,
+        20,
+        27
+      ],
+      "patched_lines": 2107,
+      "build_exit": 0,
+      "public_passed": 281,
+      "heldout_passed": 89,
+      "combined_passed": 370,
+      "combined_score": 74.39832770715124,
+      "groups": {
+        "boxes": 203,
+        "cylinders": 94,
+        "extrude": 17,
+        "revolve": 16,
+        "fillet": 0,
+        "chamfer": 17,
+        "holes": 0,
+        "patterns": 17,
+        "step": 6
+      },
+      "public": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "heldout": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 22.431,
+        "failures": [
+          "test transversal::integrate::tests::adjacent_cubes_or ... FAILED",
+          "test transversal::integrate::tests::punched_cube ... FAILED",
+          "test result: FAILED. 7 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.85s",
+          "error: test failed, to rerun pass `-p monstertruck-solid --lib`",
+          "error: 1 target failed:"
+        ]
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.865
+      },
+      "passes_all_gates": false,
+      "seconds": 115.5
+    },
+    {
+      "prefix": [
+        3,
+        4,
+        6,
+        9,
+        10,
+        20,
+        27,
+        30
+      ],
+      "patched_lines": 2119,
+      "build_exit": 0,
+      "public_passed": 284,
+      "heldout_passed": 89,
+      "combined_passed": 373,
+      "combined_score": 74.72512509277215,
+      "groups": {
+        "boxes": 203,
+        "cylinders": 97,
+        "extrude": 17,
+        "revolve": 16,
+        "fillet": 0,
+        "chamfer": 17,
+        "holes": 0,
+        "patterns": 17,
+        "step": 6
+      },
+      "public": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "heldout": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 22.051,
+        "failures": [
+          "test transversal::integrate::tests::adjacent_cubes_or ... FAILED",
+          "test transversal::integrate::tests::punched_cube ... FAILED",
+          "test result: FAILED. 7 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.15s",
+          "error: test failed, to rerun pass `-p monstertruck-solid --lib`",
+          "error: 1 target failed:"
+        ]
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 2.084
+      },
+      "passes_all_gates": false,
+      "seconds": 117.9
+    },
+    {
+      "prefix": [
+        3,
+        4,
+        6,
+        9,
+        10,
+        20,
+        27,
+        30,
+        43
+      ],
+      "patched_lines": 2243,
+      "build_exit": 0,
+      "public_passed": 292,
+      "heldout_passed": 90,
+      "combined_passed": 382,
+      "combined_score": 80.60747803394862,
+      "groups": {
+        "boxes": 203,
+        "cylinders": 97,
+        "extrude": 17,
+        "revolve": 16,
+        "fillet": 0,
+        "chamfer": 17,
+        "holes": 9,
+        "patterns": 17,
+        "step": 6
+      },
+      "public": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "heldout": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 18.565,
+        "failures": [
+          "test transversal::integrate::tests::adjacent_cubes_or ... FAILED",
+          "test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.94s",
+          "error: test failed, to rerun pass `-p monstertruck-solid --lib`",
+          "error: 1 target failed:"
+        ]
+      },
+      "release_check": {
+        "exit": 0,
+        "seconds": 0.916
+      },
+      "passes_all_gates": false,
+      "seconds": 121.8
+    },
+    {
+      "prefix": [
+        3,
+        4,
+        6,
+        9,
+        10,
+        20,
+        27,
+        30,
+        43,
+        46
+      ],
+      "patched_lines": 2496,
+      "build_exit": 0,
+      "public_passed": 297,
+      "heldout_passed": 93,
+      "combined_passed": 390,
+      "combined_score": 85.83623620388326,
+      "groups": {
+        "boxes": 203,
+        "cylinders": 97,
+        "extrude": 17,
+        "revolve": 16,
+        "fillet": 0,
+        "chamfer": 17,
+        "holes": 17,
+        "patterns": 17,
+        "step": 6
+      },
+      "public": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "heldout": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 24.339,
+        "failures": [
+          "test transversal::integrate::tests::adjacent_cubes_or ... FAILED",
+          "test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.09s",
+          "error: test failed, to rerun pass `-p monstertruck-solid --lib`",
+          "error: 1 target failed:"
+        ]
+      },
+      "release_check": {
+        "exit": 101,
+        "seconds": 0.866,
+        "failures": [
+          "error: unnecessary qualification",
+          "error: unnecessary qualification",
+          "error: could not compile `monstertruck-solid` (lib) due to 2 previous errors"
+        ]
+      },
+      "passes_all_gates": false,
+      "seconds": 150.8
+    },
+    {
+      "prefix": [
+        3,
+        4,
+        6,
+        9,
+        10,
+        20,
+        27,
+        30,
+        43,
+        46,
+        58
+      ],
+      "patched_lines": 2603,
+      "build_exit": 0,
+      "public_passed": 301,
+      "heldout_passed": 94,
+      "combined_passed": 395,
+      "combined_score": 86.10333022097728,
+      "groups": {
+        "boxes": 208,
+        "cylinders": 97,
+        "extrude": 17,
+        "revolve": 16,
+        "fillet": 0,
+        "chamfer": 17,
+        "holes": 17,
+        "patterns": 17,
+        "step": 6
+      },
+      "public": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "heldout": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 18.96,
+        "failures": [
+          "test transversal::integrate::tests::adjacent_cubes_or ... FAILED",
+          "test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.06s",
+          "error: test failed, to rerun pass `-p monstertruck-solid --lib`",
+          "error: 1 target failed:"
+        ]
+      },
+      "release_check": {
+        "exit": 101,
+        "seconds": 0.766,
+        "failures": [
+          "error: unnecessary qualification",
+          "error: unnecessary qualification",
+          "error: could not compile `monstertruck-solid` (lib) due to 2 previous errors"
+        ]
+      },
+      "passes_all_gates": false,
+      "seconds": 130.1
+    },
+    {
+      "prefix": [
+        3,
+        4,
+        6,
+        9,
+        10,
+        20,
+        27,
+        30,
+        43,
+        46,
+        58,
+        59
+      ],
+      "patched_lines": 2770,
+      "build_exit": 0,
+      "public_passed": 302,
+      "heldout_passed": 96,
+      "combined_passed": 398,
+      "combined_score": 86.4301276065982,
+      "groups": {
+        "boxes": 208,
+        "cylinders": 100,
+        "extrude": 17,
+        "revolve": 16,
+        "fillet": 0,
+        "chamfer": 17,
+        "holes": 17,
+        "patterns": 17,
+        "step": 6
+      },
+      "public": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "heldout": {
+        "regressions": [],
+        "new_incorrect_successes": [],
+        "new_runtime_failures": []
+      },
+      "kernel_tests": {
+        "exit": 101,
+        "seconds": 18.979,
+        "failures": [
+          "test transversal::integrate::tests::adjacent_cubes_or ... FAILED",
+          "test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.91s",
+          "error: test failed, to rerun pass `-p monstertruck-solid --lib`",
+          "error: 1 target failed:"
+        ]
+      },
+      "release_check": {
+        "exit": 101,
+        "seconds": 0.816,
+        "failures": [
+          "error: unnecessary qualification",
+          "error: unnecessary qualification",
+          "error: could not compile `monstertruck-solid` (lib) due to 2 previous errors"
+        ]
+      },
+      "passes_all_gates": false,
+      "seconds": 136.3
+    }
+  ]
+}

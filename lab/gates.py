@@ -5,9 +5,9 @@ Round 1 kept a change that broke `adjacent_cubes_or` and two that failed the rel
 because neither was a keep gate. Here both run on every candidate that improved the score,
 before the repeat run, and a failure rejects the candidate.
 
-Both commands run offline inside the same Bubblewrap sandbox as the candidate compile, with
-the kernel source read-only and only the Cargo cache and a dedicated target directory
-writable. They mirror the CI job: the recorded dependency lock, the same crate exclusions,
+Both commands run offline inside a Bubblewrap sandbox like the candidate compile's, with
+the kernel source under a throwaway overlay (a few tests write files next to their crate),
+and only the Cargo cache and a dedicated target directory writable for real. They mirror the CI job: the recorded dependency lock, the same crate exclusions,
 one test thread. The release check uses `cargo check --release`, which is where every crate's
 `#![cfg_attr(not(debug_assertions), deny(warnings))]` turns a warning into an error; CI also
 runs the full release build.
@@ -57,7 +57,9 @@ def sandbox(target):
     return ['bwrap', '--unshare-all', '--die-with-parent',
             '--ro-bind', '/usr', '/usr', '--ro-bind', '/lib', '/lib', '--ro-bind', '/lib64', '/lib64',
             '--symlink', 'usr/bin', '/bin', '--proc', '/proc', '--dev', '/dev', '--tmpfs', '/tmp',
-            '--ro-bind', str(KERNEL), '/work/kernel/source',
+            # Some kernel tests write files into their crate directory. A throwaway overlay
+            # takes those writes and the real source stays untouched.
+            '--overlay-src', str(KERNEL.resolve()), '--tmp-overlay', '/work/kernel/source',
             '--bind', str(ROOT / 'cache/cargo'), '/cargo',
             '--bind', str(target), '/target',
             '--setenv', 'CARGO_HOME', '/cargo', '--setenv', 'CARGO_TARGET_DIR', '/target',

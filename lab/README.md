@@ -94,7 +94,7 @@ The controller writes everything to `lab/overnight/`, which git ignores, and ref
 ## What the sandboxes allow
 
 - The coding agent sees the kernel source read-only, except the lane's editable paths, plus the probe source read-only, its scratch directory and its own home. It has network access, because the subscription login needs it. So this is a filesystem boundary, not a full security boundary. The prompt forbids network research and web search is disabled in the harness.
-- Compilation, the kernel tests and the release check run offline with only the kernel source, the probe, the Cargo cache and a target directory mounted.
+- Compilation, the kernel tests and the release check run offline with only the kernel source, the probe, the Cargo cache and a target directory mounted. The gates see the kernel through a throwaway overlay, because a few kernel tests write files next to their crate; nothing they write reaches the real tree.
 - Each probe run gets one stripped recipe, no network, no corpus and no credentials, under `prlimit` limits of 4 GiB address space, 8 CPU seconds and a 16 MiB output file.
 
 ## Changing the evaluator

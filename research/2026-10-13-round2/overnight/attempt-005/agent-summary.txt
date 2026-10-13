@@ -1,0 +1,8 @@
+Candidate written in:
+
+- [revolved_curve.rs](/workspace/kernel/monstertruck-geometry/src/decorators/revolved_curve.rs): avoids Newton seeds at the radial-distance cusp, where roundoff can select the profile’s opposite extension.
+- [projection.rs](/workspace/kernel/monstertruck-meshing/src/tessellation/triangulation/boundary/projection.rs): preserves the pole’s 3D position when duplicating it across angular UV coordinates.
+
+Expected scope: revolved faces meeting the axis, including translated profiles. Complex-profile regressions and all controller gates remain unverified.
+
+No builds or tests run. [Candidate patch](/workspace/scratch/candidate.patch).

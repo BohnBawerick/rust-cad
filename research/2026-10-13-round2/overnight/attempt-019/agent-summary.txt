@@ -1,0 +1,9 @@
+Modified `classic/mod.rs` and `classic/shell_classification.rs`.
+
+Residual face classification now respects B-rep face orientation and complemented solids. For the failing hole recipe, the lower-cap ray’s correct winding is zero; the previous calculation produced two, incorrectly retaining an exterior cap.
+
+Expected scope: restore the through-hole shell’s closure without changing intersection curves or tolerances. Existing sliver filtering and boundary-sampling ambiguity remain.
+
+No builds or tests run. Controller validation remains required.
+
+[Candidate patch](/workspace/scratch/attempt-19.patch) · [Findings](/workspace/scratch/partial.txt)

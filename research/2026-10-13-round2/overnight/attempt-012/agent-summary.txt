@@ -1,0 +1,9 @@
+Modified [polyline_construction/mod.rs](/workspace/kernel/monstertruck-solid/src/transversal/polyline_construction/mod.rs).
+
+The candidate treats interference segments as a geometric set: weld endpoints across spatial-cell boundaries, split overlapping reports at intermediate endpoints, deduplicate segments, and trace deterministic paths. Repeated triangle incidence should no longer create false retraced loops.
+
+Expected scope: cylinder and hole intersection chains broken by duplicate segments or endpoint hashing. Coplanar caps, tangency classification, small-UV-area deletion, and worst-case splitting cost remain risks.
+
+No builds or tests run. Existing tests remain unchanged.
+
+[Candidate patch](/workspace/scratch/attempt-12.patch) · [Findings](/workspace/scratch/partial.txt)

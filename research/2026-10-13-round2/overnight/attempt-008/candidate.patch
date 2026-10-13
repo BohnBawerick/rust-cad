@@ -1,0 +1,151 @@
+--- /dev/null
++++ b/monstertruck-solid/src/transversal/classic/exact_section.rs
+@@ -0,0 +1,107 @@
++//! Preserve rational constant-parameter sections in intersection leaders.
++
++use monstertruck_geometry::prelude::*;
++use monstertruck_meshing::prelude::PolylineCurve;
++
++use super::ShapeOpsSurface;
++
++/// Recover an exact planar section from either carrier of an intersection.
++pub(super) fn intersection_section<S: ShapeOpsSurface>(
++    curve: &IntersectionCurve<PolylineCurve<Point3>, S, S>,
++) -> Option<NurbsCurve<Vector4>> {
++    [
++        (curve.surface0(), curve.surface1()),
++        (curve.surface1(), curve.surface0()),
++    ]
++    .into_iter()
++    .find_map(|(surface, other)| {
++        let AnalyticSurfaceKind::Plane(plane) = other.try_into_analytic_surface_kind()? else {
++            return None;
++        };
++        let surface = NurbsSurface::new(surface.try_into_homogeneous_bspline_surface()?);
++        let section = isoparametric_section(&surface, curve.leader().as_slice())?;
++        // The section lies on its source surface by construction. Testing
++        // its homogeneous control polygon against the plane certifies the
++        // whole curve, including the intervals between marching samples.
++        plane.include(&section).then_some(section)
++    })
++}
++
++/// Extract and trim a surface section while retaining its rational weights.
++fn isoparametric_section(
++    surface: &NurbsSurface<Vector4>,
++    points: &[Point3],
++) -> Option<NurbsCurve<Vector4>> {
++    if points.len() < 2 {
++        return None;
++    }
++    let parameters = points
++        .iter()
++        .map(|&point| surface.search_parameter(point, None, 100))
++        .collect::<Option<Vec<_>>>()?;
++    let &(start_u, start_v) = parameters.first()?;
++    let &(end_u, end_v) = parameters.last()?;
++    let homogeneous = surface.non_rationalized();
++    let (range_u, range_v) = surface.range_tuple();
++    let (mut section, start, end) = if parameters.iter().all(|uv| uv.1.near(&start_v)) {
++        let fixed = section_parameter((start_v + end_v) * 0.5, range_v)?;
++        let controls = (0..surface.control_points().len())
++            .map(|index| homogeneous.curve_v(index).subs(fixed))
++            .collect();
++        (
++            BsplineCurve::new(surface.knot_vector_u().clone(), controls),
++            section_parameter(start_u, range_u)?,
++            section_parameter(end_u, range_u)?,
++        )
++    } else if parameters.iter().all(|uv| uv.0.near(&start_u)) {
++        let fixed = section_parameter((start_u + end_u) * 0.5, range_u)?;
++        let controls = (0..surface.control_points().first()?.len())
++            .map(|index| homogeneous.curve_u(index).subs(fixed))
++            .collect();
++        (
++            BsplineCurve::new(surface.knot_vector_v().clone(), controls),
++            section_parameter(start_v, range_v)?,
++            section_parameter(end_v, range_v)?,
++        )
++    } else {
++        return None;
++    };
++    if start.near(&end) {
++        return None;
++    }
++    let (low, high) = (start.min(end), start.max(end));
++    let (first, last) = section.range_tuple();
++    if !low.near(&first) {
++        section = section.cut(low);
++    }
++    if !high.near(&last) {
++        section.cut(high);
++    }
++    let (mut knots, controls) = section.destruct();
++    knots.try_normalize().ok()?;
++    let mut section = NurbsCurve::new(BsplineCurve::try_new(knots, controls).ok()?);
++    if start > end {
++        section.invert();
++    }
++    // Retain the topological endpoints and the branch selected by the leader.
++    // A closed or folded leader must not become a different trimmed section.
++    if !section.front().near(points.first()?) || !section.back().near(points.last()?) {
++        return None;
++    }
++    points.iter().try_fold(0.0, |previous, &point| {
++        let parameter = section_parameter(section.search_parameter(point, None, 100)?, (0.0, 1.0))?;
++        (parameter >= previous || parameter.near(&previous)).then_some(parameter)
++    })?;
++    Some(section)
++}
++
++/// Snap parameter-search roundoff at the existing section domain endpoints.
++fn section_parameter(value: f64, (start, end): (f64, f64)) -> Option<f64> {
++    if value.near(&start) {
++        Some(start)
++    } else if value.near(&end) {
++        Some(end)
++    } else {
++        (start < value && value < end).then_some(value)
++    }
++}
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -19,6 +19,7 @@
+ //!   the current error enum has no single `Internal` variant.
+ 
+ mod divide_face;
++mod exact_section;
+ mod faces_classification;
+ mod intersection_curve;
+ mod loops_store;
+@@ -37,10 +38,9 @@
+ type AltCurve<C, S> = Alternative<C, IntersectionCurve<PolylineCurve<Point3>, S, S>>;
+ type AltCurveShell<C, S> = Shell<Point3, AltCurve<C, S>, S>;
+ 
+-/// Convert an Alternative-curve shell back to a target-curve shell, approximating
+-/// each intersection-curve arm with a polyline B-spline wrapped in a
+-/// `SurfaceCurve` (uses the `From<SurfaceCurve<BsplineCurve<Point3>, ..>>`
+-/// conversion the current `ShapeOpsCurve` bound guarantees).
++/// Convert an alternative-curve shell back to a target-curve shell.
++/// Preserve exact rational planar sections when available, and otherwise use
++/// the sampled leader wrapped in a [`SurfaceCurve`].
+ fn altshell_to_shell<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+     altshell: &AltCurveShell<C, S>,
+ ) -> Option<Shell<Point3, C, S>> {
+@@ -51,6 +51,16 @@
+             Alternative::SecondType(ic) => {
+                 let surface0 = ic.surface0().clone();
+                 let surface1 = ic.surface1().clone();
++                if let Some(section) = exact_section::intersection_section(ic) {
++                    let boundary0: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
++                    let boundary1: Option<ParameterCurve<BoundaryCurve2D, S>> = None;
++                    return Some(
++                        SurfaceCurve::with_boundaries(
++                            surface0, surface1, section, boundary0, boundary1,
++                        )
++                        .into(),
++                    );
++                }
+                 let mut points = ic.leader().as_slice().to_vec();
+                 points.dedup_by(|lhs, rhs| (*lhs).near(&*rhs));
+                 if points.len() < 2 {

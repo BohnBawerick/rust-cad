@@ -1,0 +1,9 @@
+Modified [fillet_impl/mod.rs](/workspace/kernel/monstertruck-modeling/src/fillet_impl/mod.rs).
+
+The conversion replaced rational fillet arcs with polyline chords that leave the curved surface. The candidate reconstructs affine UV trims as piecewise rational curves, preserving homogeneous weights. It uses them only when existing inclusion checks accept both carrier surfaces.
+
+Expected scope: straight-edge round fillets ending on planar caps and other exact affine UV intersections. Risks remain around high-degree interpolation and intersections requiring projection.
+
+No builds or tests run. Tests and tolerances are unchanged.
+
+[Candidate patch](/workspace/scratch/fillet-candidate.patch) · [Findings](/workspace/scratch/partial.txt)

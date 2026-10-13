@@ -1,0 +1,9 @@
+Candidate written in `classic/mod.rs`, `classic/planar.rs`, `classic/planar/assemble.rs`, and new `classic/planar/coalesce.rs`.
+
+Restores the previous planar-arrangement hypothesis and repairs its face-count failure: fragments retain source identity, and internal subdivision edges cancel within each connected surviving face region. Angular edge pairing still separates bodies touching only along edges or vertices.
+
+Expected scope includes certified polygonal planar solids, containment, cavities, contacts, and thin overlaps. Numerical degeneracies, merged-face meshing, and subsequent booleans involving concave remainders remain unverified.
+
+No builds or tests were run.
+
+[Candidate patch](/workspace/scratch/candidate.patch) · [Findings and risks](/workspace/scratch/partial.txt)

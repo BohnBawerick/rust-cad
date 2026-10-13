@@ -1,0 +1,24 @@
+   Compiling monstertruck-geometry v0.4.1 (/workspace/kernel/source/monstertruck-geometry)
+   Compiling monstertruck-meshing v0.4.1 (/workspace/kernel/source/monstertruck-meshing)
+   Compiling monstertruck-fillet v0.4.1 (/workspace/kernel/source/monstertruck-fillet)
+   Compiling monstertruck-solid v0.4.1 (/workspace/kernel/source/monstertruck-solid)
+   Compiling monstertruck-modeling v0.4.1 (/workspace/kernel/source/monstertruck-modeling)
+error[E0308]: mismatched types
+  --> /workspace/kernel/source/monstertruck-solid/src/transversal/classic/divide_face/interior.rs:74:48
+   |
+74 |     points.dedup_by(|first, second| first.near(second));
+   |                                           ---- ^^^^^^ expected `&&mut Point2<f64>`, found `&mut Point2<f64>`
+   |                                           |
+   |                                           arguments to this method are incorrect
+   |
+   = note:      expected reference `&&mut monstertruck_core::cgmath::Point2<_>`
+           found mutable reference `&mut monstertruck_core::cgmath::Point2<_>`
+note: method defined here
+  --> /workspace/kernel/source/monstertruck-core/src/tolerance.rs:14:8
+   |
+14 |     fn near(&self, other: &Self) -> bool { self.abs_diff_eq(other, TOLERANCE) }
+   |        ^^^^
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `monstertruck-solid` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

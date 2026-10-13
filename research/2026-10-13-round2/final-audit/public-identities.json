@@ -1,0 +1,788 @@
+{
+  "total": 78,
+  "passed": 78,
+  "operation_failed": 0,
+  "identity_failed": 0,
+  "rows": [
+    {
+      "ids": [
+        "public-000",
+        "public-001",
+        "public-002"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": -1.1368683772161603e-13
+    },
+    {
+      "ids": [
+        "public-003",
+        "public-004",
+        "public-005"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -2.842170943040401e-14,
+      "union_plus_intersection_error": -5.684341886080802e-14
+    },
+    {
+      "ids": [
+        "public-006",
+        "public-007",
+        "public-008"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -3.552713678800501e-15,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-009",
+        "public-010",
+        "public-011"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -3.552713678800501e-15,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-012",
+        "public-013",
+        "public-014"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 1.1102230246251565e-16,
+      "union_plus_intersection_error": 3.3306690738754696e-16
+    },
+    {
+      "ids": [
+        "public-015",
+        "public-016",
+        "public-017"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 2.7755575615628914e-17,
+      "union_plus_intersection_error": 2.7755575615628914e-17
+    },
+    {
+      "ids": [
+        "public-018",
+        "public-019",
+        "public-020"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 1.1368683772161603e-13,
+      "union_plus_intersection_error": -4.547473508864641e-13
+    },
+    {
+      "ids": [
+        "public-021",
+        "public-022",
+        "public-023"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 1.3322676295501878e-15,
+      "union_plus_intersection_error": 1.7763568394002505e-15
+    },
+    {
+      "ids": [
+        "public-024",
+        "public-025",
+        "public-026"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 2.220446049250313e-16
+    },
+    {
+      "ids": [
+        "public-027",
+        "public-028",
+        "public-029"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-030",
+        "public-031",
+        "public-032"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -1.1368683772161603e-13,
+      "union_plus_intersection_error": -2.2737367544323206e-13
+    },
+    {
+      "ids": [
+        "public-033",
+        "public-034",
+        "public-035"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 5.551115123125783e-17,
+      "union_plus_intersection_error": 5.551115123125783e-17
+    },
+    {
+      "ids": [
+        "public-036",
+        "public-037",
+        "public-038"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 5.551115123125783e-17,
+      "union_plus_intersection_error": 1.1980434005964824e-16
+    },
+    {
+      "ids": [
+        "public-039",
+        "public-040",
+        "public-041"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 1.3322676295501878e-15,
+      "union_plus_intersection_error": 3.552713678800501e-15
+    },
+    {
+      "ids": [
+        "public-042",
+        "public-043",
+        "public-044"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -7.105427357601002e-15,
+      "union_plus_intersection_error": -2.842170943040401e-14
+    },
+    {
+      "ids": [
+        "public-045",
+        "public-046",
+        "public-047"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": -7.105427357601002e-15
+    },
+    {
+      "ids": [
+        "public-048",
+        "public-049",
+        "public-050"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 1.7763568394002505e-15,
+      "union_plus_intersection_error": 1.7763568394002505e-15
+    },
+    {
+      "ids": [
+        "public-051",
+        "public-052",
+        "public-053"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -3.552713678800501e-15,
+      "union_plus_intersection_error": -7.105427357601002e-15
+    },
+    {
+      "ids": [
+        "public-054",
+        "public-055",
+        "public-056"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -3.885780586188048e-16,
+      "union_plus_intersection_error": -2.914335439641036e-16
+    },
+    {
+      "ids": [
+        "public-057",
+        "public-058",
+        "public-059"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -1.1102230246251565e-16,
+      "union_plus_intersection_error": 1.1102230246251565e-16
+    },
+    {
+      "ids": [
+        "public-060",
+        "public-061",
+        "public-062"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-063",
+        "public-064",
+        "public-065"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 7.105427357601002e-15,
+      "union_plus_intersection_error": 4.263256414560601e-14
+    },
+    {
+      "ids": [
+        "public-066",
+        "public-067",
+        "public-068"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 1.1102230246251565e-16
+    },
+    {
+      "ids": [
+        "public-069",
+        "public-070",
+        "public-071"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 4.440892098500626e-15,
+      "union_plus_intersection_error": 8.881784197001252e-15
+    },
+    {
+      "ids": [
+        "public-072",
+        "public-073",
+        "public-074"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 2.220446049250313e-16,
+      "union_plus_intersection_error": -6.661338147750939e-16
+    },
+    {
+      "ids": [
+        "public-075",
+        "public-076",
+        "public-077"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 3.0140820395097023e-17
+    },
+    {
+      "ids": [
+        "public-078",
+        "public-079",
+        "public-080"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-081",
+        "public-082",
+        "public-083"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 4.440892098500626e-16,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-084",
+        "public-085",
+        "public-086"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": -2.220446049250313e-16
+    },
+    {
+      "ids": [
+        "public-087",
+        "public-088",
+        "public-089"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": -1.4210854715202004e-14
+    },
+    {
+      "ids": [
+        "public-090",
+        "public-091",
+        "public-092"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 8.526512829121202e-14,
+      "union_plus_intersection_error": 5.684341886080802e-14
+    },
+    {
+      "ids": [
+        "public-093",
+        "public-094",
+        "public-095"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 1.7763568394002505e-14,
+      "union_plus_intersection_error": 6.217248937900877e-15
+    },
+    {
+      "ids": [
+        "public-096",
+        "public-097",
+        "public-098"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -5.551115123125783e-16,
+      "union_plus_intersection_error": -1.7763568394002505e-15
+    },
+    {
+      "ids": [
+        "public-099",
+        "public-100",
+        "public-101"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-102",
+        "public-103",
+        "public-104"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 2.220446049250313e-16,
+      "union_plus_intersection_error": 2.220446049250313e-16
+    },
+    {
+      "ids": [
+        "public-105",
+        "public-106",
+        "public-107"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 1.4210854715202004e-14,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-108",
+        "public-109",
+        "public-110"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 1.6653345369377348e-16,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-111",
+        "public-112",
+        "public-113"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 1.3322676295501878e-15,
+      "union_plus_intersection_error": -1.7763568394002505e-15
+    },
+    {
+      "ids": [
+        "public-114",
+        "public-115",
+        "public-116"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 2.2737367544323206e-13,
+      "union_plus_intersection_error": 2.084998840246044e-13
+    },
+    {
+      "ids": [
+        "public-117",
+        "public-118",
+        "public-119"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-120",
+        "public-121",
+        "public-122"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -8.881784197001252e-16,
+      "union_plus_intersection_error": -1.7763568394002505e-15
+    },
+    {
+      "ids": [
+        "public-123",
+        "public-124",
+        "public-125"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -1.3877787807814457e-16,
+      "union_plus_intersection_error": -2.7755575615628914e-16
+    },
+    {
+      "ids": [
+        "public-126",
+        "public-127",
+        "public-128"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -2.2737367544323206e-13,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-129",
+        "public-130",
+        "public-131"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": -1.1368683772161603e-13
+    },
+    {
+      "ids": [
+        "public-132",
+        "public-133",
+        "public-134"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -1.3322676295501878e-15,
+      "union_plus_intersection_error": -2.220446049250313e-16
+    },
+    {
+      "ids": [
+        "public-135",
+        "public-136",
+        "public-137"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": -4.440892098500626e-16
+    },
+    {
+      "ids": [
+        "public-138",
+        "public-139",
+        "public-140"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-141",
+        "public-142",
+        "public-143"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 1.7763568394002505e-15,
+      "union_plus_intersection_error": 1.7763568394002505e-15
+    },
+    {
+      "ids": [
+        "public-144",
+        "public-145",
+        "public-146"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -1.1102230246251565e-16,
+      "union_plus_intersection_error": 0.0
+    },
+    {
+      "ids": [
+        "public-147",
+        "public-148",
+        "public-149"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 0.0,
+      "union_plus_intersection_error": 2.1316282072803006e-14
+    },
+    {
+      "ids": [
+        "public-150",
+        "public-151",
+        "public-152"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": 2.6645352591003757e-15,
+      "union_plus_intersection_error": 3.552713678800501e-15
+    },
+    {
+      "ids": [
+        "public-153",
+        "public-154",
+        "public-155"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -5.684341886080802e-14,
+      "union_plus_intersection_error": -2.4980018054066022e-14
+    },
+    {
+      "ids": [
+        "public-156",
+        "public-157",
+        "public-158"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0007260567423086339,
+      "union_plus_intersection_error": -0.0014521134846172679
+    },
+    {
+      "ids": [
+        "public-159",
+        "public-160",
+        "public-161"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0005416791992007841,
+      "union_plus_intersection_error": -0.0010833583984917183
+    },
+    {
+      "ids": [
+        "public-162",
+        "public-163",
+        "public-164"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.00022951799192139077,
+      "union_plus_intersection_error": -0.00045903598383079114
+    },
+    {
+      "ids": [
+        "public-165",
+        "public-166",
+        "public-167"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0009798696210872038,
+      "union_plus_intersection_error": -0.0019597392422880944
+    },
+    {
+      "ids": [
+        "public-168",
+        "public-169",
+        "public-170"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0011902710735007815,
+      "union_plus_intersection_error": -0.0023805421469029753
+    },
+    {
+      "ids": [
+        "public-171",
+        "public-172",
+        "public-173"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.00033893587564270966,
+      "union_plus_intersection_error": -0.0006742817417635383
+    },
+    {
+      "ids": [
+        "public-174",
+        "public-175",
+        "public-176"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.00040967012472425957,
+      "union_plus_intersection_error": -0.0008210946568614208
+    },
+    {
+      "ids": [
+        "public-177",
+        "public-178",
+        "public-179"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0014512474513668217,
+      "union_plus_intersection_error": -0.002902494902787822
+    },
+    {
+      "ids": [
+        "public-180",
+        "public-181",
+        "public-182"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.000711885614295138,
+      "union_plus_intersection_error": -0.0014237712286080395
+    },
+    {
+      "ids": [
+        "public-183",
+        "public-184",
+        "public-185"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0002413506038770885,
+      "union_plus_intersection_error": -0.00048388374780450327
+    },
+    {
+      "ids": [
+        "public-186",
+        "public-187",
+        "public-188"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0005256457140279114,
+      "union_plus_intersection_error": -0.0010512914280558228
+    },
+    {
+      "ids": [
+        "public-189",
+        "public-190",
+        "public-191"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0011565931737247404,
+      "union_plus_intersection_error": -0.002313186347461915
+    },
+    {
+      "ids": [
+        "public-192",
+        "public-193",
+        "public-194"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0016339189506666685,
+      "union_plus_intersection_error": -0.003267837901503867
+    },
+    {
+      "ids": [
+        "public-195",
+        "public-196",
+        "public-197"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0015816442511651374,
+      "union_plus_intersection_error": -0.003163288502330275
+    },
+    {
+      "ids": [
+        "public-198",
+        "public-199",
+        "public-200"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0002643155173791545,
+      "union_plus_intersection_error": -0.000528631034758309
+    },
+    {
+      "ids": [
+        "public-201",
+        "public-202",
+        "public-203"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0007658884904520047,
+      "union_plus_intersection_error": -0.0015317769809195525
+    },
+    {
+      "ids": [
+        "public-204",
+        "public-205",
+        "public-206"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0011307783073273292,
+      "union_plus_intersection_error": -0.002261556614726601
+    },
+    {
+      "ids": [
+        "public-207",
+        "public-208",
+        "public-209"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.00019016277906747092,
+      "union_plus_intersection_error": -0.00038032555812095303
+    },
+    {
+      "ids": [
+        "public-210",
+        "public-211",
+        "public-212"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0020648132661413854,
+      "union_plus_intersection_error": -0.0041296265322881
+    },
+    {
+      "ids": [
+        "public-213",
+        "public-214",
+        "public-215"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0006149037380600575,
+      "union_plus_intersection_error": -0.001229807476179623
+    },
+    {
+      "ids": [
+        "public-216",
+        "public-217",
+        "public-218"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0004327970975361861,
+      "union_plus_intersection_error": -0.0008655941950723722
+    },
+    {
+      "ids": [
+        "public-219",
+        "public-220",
+        "public-221"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0004217601745055699,
+      "union_plus_intersection_error": -0.0008435203490764209
+    },
+    {
+      "ids": [
+        "public-222",
+        "public-223",
+        "public-224"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.00015544290700181262,
+      "union_plus_intersection_error": -0.0003116571836478399
+    },
+    {
+      "ids": [
+        "public-225",
+        "public-226",
+        "public-227"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.00022412188788489829,
+      "union_plus_intersection_error": -0.0004502252793967543
+    },
+    {
+      "ids": [
+        "public-228",
+        "public-229",
+        "public-230"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.0018397867370412158,
+      "union_plus_intersection_error": -0.003679573473736042
+    },
+    {
+      "ids": [
+        "public-231",
+        "public-232",
+        "public-233"
+      ],
+      "verdict": "pass",
+      "difference_plus_intersection_error": -0.001377676453504062,
+      "union_plus_intersection_error": -0.0027553529073749417
+    }
+  ]
+}

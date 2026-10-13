@@ -1,0 +1,720 @@
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded cpufeatures v0.3.1
+  Downloaded cfg-if v1.0.5
+  Downloaded matext4cgmath v0.1.0
+  Downloaded itoa v1.0.18
+  Downloaded chacha20 v0.10.2
+  Downloaded katexit v0.1.5
+  Downloaded equivalent v1.0.2
+  Downloaded rustc_version v0.4.1
+  Downloaded scopeguard v1.2.0
+  Downloaded proc-macro-error-attr2 v2.0.0
+  Downloaded array-macro v2.1.8
+  Downloaded rustc-hash v2.1.3
+  Downloaded version_check v0.9.5
+  Downloaded derive-new v0.7.0
+  Downloaded unicode-xid v0.2.6
+  Downloaded proc-macro-crate v3.5.0
+  Downloaded bytemuck_derive v1.12.1
+  Downloaded convert_case v0.10.0
+  Downloaded nom-language v0.1.0
+  Downloaded approx v0.4.0
+  Downloaded Inflector v0.11.4
+  Downloaded foldhash v0.2.0
+  Downloaded lazy_static v1.5.1
+  Downloaded rand_core v0.10.1
+  Downloaded autocfg v1.5.1
+  Downloaded thiserror v2.0.21
+  Downloaded toml_datetime v1.1.2+spec-1.1.0
+  Downloaded zmij v1.0.23
+  Downloaded xxhash-rust v0.8.19
+  Downloaded proc-macro-error2 v2.0.1
+  Downloaded lock_api v0.4.14
+  Downloaded rclite v0.4.2
+  Downloaded proc-macro-error-attr v1.0.4
+  Downloaded either v1.19.0
+  Downloaded quote v1.0.47
+  Downloaded step-p21-derive v0.1.1
+  Downloaded thiserror-impl v2.0.21
+  Downloaded web-time v1.1.0
+  Downloaded smallvec v1.16.3
+  Downloaded toml_parser v1.1.5+spec-1.1.0
+  Downloaded num-complex v0.4.6
+  Downloaded once_cell v1.21.4
+  Downloaded parking_lot_core v0.9.12
+  Downloaded crossbeam-deque v0.8.8
+  Downloaded iana-time-zone v0.1.65
+  Downloaded parking_lot v0.12.5
+  Downloaded semver v1.0.28
+  Downloaded cgmath v0.18.0
+  Downloaded crossbeam-utils v0.8.23
+  Downloaded unicode-ident v1.0.27
+  Downloaded getrandom v0.4.3
+  Downloaded proc-macro-error v1.0.4
+  Downloaded ahash v0.8.12
+  Downloaded crossbeam-epoch v0.9.21
+  Downloaded proc-macro2 v1.0.107
+  Downloaded num-traits v0.2.19
+  Downloaded log v0.4.34
+  Downloaded bytemuck v1.25.2
+  Downloaded getrandom v0.3.4
+  Downloaded rayon-core v1.13.0
+  Downloaded serde_core v1.0.229
+  Downloaded serde_derive v1.0.229
+  Downloaded toml_edit v0.25.17+spec-1.1.0
+  Downloaded allocator-api2 v0.2.21
+  Downloaded derive_more v2.1.1
+  Downloaded indexmap v2.14.2
+  Downloaded derive_more-impl v2.1.1
+  Downloaded rand v0.10.3
+  Downloaded step-p21 v0.1.1
+  Downloaded serde v1.0.229
+  Downloaded memchr v2.8.3
+  Downloaded unicode-segmentation v1.13.3
+  Downloaded nom v8.0.0
+  Downloaded hashbrown v0.16.1
+  Downloaded serde_json v1.0.154
+  Downloaded hashbrown v0.17.1
+  Downloaded regex v1.13.1
+  Downloaded itertools v0.14.0
+  Downloaded itertools v0.15.0
+  Downloaded rayon v1.12.0
+  Downloaded winnow v1.0.4
+  Downloaded branches v0.5.1
+  Downloaded aho-corasick v1.1.5
+  Downloaded chrono v0.4.45
+  Downloaded syn v1.0.109
+  Downloaded regex-syntax v0.8.11
+  Downloaded syn v3.0.9
+  Downloaded syn v2.0.119
+  Downloaded zerocopy v0.8.62
+  Downloaded robust v1.2.0
+  Downloaded spade v2.15.1
+  Downloaded regex-automata v0.4.18
+  Downloaded libc v0.2.190
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling autocfg v1.5.1
+   Compiling version_check v0.9.5
+   Compiling serde_core v1.0.229
+   Compiling libc v0.2.190
+   Compiling num-traits v0.2.19
+   Compiling syn v3.0.9
+   Compiling syn v2.0.119
+   Compiling serde v1.0.229
+   Compiling cfg-if v1.0.5
+   Compiling cgmath v0.18.0
+   Compiling crossbeam-utils v0.8.23
+   Compiling approx v0.4.0
+   Compiling proc-macro-error-attr v1.0.4
+   Compiling crossbeam-epoch v0.9.21
+   Compiling syn v1.0.109
+   Compiling num-complex v0.4.6
+   Compiling proc-macro-error v1.0.4
+   Compiling equivalent v1.0.2
+   Compiling thiserror v2.0.21
+   Compiling getrandom v0.4.3
+   Compiling crossbeam-deque v0.8.8
+   Compiling either v1.19.0
+   Compiling rand_core v0.10.1
+   Compiling xxhash-rust v0.8.19
+   Compiling rayon-core v1.13.0
+   Compiling rustc-hash v2.1.3
+   Compiling cpufeatures v0.3.1
+   Compiling chacha20 v0.10.2
+   Compiling memchr v2.8.3
+   Compiling parking_lot_core v0.9.12
+   Compiling smallvec v1.16.3
+   Compiling rand v0.10.3
+   Compiling branches v0.5.1
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.21
+   Compiling katexit v0.1.5
+   Compiling monstertruck-derive v0.4.1 (/workspace/lab/kernel/source/monstertruck-derive)
+   Compiling scopeguard v1.2.0
+   Compiling unicode-segmentation v1.13.3
+   Compiling convert_case v0.10.0
+   Compiling lock_api v0.4.14
+   Compiling rayon v1.12.0
+   Compiling unicode-xid v0.2.6
+   Compiling derive_more-impl v2.1.1
+   Compiling parking_lot v0.12.5
+   Compiling bytemuck_derive v1.12.1
+   Compiling allocator-api2 v0.2.21
+   Compiling zerocopy v0.8.62
+   Compiling getrandom v0.3.4
+   Compiling foldhash v0.2.0
+   Compiling hashbrown v0.16.1
+   Compiling bytemuck v1.25.2
+   Compiling rclite v0.4.2
+   Compiling aho-corasick v1.1.5
+   Compiling itertools v0.14.0
+   Compiling matext4cgmath v0.1.0
+   Compiling monstertruck-core v0.4.1 (/workspace/lab/kernel/source/monstertruck-core)
+   Compiling ahash v0.8.12
+   Compiling hashbrown v0.17.1
+   Compiling monstertruck-traits v0.4.1 (/workspace/lab/kernel/source/monstertruck-traits)
+   Compiling winnow v1.0.4
+   Compiling regex-syntax v0.8.11
+   Compiling array-macro v2.1.8
+   Compiling robust v1.2.0
+   Compiling derive_more v2.1.1
+   Compiling spade v2.15.1
+   Compiling monstertruck-mesh v0.4.1 (/workspace/lab/kernel/source/monstertruck-mesh)
+   Compiling toml_parser v1.1.5+spec-1.1.0
+   Compiling monstertruck-geometry v0.4.1 (/workspace/lab/kernel/source/monstertruck-geometry)
+   Compiling regex-automata v0.4.18
+   Compiling monstertruck-topology v0.4.1 (/workspace/lab/kernel/source/monstertruck-topology)
+   Compiling indexmap v2.14.2
+   Compiling web-time v1.1.0
+   Compiling once_cell v1.21.4
+   Compiling toml_datetime v1.1.2+spec-1.1.0
+   Compiling log v0.4.34
+   Compiling toml_edit v0.25.17+spec-1.1.0
+   Compiling monstertruck-meshing v0.4.1 (/workspace/lab/kernel/source/monstertruck-meshing)
+   Compiling regex v1.13.1
+   Compiling proc-macro-error-attr2 v2.0.0
+   Compiling lazy_static v1.5.1
+   Compiling Inflector v0.11.4
+   Compiling proc-macro-error2 v2.0.1
+   Compiling proc-macro-crate v3.5.0
+   Compiling nom v8.0.0
+   Compiling zmij v1.0.23
+   Compiling step-p21-derive v0.1.1
+   Compiling monstertruck-fillet v0.4.1 (/workspace/lab/kernel/source/monstertruck-fillet)
+   Compiling derive-new v0.7.0
+   Compiling itertools v0.15.0
+   Compiling nom-language v0.1.0
+   Compiling iana-time-zone v0.1.65
+   Compiling serde_json v1.0.154
+   Compiling chrono v0.4.45
+   Compiling step-p21 v0.1.1
+   Compiling monstertruck-modeling v0.4.1 (/workspace/lab/kernel/source/monstertruck-modeling)
+   Compiling monstertruck-assembly v0.4.1 (/workspace/lab/kernel/source/monstertruck-assembly)
+   Compiling itoa v1.0.18
+   Compiling monstertruck-io v0.4.1 (/workspace/lab/kernel/source/monstertruck-io)
+   Compiling monstertruck-solid v0.4.1 (/workspace/lab/kernel/source/monstertruck-solid)
+   Compiling kernel-probe v0.1.0 (/workspace/lab/probe)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 01s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded fnv v1.0.7
+  Downloaded rand_xorshift v0.5.0
+  Downloaded once_cell_polyfill v1.70.2
+  Downloaded ciborium-io v0.2.2
+  Downloaded strsim v0.11.1
+  Downloaded crunchy v0.2.4
+  Downloaded ptr_meta v0.3.2
+  Downloaded quick-error v2.0.1
+  Downloaded bytecheck v0.8.3
+  Downloaded anstyle-wincon v3.0.11
+  Downloaded wasm-bindgen-futures v0.4.79
+  Downloaded colorchoice v1.0.5
+  Downloaded adler2 v2.0.1
+  Downloaded ciborium-ll v0.2.2
+  Downloaded anstyle-query v1.1.5
+  Downloaded bytecheck_derive v0.8.3
+  Downloaded plotters-backend v0.3.7
+  Downloaded cast v0.3.0
+  Downloaded same-file v1.0.6
+  Downloaded utf8parse v0.2.2
+  Downloaded munge_macro v0.4.7
+  Downloaded heck v0.5.0
+  Downloaded ptr_meta_derive v0.3.2
+  Downloaded alloca v0.4.0
+  Downloaded plotters-svg v0.3.7
+  Downloaded multiversion_no_op v1.0.0
+  Downloaded serde_spanned v1.1.2
+  Downloaded gloo-worker-macros v0.2.0
+  Downloaded rancor v0.1.3
+  Downloaded clap_lex v1.1.1
+  Downloaded munge v0.4.7
+  Downloaded wasm-bindgen-macro v0.2.129
+  Downloaded rend v0.5.4
+  Downloaded is_terminal_polyfill v1.70.2
+  Downloaded wait-timeout v0.2.1
+  Downloaded quick-error v1.2.3
+  Downloaded r-efi v6.0.0
+  Downloaded page_size v0.6.0
+  Downloaded form_urlencoded v1.2.2
+  Downloaded defmt-parser v1.0.0
+  Downloaded gloo-dialogs v0.3.0
+  Downloaded dlib v0.5.3
+  Downloaded jiff-static v0.2.38
+  Downloaded fastrand v2.5.0
+  Downloaded winapi-util v0.1.11
+  Downloaded gloo-events v0.3.0
+  Downloaded cfg_aliases v0.2.2
+  Downloaded rustversion v1.0.23
+  Downloaded slab v0.4.12
+  Downloaded serde_urlencoded v0.7.1
+  Downloaded core_detect v1.0.0
+  Downloaded anstyle v1.0.14
+  Downloaded find-msvc-tools v0.1.14
+  Downloaded gethostname v1.1.0
+  Downloaded simdutf8 v0.1.5
+  Downloaded anstyle-parse v1.0.0
+  Downloaded shlex v2.0.1
+  Downloaded simd-adler32 v0.3.10
+  Downloaded tinytemplate v1.2.1
+  Downloaded criterion-plot v0.8.2
+  Downloaded anstream v1.0.0
+  Downloaded windows-targets v0.52.6
+  Downloaded oorandom v11.1.5
+  Downloaded wasm-bindgen-shared v0.2.129
+  Downloaded rkyv_derive v0.8.18
+  Downloaded gloo-utils v0.2.0
+  Downloaded walkdir v2.5.0
+  Downloaded futures-io v0.3.34
+  Downloaded memchr v1.0.2
+  Downloaded bit-set v0.11.1
+  Downloaded jobserver v0.1.35
+  Downloaded gloo-storage v0.4.0
+  Downloaded percent-encoding v2.3.2
+  Downloaded rusty-fork v0.3.1
+  Downloaded convert_case v0.11.0
+  Downloaded bit-vec v0.10.1
+  Downloaded gloo-utils v0.3.0
+  Downloaded zune-core v0.5.3
+  Downloaded unarray v0.1.4
+  Downloaded proptest-macro v0.6.0
+  Downloaded async-trait v0.1.92
+  Downloaded borsh-derive v1.8.1
+  Downloaded redox_syscall v0.5.18
+  Downloaded anyhow v1.0.104
+  Downloaded clap_derive v4.6.7
+  Downloaded thiserror-impl v1.0.69
+  Downloaded weezl v0.1.12
+  Downloaded anes v0.1.6
+  Downloaded ciborium v0.2.2
+  Downloaded simd_helpers v0.1.0
+  Downloaded gloo-history v0.3.0
+  Downloaded gloo-console v0.4.1
+  Downloaded num-derive v0.4.2
+  Downloaded as-slice v0.2.1
+  Downloaded gloo-render v0.3.0
+  Downloaded bitflags v2.13.2
+  Downloaded gloo-timers v0.4.0
+  Downloaded xkbcommon-dl v0.4.2
+  Downloaded half v2.7.1
+  Downloaded fax v0.2.7
+  Downloaded xcursor v0.3.11
+  Downloaded byteorder-lite v0.1.0
+  Downloaded as-raw-xcb-connection v1.0.1
+  Downloaded smol_str v0.2.2
+  Downloaded windows-strings v0.5.1
+  Downloaded num-integer v0.1.47
+  Downloaded avif-serialize v0.8.9
+  Downloaded wit-bindgen v0.57.1
+  Downloaded flate2 v1.1.10
+  Downloaded r-efi v5.3.0
+  Downloaded tinyvec v1.13.3
+  Downloaded uuid v1.28.0
+  Downloaded fdeflate v0.3.7
+  Downloaded objc2-user-notifications v0.2.2
+  Downloaded clap v4.6.7
+  Downloaded owned_ttf_parser v0.25.1
+  Downloaded miniz_oxide v0.9.1
+  Downloaded scoped-tls v1.0.1
+  Downloaded downcast-rs v1.2.1
+  Downloaded arrayref v0.3.9
+  Downloaded wasm-bindgen v0.2.129
+  Downloaded borsh v1.8.1
+  Downloaded bytes v1.12.1
+  Downloaded calloop-wayland-source v0.3.0
+  Downloaded toml_edit v0.22.27
+  Downloaded zune-inflate v0.2.54
+  Downloaded objc-sys v0.3.5
+  Downloaded foreign-types-shared v0.3.1
+  Downloaded bitstream-io v4.10.0
+  Downloaded zune-jpeg v0.5.15
+  Downloaded bumpalo v3.20.3
+  Downloaded ab_glyph_rasterizer v0.1.10
+  Downloaded objc2-contacts v0.2.2
+  Downloaded tiff v0.11.3
+  Downloaded objc2-core-data v0.2.2
+  Downloaded num_enum_derive v0.7.6
+  Downloaded atomic-waker v1.1.2
+  Downloaded cursor-icon v1.2.0
+  Downloaded rustc-hash v1.1.0
+  Downloaded wayland-csd-frame v0.3.0
+  Downloaded strict-num v0.1.1
+  Downloaded pollster v0.4.0
+  Downloaded raw-window-metal v1.1.0
+  Downloaded range-alloc v0.1.5
+  Downloaded js-sys v0.3.106
+  Downloaded wayland-cursor v0.31.14
+  Downloaded pinned v0.1.0
+  Downloaded gloo-file v0.4.0
+  Downloaded gpu-descriptor v0.3.2
+  Downloaded termcolor v1.4.1
+  Downloaded rand v0.9.5
+  Downloaded cc v1.8.0
+  Downloaded criterion v0.8.2
+  Downloaded wgpu-core-deps-wasm v29.0.4
+  Downloaded zerocopy-derive v0.8.62
+  Downloaded toml_writer v1.1.3+spec-1.1.0
+  Downloaded objc2-metal v0.2.2
+  Downloaded env_filter v2.0.0
+  Downloaded wasm-bindgen-macro-support v0.2.129
+  Downloaded itertools v0.13.0
+  Downloaded quick-xml v0.22.0
+  Downloaded num-bigint v0.4.8
+  Downloaded plotters v0.3.7
+  Downloaded serde-wasm-bindgen v0.6.5
+  Downloaded toml_datetime v0.6.11
+  Downloaded windows-link v0.2.1
+  Downloaded futures-sink v0.3.34
+  Downloaded futures-macro v0.3.34
+  Downloaded wasip2 v1.0.4+wasi-0.2.12
+  Downloaded khronos-egl v6.0.0
+  Downloaded libfuzzer-sys v0.4.13
+  Downloaded noop_proc_macro v0.3.0
+  Downloaded pin-project-internal v1.1.13
+  Downloaded clap_builder v4.6.7
+  Downloaded byteorder v1.5.0
+  Downloaded iana-time-zone-haiku v0.1.2
+  Downloaded rgb v0.8.53
+  Downloaded windows-numerics v0.3.1
+  Downloaded futures-util v0.3.34
+  Downloaded loop9 v0.1.5
+  Downloaded ppv-lite86 v0.2.21
+  Downloaded interpolate_name v0.2.4
+  Downloaded litrs v1.0.1
+  Downloaded glutin_wgl_sys v0.6.1
+  Downloaded rkyv v0.8.18
+  Downloaded pulp v0.22.3
+  Downloaded typenum v1.20.1
+  Downloaded crypto-common v0.2.2
+  Downloaded pkg-config v0.3.34
+  Downloaded gif v0.14.2
+  Downloaded pin-project-lite v0.2.17
+  Downloaded pastey v0.1.1
+  Downloaded zlib-rs v0.6.8
+  Downloaded ttf-parser v0.25.1
+  Downloaded wayland-sys v0.31.11
+  Downloaded hybrid-array v0.4.15
+  Downloaded raw-window-handle v0.6.2
+  Downloaded miniz_oxide v0.8.9
+  Downloaded objc2-quartz-core v0.2.2
+  Downloaded foreign-types v0.5.0
+  Downloaded libloading v0.8.9
+  Downloaded jni-sys v0.4.1
+  Downloaded gloo-net v0.7.0
+  Downloaded hermit-abi v0.5.3
+  Downloaded objc2-cloud-kit v0.2.2
+  Downloaded raw-cpuid v11.6.0
+  Downloaded windows-future v0.3.2
+  Downloaded redox_syscall v0.4.1
+  Downloaded wayland-protocols-wlr v0.3.12
+  Downloaded concurrent-queue v2.5.0
+  Downloaded bitflags v1.3.2
+  Downloaded renderdoc-sys v1.1.0
+  Downloaded gpu-descriptor-types v0.2.0
+  Downloaded image v0.25.10
+  Downloaded combine v4.6.8
+  Downloaded ndk-sys v0.6.0+11769913
+  Downloaded equator v0.4.2
+  Downloaded gloo-worker v0.6.0
+  Downloaded thiserror v1.0.69
+  Downloaded cadmpeg-core v0.4.0
+  Downloaded rustix v1.1.5
+  Downloaded objc2-foundation v0.2.2
+  Downloaded bincode v1.3.3
+  Downloaded getrandom v0.2.17
+  Downloaded v_frame v0.3.9
+  Downloaded document-features v0.2.12
+  Downloaded objc2-quartz-core v0.3.2
+  Downloaded portable-atomic v1.15.0
+  Downloaded vtkio v0.6.3
+  Downloaded android-activity v0.6.1
+  Downloaded objc2 v0.6.5
+  Downloaded jiff-core v0.1.1
+  Downloaded crc32fast v1.5.2
+  Downloaded ab_glyph v0.2.32
+  Downloaded equator-macro v0.4.2
+  Downloaded tiny-skia-path v0.11.4
+  Downloaded wayland-scanner v0.31.11
+  Downloaded memmap2 v0.9.11
+  Downloaded arbitrary v1.5.0
+  Downloaded web-sys v0.3.106
+  Downloaded wgpu-hal v29.0.4
+  Downloaded khronos_api v3.1.0
+  Downloaded env_logger v0.11.11
+  Downloaded futures v0.3.34
+  Downloaded color_quant v1.1.0
+  Downloaded android_system_properties v0.1.6
+  Downloaded plain v0.2.3
+  Downloaded dispatch v0.2.0
+  Downloaded objc2-link-presentation v0.2.2
+  Downloaded png v0.18.1
+  Downloaded proc-macro-crate v3.3.0
+  Downloaded core-foundation-sys v0.8.7
+  Downloaded windows-result v0.4.1
+  Downloaded num_enum v0.7.6
+  Downloaded block2 v0.5.1
+  Downloaded core-graphics v0.23.2
+  Downloaded ndk-context v0.1.1
+  Downloaded wgpu-naga-bridge v29.0.4
+  Downloaded profiling v1.0.18
+  Downloaded exr v1.74.2
+  Downloaded toml v1.1.8+spec-1.1.0
+  Downloaded winapi v0.3.9
+  Downloaded gpu-allocator v0.28.0
+  Downloaded cadmpeg-ir v0.4.0
+  Downloaded pin-project v1.1.13
+  Downloaded ryu v1.0.23
+  Downloaded wasi v0.11.1+wasi-snapshot-preview1
+  Downloaded wgpu-core-deps-apple v29.0.4
+  Downloaded polling v3.11.0
+  Downloaded tracing-core v0.1.36
+  Downloaded futures-core v0.3.34
+  Downloaded glow v0.17.0
+  Downloaded profiling-procmacros v1.0.18
+  Downloaded no_std_io2 v0.9.4
+  Downloaded block-buffer v0.12.1
+  Downloaded gl_generator v0.14.0
+  Downloaded built v0.8.1
+  Downloaded reborrow v0.5.5
+  Downloaded pulp-wasm-simd-flag v0.1.1
+  Downloaded objc2-uniform-type-identifiers v0.2.2
+  Downloaded nom v3.2.1
+  Downloaded x11-dl v2.21.0
+  Downloaded foreign-types-macros v0.2.4
+  Downloaded base64 v0.23.1
+  Downloaded presser v0.3.1
+  Downloaded rand_core v0.9.5
+  Downloaded winnow v0.7.15
+  Downloaded portable-atomic-util v0.2.8
+  Downloaded ravif v0.13.0
+  Downloaded spirv v0.4.0+sdk-1.4.341.0
+  Downloaded libredox v0.1.25
+  Downloaded proptest v1.12.0
+  Downloaded paste v1.0.15
+  Downloaded windows-implement v0.60.2
+  Downloaded stable_deref_trait v1.2.1
+  Downloaded jni-sys v0.3.1
+  Downloaded windows-collections v0.3.2
+  Downloaded windows-core v0.62.2
+  Downloaded core-foundation v0.9.4
+  Downloaded bit-set v0.9.1
+  Downloaded errno v0.3.14
+  Downloaded arg_enum_proc_macro v0.3.4
+  Downloaded objc2-encode v4.1.0
+  Downloaded objc2-core-image v0.2.2
+  Downloaded core-graphics-types v0.1.3
+  Downloaded wayland-client v0.31.15
+  Downloaded objc2-ui-kit v0.2.2
+  Downloaded sha2 v0.11.1
+  Downloaded slotmap v1.1.1
+  Downloaded wgpu-core-deps-windows-linux-android v29.0.4
+  Downloaded maybe-rayon v0.1.1
+  Downloaded sctk-adwaita v0.10.1
+  Downloaded defmt-macros v1.1.1
+  Downloaded y4m v0.8.0
+  Downloaded imgref v1.12.3
+  Downloaded console_log v1.1.0
+  Downloaded objc2-metal v0.3.2
+  Downloaded ordered-float v5.5.0
+  Downloaded aligned-vec v0.6.4
+  Downloaded lebe v0.5.3
+  Downloaded windows-threading v0.2.1
+  Downloaded bit_field v0.10.3
+  Downloaded static_assertions v1.1.0
+  Downloaded new_debug_unreachable v1.0.6
+  Downloaded windows-interface v0.59.3
+  Downloaded hashbrown v0.15.5
+  Downloaded digest v0.11.3
+  Downloaded jni-macros v0.22.4
+  Downloaded calloop v0.13.0
+  Downloaded image-webp v0.2.4
+  Downloaded wgpu-types v29.0.4
+  Downloaded rand_chacha v0.9.0
+  Downloaded moxcms v0.8.1
+  Downloaded av1-grain v0.2.5
+  Downloaded num-derive v0.3.3
+  Downloaded const-oid v0.10.2
+  Downloaded aligned v0.4.3
+  Downloaded codespan-reporting v0.13.1
+  Downloaded objc2 v0.5.3
+  Downloaded xml-rs v0.8.29
+  Downloaded android-properties v0.2.2
+  Downloaded arrayvec v0.7.8
+  Downloaded wayland-protocols-plasma v0.3.12
+  Downloaded wayland-backend v0.3.17
+  Downloaded base64 v0.13.1
+  Downloaded defmt v1.1.1
+  Downloaded futures-task v0.3.34
+  Downloaded xkeysym v0.2.1
+  Downloaded redox_syscall v0.9.4
+  Downloaded jiff v0.2.38
+  Downloaded objc2-symbols v0.2.2
+  Downloaded tempfile v3.27.0
+  Downloaded wgpu-core-deps-emscripten v29.0.4
+  Downloaded hexf-parse v0.2.1
+  Downloaded foldhash v0.1.5
+  Downloaded num-rational v0.4.2
+  Downloaded smithay-client-toolkit v0.19.2
+  Downloaded qoi v0.4.1
+  Downloaded pxfm v0.1.30
+  Downloaded objc2-core-location v0.2.2
+  Downloaded http v1.5.0
+  Downloaded cadmpeg-codec-iges v0.4.0
+  Downloaded bit-vec v0.9.1
+  Downloaded winapi-i686-pc-windows-gnu v0.4.0
+  Downloaded winapi-x86_64-pc-windows-gnu v0.4.0
+  Downloaded dpi v0.1.2
+  Downloaded jni-sys-macros v0.4.1
+  Downloaded cadmpeg-codec-step v0.4.0
+  Downloaded ndk v0.9.0
+  Downloaded rav1e v0.8.1
+  Downloaded orbclient v0.3.55
+  Downloaded futures-intrusive v0.5.0
+  Downloaded futures-channel v0.3.34
+  Downloaded windows-sys v0.61.2
+  Downloaded block2 v0.6.2
+  Downloaded linux-raw-sys v0.12.1
+  Downloaded wayland-protocols v0.32.13
+  Downloaded dispatch2 v0.3.1
+  Downloaded tiny-skia v0.11.4
+  Downloaded quick-xml v0.41.0
+  Downloaded objc2-core-foundation v0.3.2
+  Downloaded x11rb v0.13.2
+  Downloaded jni v0.22.4
+  Downloaded libm v0.2.16
+  Downloaded wgpu v29.0.4
+  Downloaded simd_cesu8 v1.2.0
+  Downloaded unicode-width v0.2.2
+  Downloaded rustix v0.38.44
+  Downloaded wgpu-core v29.0.4
+  Downloaded gloo v0.12.0
+  Downloaded objc2-foundation v0.3.2
+  Downloaded windows_x86_64_gnullvm v0.52.6
+  Downloaded windows_aarch64_gnullvm v0.52.6
+  Downloaded objc2-app-kit v0.2.2
+  Downloaded tracing v0.1.44
+  Downloaded windows_i686_gnullvm v0.52.6
+  Downloaded x11rb-protocol v0.13.2
+  Downloaded av-scenechange v0.14.1
+  Downloaded encoding_rs v0.8.42
+  Downloaded console_error_panic_hook v0.1.7
+  Downloaded winit v0.30.13
+  Downloaded ash v0.38.0+1.3.281
+  Downloaded windows_x86_64_msvc v0.52.6
+  Downloaded windows_x86_64_gnu v0.52.6
+  Downloaded windows_aarch64_msvc v0.52.6
+  Downloaded windows_i686_gnu v0.52.6
+  Downloaded tokio v1.53.2
+  Downloaded windows_i686_msvc v0.52.6
+  Downloaded naga v29.0.4
+  Downloaded linux-raw-sys v0.4.15
+  Downloaded windows-sys v0.59.0
+  Downloaded windows-sys v0.52.0
+  Downloaded windows v0.62.2
+{
+  "valid_cube": true,
+  "reject_empty": true,
+  "reject_missing_face": true,
+  "reject_wrong_centroid": true,
+  "reject_inward_volume": true,
+  "reject_open_brep": true,
+  "reject_wrong_euler": true,
+  "accept_degenerate_seam_triangle": true,
+  "accept_subdivided_edge": true,
+  "disjoint_formula_difference": true,
+  "disjoint_formula_union": true,
+  "disjoint_formula_intersection": true,
+  "topology_disjoint": true,
+  "topology_touch_face": true,
+  "topology_touch_edge": true,
+  "topology_touch_vertex": true,
+  "topology_overlap": true,
+  "topology_contains_difference": true,
+  "topology_contained_difference": true,
+  "topology_disjoint_intersection": true,
+  "topology_tangent_cylinders": true,
+  "topology_hole_euler": true,
+  "accept_two_closed_bodies_touching_at_edge": true,
+  "reject_bodies_merged_into_one_shell": true,
+  "accept_two_bodies_one_side_subdivided": true,
+  "reject_merged_shell_closed_only_as_emitted": true,
+  "reject_two_shells_where_one_body_expected": true,
+  "accept_two_disjoint_bodies": true,
+  "reject_disjoint_bodies_reported_as_one_shell": true,
+  "reject_round1_merged_public-007": true,
+  "reject_round1_merged_public-046": true,
+  "reject_round1_merged_public-085": true,
+  "reject_round1_merged_public-124": true,
+  "reject_round1_merged_public-166": true,
+  "reject_round1_merged_public-178": true,
+  "reject_round1_merged_public-229": true,
+  "accept_round1_control_public-315": true
+}
+{
+  "first_open_lane_is_entered": true,
+  "lane_continues_below_stall": true,
+  "stalled_lane_hands_over": true,
+  "stall_wraps_around": true,
+  "closed_lane_is_skipped": true,
+  "no_headroom_stops": true,
+  "single_lane_keeps_going_after_stall": true,
+  "test_block_extracted": true,
+  "unchanged_test_block_allowed": true,
+  "edited_test_block_rejected": true,
+  "removed_test_block_rejected": true,
+  "added_test_block_allowed": true,
+  "test_file_rejected": true,
+  "tests_dir_rejected": true,
+  "new_source_file_allowed": true,
+  "non_rust_file_rejected": true,
+  "item_level_cfg_test_handled": true,
+  "snapshot_lists_rust_files_only": true,
+  "diff_covers_change_add_remove": true,
+  "restore_recovers_snapshot": true,
+  "validate_rejects_tests_dir": true,
+  "validate_rejects_missing": true,
+  "validate_accepts_dir_and_file": true,
+  "usage_limit_detected": true,
+  "http_429_detected": true,
+  "ordinary_text_not_flagged": true,
+  "missing_log_not_flagged": true,
+  "codex_uses_model_and_effort": true,
+  "codex_runs_ephemeral_without_user_config": true,
+  "codex_usage_summed": true,
+  "codex_mounts_editable_rw": true,
+  "probe_source_mounted_read_only": true,
+  "claude_uses_model_and_effort": true,
+  "unknown_harness_rejected": true,
+  "no_api_key_in_agent_env": true,
+  "move_to_origin_keeps_offsets": true,
+  "round_keeps_shared_planes": true,
+  "round_keeps_equal_sizes": true,
+  "round_keeps_tangent_ratio": true
+}
+{"score": 58.742537245721955, "passed": 122, "total": 318, "groups": {"boxes": {"passed": 40, "total": 157}, "cylinders": {"passed": 28, "total": 78}, "extrude": {"passed": 13, "total": 13}, "revolve": {"passed": 12, "total": 13}, "fillet": {"passed": 0, "total": 14}, "chamfer": {"passed": 13, "total": 13}, "holes": {"passed": 0, "total": 13}, "patterns": {"passed": 13, "total": 13}, "step": {"passed": 3, "total": 4}}, "split": "public", "evaluator": "oracle-v2"}
+public: baseline 122/318 score 58.7425372457; current 122/318 score 58.7425372457
+  boxes        40/157  (baseline 40)
+  cylinders    28/78   (baseline 28)
+  extrude      13/13   (baseline 13)
+  revolve      12/13   (baseline 12)
+  fillet        0/14   (baseline 0)
+  chamfer      13/13   (baseline 13)
+  holes         0/13   (baseline 0)
+  patterns     13/13   (baseline 13)
+  step          3/4    (baseline 3)
+{"score": 60.64814814814814, "passed": 39, "total": 102, "groups": {"boxes": {"passed": 17, "total": 51}, "cylinders": {"passed": 3, "total": 24}, "extrude": {"passed": 4, "total": 4}, "revolve": {"passed": 4, "total": 4}, "fillet": {"passed": 0, "total": 4}, "chamfer": {"passed": 4, "total": 4}, "holes": {"passed": 0, "total": 4}, "patterns": {"passed": 4, "total": 4}, "step": {"passed": 3, "total": 3}}, "split": "heldout", "evaluator": "oracle-v2"}
+heldout: baseline 39/102 score 60.6481481481; current 39/102 score 60.6481481481
+  boxes        17/51   (baseline 17)
+  cylinders     3/24   (baseline 3)
+  extrude       4/4    (baseline 4)
+  revolve       4/4    (baseline 4)
+  fillet        0/4    (baseline 0)
+  chamfer       4/4    (baseline 4)
+  holes         0/4    (baseline 0)
+  patterns      4/4    (baseline 4)
+  step          3/3    (baseline 3)
+PREFLIGHT PASSED

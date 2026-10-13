@@ -1,0 +1,19 @@
+   Compiling syn v3.0.9
+   Compiling thiserror v2.0.21
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.21
+   Compiling bytemuck_derive v1.12.1
+    Checking bytemuck v1.25.2
+    Checking serde v1.0.229
+    Checking cgmath v0.18.0
+    Checking matext4cgmath v0.1.0
+    Checking monstertruck-core v0.4.1 (/workspace/kernel/source/monstertruck-core)
+    Checking monstertruck-traits v0.4.1 (/workspace/kernel/source/monstertruck-traits)
+    Checking monstertruck-mesh v0.4.1 (/workspace/kernel/source/monstertruck-mesh)
+    Checking monstertruck-topology v0.4.1 (/workspace/kernel/source/monstertruck-topology)
+    Checking monstertruck-geometry v0.4.1 (/workspace/kernel/source/monstertruck-geometry)
+    Checking monstertruck-meshing v0.4.1 (/workspace/kernel/source/monstertruck-meshing)
+    Checking monstertruck-modeling v0.4.1 (/workspace/kernel/source/monstertruck-modeling)
+    Checking monstertruck-solid v0.4.1 (/workspace/kernel/source/monstertruck-solid)
+    Checking monstertruck v0.4.1 (/workspace/kernel/source/monstertruck)
+    Finished `release` profile [optimized] target(s) in 9.76s

@@ -1,0 +1,9 @@
+Modified `classic/mod.rs` and added `classic/exact_section.rs`.
+
+The candidate preserves rational constant-parameter intersection sections instead of chordal leaders. Plane containment, endpoints and monotone traversal validate recovery. It addresses the previous timeout by reusing UV searches, retaining verified UV trims, and converting only the requested boolean boundary.
+
+Expected scope: through-hole rims and other planar isoparametric intersections. Cylinder-pair loop assembly remains unresolved. Runtime improvement and regression gates need controller verification.
+
+Formatted only; no builds or tests run.
+
+[Candidate patch](/workspace/scratch/curved-candidate.patch) · [Findings](/workspace/scratch/partial.txt)

@@ -1,0 +1,753 @@
+   Compiling matext4cgmath v0.1.0
+   Compiling quick-xml v0.22.0
+   Compiling serde_json v1.0.154
+   Compiling step-p21 v0.1.1
+   Compiling monstertruck-core v0.4.1 (/workspace/kernel/source/monstertruck-core)
+   Compiling monstertruck-traits v0.4.1 (/workspace/kernel/source/monstertruck-traits)
+   Compiling vtkio v0.6.3
+   Compiling monstertruck-geometry v0.4.1 (/workspace/kernel/source/monstertruck-geometry)
+   Compiling monstertruck-topology v0.4.1 (/workspace/kernel/source/monstertruck-topology)
+   Compiling monstertruck-mesh v0.4.1 (/workspace/kernel/source/monstertruck-mesh)
+   Compiling monstertruck-assembly v0.4.1 (/workspace/kernel/source/monstertruck-assembly)
+   Compiling monstertruck-meshing v0.4.1 (/workspace/kernel/source/monstertruck-meshing)
+   Compiling monstertruck-fillet v0.4.1 (/workspace/kernel/source/monstertruck-fillet)
+   Compiling monstertruck-healing v0.4.1 (/workspace/kernel/source/monstertruck-healing)
+   Compiling monstertruck-solid v0.4.1 (/workspace/kernel/source/monstertruck-solid)
+   Compiling monstertruck-modeling v0.4.1 (/workspace/kernel/source/monstertruck-modeling)
+   Compiling monstertruck-io v0.4.1 (/workspace/kernel/source/monstertruck-io)
+   Compiling monstertruck v0.4.1 (/workspace/kernel/source/monstertruck)
+   Compiling monstertruck-step v0.4.1 (/workspace/kernel/source/monstertruck-step)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 48s
+warning: the following packages contain code that will be rejected by a future version of Rust: nom v3.2.1, proc-macro-error2 v2.0.1, quick-xml v0.22.0
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck-99df46893937c166)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck_assembly-daa8f362840c8f71)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/dag.rs (/target/debug/deps/dag-eab041d31ea2144c)
+
+running 2 tests
+test a_little_complex_case ... ok
+test random_graph ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck_fillet-ec80acbdad2bed18)
+
+running 32 tests
+test geometry::test_unit_circle ... ok
+test geometry::unit_circle_info ... ok
+test tests::accuracy::continuity_at_wire_joins ... ok
+test tests::accuracy::radius_error_bounds ... ok
+test tests::edges::cut_face_five_edge_boundary ... ok
+test tests::edges::fillet_closed_wire_box_top ... ok
+test tests::edges::fillet_edges_cuboid_top_4 ... ok
+test tests::edges::fillet_edges_cuboid_top_and_bottom ... ok
+test tests::edges::fillet_edges_multi_chain ... ok
+test tests::edges::fillet_edges_rejects_boundary ... ok
+test tests::edges::fillet_edges_rejects_missing ... ok
+test tests::edges::fillet_edges_single_edge ... ok
+test tests::edges::fillet_rejects_degenerate_edge ... ok
+test tests::edges::fillet_semi_cube ... ok
+test tests::edges::generic_fillet_identity ... ok
+test tests::profile::chamfer_closed_wire ... ok
+test tests::profile::chamfer_semi_cube ... ok
+test tests::profile::chamfer_single_edge ... ok
+test tests::profile::custom_profile_bump ... ok
+test tests::profile::custom_profile_linear ... ok
+test tests::profile::ridge_closed_wire ... ok
+test tests::profile::ridge_semi_cube ... ok
+test tests::profile::ridge_single_edge ... ok
+test tests::radius::per_edge_radius_degenerate ... ok
+test tests::radius::per_edge_radius_mismatch ... ok
+test tests::radius::per_edge_radius_two_edges ... ok
+test tests::radius::variable_radius_closed_wire ... ok
+test tests::radius::variable_radius_open_wire ... ok
+test tests::surface::create_fillet ... ok
+test tests::surface::create_fillet_surface ... ok
+test tests::surface::create_fillet_with_side ... ok
+test tests::surface::fillet_to_nurbs ... ok
+
+test result: ok. 32 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.89s
+
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck_healing-afb258d2c122c288)
+
+running 16 tests
+test split_closed_faces::tests::split_closed_faces_reports_change_only_on_first_normalizing_pass ... ok
+test tests::closed_edges::test_split_closed_edges ... ok
+test tests::closed_faces_cylinders::double_closed_boundary_cylinder ... ok
+test tests::closed_faces_cylinders::many_closed_boundary_cylinder ... ok
+test tests::closed_faces_cylinders::test_split_closed_face_simple_cylinder_case ... ok
+test tests::closed_faces_cylinders::too_simple_cylinder ... ok
+test tests::closed_faces_holes::test_split_closed_face_cylinder_with_hole ... ok
+test tests::closed_faces_holes::test_split_closed_face_cylinder_with_rotated_hole ... ignored, WIP: split_closed_faces changes produce 13 edges instead of expected 11
+test tests::non_simple_wires::split_non_simple_wires_drops_geometric_slits ... ok
+test tests::non_simple_wires::split_non_simple_wires_drops_pass_through_spikes ... ok
+test tests::non_simple_wires::split_non_simple_wires_then_pinch_split_extracts_bowtie ... ok
+test tests::non_simple_wires::split_pinched_faces_makes_vertex_sharing_boundaries_extractable ... ok
+test tests::non_simple_wires::split_seam_faces_resolves_doubled_seam_cylinder ... ok
+test tests::shell_orientation::normalize_shell_orientation_keeps_consistent_shell_untouched ... ok
+test tests::shell_orientation::normalize_shell_orientation_majority_flip_converges ... ok
+test tests::shell_orientation::normalize_shell_orientation_repairs_flipped_face ... ok
+
+test result: ok. 15 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/healing_partial_solid.rs (/target/debug/deps/healing_partial_solid-61a3160004ed4c48)
+
+running 3 tests
+test a_complete_compressed_solid_still_heals_and_extracts ... ok
+test a_compressed_solid_that_lost_a_face_refuses_typed_instead_of_aborting ... ok
+test the_refusal_distinguishes_an_open_shell_from_a_disconnected_one ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests/step_shell_orientation.rs (/target/debug/deps/step_shell_orientation-d6f7971487e01a26)
+
+running 3 tests
+test occt_cube_shell_is_consistently_oriented_as_loaded ... ok
+test step_loaded_shells_carry_their_closed_form_signed_volume ... ok
+test the_primitive_cuboid_control_is_exact_and_positive ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.55s
+
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck_io-878aca308ba35a2a)
+
+running 43 tests
+test step::load::convert::tests::pcurve_load_path_populates_trim_curves ... ok
+test step::load::convert::tests::seam_curve_opposite_orientations_use_opposite_parameter_curves ... ok
+test step::load::report::tests::a_report_with_no_losses_is_lossless_and_says_so ... ok
+test step::load::report::tests::merging_adds_counts_and_keeps_the_first_example ... ok
+test step::load::report::tests::one_lost_wire_shows_up_in_the_count_the_reason_and_the_summary ... ok
+test step::load::report::tests::the_entity_report_separates_refusals_from_unexpected_shapes ... ok
+test step::load::step_geometry::geom_impls::parameter_trims::a_knot_bounded_surface_still_snaps_a_sample_that_overshoots_its_knots ... ok
+test step::load::step_geometry::geom_impls::parameter_trims::a_planar_trim_sample_past_the_fictional_unit_square_is_not_snapped_to_it ... ok
+test step::load::step_geometry::geom_impls::parameter_trims::no_placeholder_axis_carries_a_period ... ok
+test step::load::step_geometry::geom_impls::parameter_trims::raw_conic_boundary_without_pcurve_uses_sampled_projection_at_safe_tolerance ... ok
+test step::load::step_geometry::geom_impls::parameter_trims::raw_line_boundary_without_pcurve_uses_sampled_projection ... ok
+test step::load::step_geometry::geom_impls::parameter_trims::raw_line_without_pcurve_on_cylinder_stays_fallback_only ... ok
+test step::load::step_geometry::geom_impls::parameter_trims::sampled_parameter_boundary_preserves_unbounded_cylinder_axis_parameter ... ok
+test step::load::step_geometry::geom_impls::parameter_trims::surface_curve_line_without_pcurve_converts_to_exact_pcurve ... ok
+test step::load::step_geometry::geom_impls::parameter_trims::surface_curve_line_without_pcurve_on_cylinder_stays_fallback_only ... ok
+test step::load::step_geometry::geom_impls::same_geometry::builder ... ok
+test step::load::step_geometry::geom_impls::same_geometry::to_same_geometry_2d_bspline_curve_round_trip ... ok
+test step::load::step_geometry::geom_impls::same_geometry::to_same_geometry_2d_ellipse_wraps_in_conic ... ok
+test step::load::step_geometry::geom_impls::same_geometry::to_same_geometry_2d_line_round_trip ... ok
+test step::load::step_geometry::geom_impls::same_geometry::to_same_geometry_revolution_of_axis_parallel_line_is_uninverted_cylinder ... ok
+test step::load::step_geometry::geom_impls::to_modeling::a_spindle_torus_is_still_refused_by_the_analytic_route ... ok
+test step::load::step_geometry::geom_impls::to_modeling::the_analytic_guard_matches_the_builders_own_predicate ... ok
+test step::load::step_geometry::geom_impls::to_modeling::the_analytic_route_emits_the_same_rational_net_the_flattened_route_did ... ok
+test step::load::step_geometry::geom_impls::to_modeling::the_analytic_route_spends_no_adaptive_refinement_cells ... ok
+test step::load::step_geometry::sphere::surface ... ok
+test step::load::step_geometry::tests::public_parameter_curve_api_uses_descriptive_names ... ok
+test step::load::step_geometry::tests::surface_curve_rejects_invalid_pcurve_on_identical_surface ... ok
+test step::load::step_geometry::uv_clamp::tests::sphere_and_torus_ranges_are_measurements_not_placeholders ... ok
+test step::load::step_geometry::uv_clamp::tests::the_placeholder_axes_are_the_plane_and_a_loaded_cylinders_profile ... ok
+test step::load::step_geometry::uv_clamp_probe::uv_clamp_census_corpus_ai14r ... ignored, corpus measurement -- ~1 GB, run with MT_STEP_DEBUG_UV_CLAMP=1
+test step::load::step_geometry::uv_clamp_probe::uv_clamp_census_corpus_cruise_assembly ... ignored, corpus measurement -- ~1 GB, run with MT_STEP_DEBUG_UV_CLAMP=1
+test step::load::step_geometry::uv_clamp_probe::uv_clamp_census_corpus_nissan ... ignored, corpus measurement -- ~1 GB, run with MT_STEP_DEBUG_UV_CLAMP=1
+test step::load::step_geometry::uv_clamp_probe::uv_clamp_census_corpus_rocky_house ... ignored, corpus measurement -- ~1 GB, run with MT_STEP_DEBUG_UV_CLAMP=1
+test step::load::step_geometry::uv_clamp_probe::uv_clamp_census_corpus_rotor ... ignored, corpus measurement -- ~1 GB, run with MT_STEP_DEBUG_UV_CLAMP=1
+test step::load::step_geometry::uv_clamp_probe::uv_clamp_census_corpus_scania_8x4 ... ignored, corpus measurement -- ~1 GB, run with MT_STEP_DEBUG_UV_CLAMP=1
+test step::load::step_geometry::uv_clamp_probe::uv_clamp_census_corpus_scania_engine ... ignored, corpus measurement -- ~1 GB, run with MT_STEP_DEBUG_UV_CLAMP=1
+test step::load::step_geometry::uv_clamp_probe::uv_clamp_census_corpus_umc500 ... ignored, corpus measurement -- ~1 GB, run with MT_STEP_DEBUG_UV_CLAMP=1
+test step::load::step_geometry::uv_clamp_probe::uv_clamp_census_over_in_repo_fixtures ... ignored, measurement harness -- run with MT_STEP_DEBUG_UV_CLAMP=1 --no-capture
+test step::load::step_types::deserialize_pscr ... ok
+test step::load::step_types::tests::axis2_placement3d_parallel_axis_and_ref_direction_is_finite ... ok
+test step::save::assembly::tests::assembly_round_trip_preserves_topology_and_attributes ... ok
+test step::save::assembly::tests::step_design_emits_application_context_and_per_node_entities ... ok
+test step::save::assembly::tests::step_design_with_custom_application_context_round_trips ... ok
+
+test result: ok. 34 passed; 0 failed; 9 ignored; 0 measured; 0 filtered out; finished in 24.76s
+
+     Running tests/cadmpeg_reads_the_step_corpus.rs (/target/debug/deps/cadmpeg_reads_the_step_corpus-2888ca97c306776d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/corpus_conversion_census.rs (/target/debug/deps/corpus_conversion_census-60c94d04bfcfc029)
+
+running 9 tests
+test a_horn_torus_spelled_degenerate_converts_unless_it_selects_the_apex_sheet ... ok
+test corpus_conversion_census ... ignored, conversion census -- ~1 GB of corpus, run explicitly
+test degenerate_toroidal_surface_is_refused_typed_not_mistaken_for_a_torus ... ok
+test face_fates_partition_a_small_fixture ... ok
+test horn_and_near_horn_tori_still_convert ... ok
+test negative_major_radius_torus_refuses_typed_and_does_not_panic ... ok
+test positive_major_spindle_torus_refuses_typed_naming_the_regime ... ok
+test raw_entity_counter_sees_both_step_formatting_styles ... ok
+test swallowed_entity_records_are_counted_and_the_null_label_family_now_loads ... ok
+
+test result: ok. 8 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/corpus_load.rs (/target/debug/deps/corpus_load-79f97347b4f18e59)
+
+running 2 tests
+test corpus_load_census ... ignored, corpus census -- ~1 GB, run explicitly
+test refused_files_failure_points ... ignored, corpus diagnostic
+
+test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/every_fixture_loads.rs (/target/debug/deps/every_fixture_loads-a3d70c5a6c349ca4)
+
+running 1 test
+test every_fixture_in_the_repository_loads ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.36s
+
+     Running tests/input/main.rs (/target/debug/deps/input-581276784291073b)
+
+running 39 tests
+test assy::occt_assy ... ok
+test geometry::axis1_placement ... ok
+test geometry::axis2_placement_2d ... ok
+test geometry::axis2_placement_3d ... ok
+test geometry::b_spline_curve_with_knots ... ok
+test geometry::b_spline_surface_with_knots ... ok
+test geometry::bezier_curve ... ok
+test geometry::bezier_surface ... ok
+test geometry::cartesian_point ... ok
+test geometry::circle ... ok
+test geometry::conical_surface ... ok
+test geometry::cylindrical_surface ... ok
+test geometry::direction ... ok
+test geometry::ellipse ... ok
+test geometry::hyperbola ... ok
+test geometry::line ... ok
+test geometry::nurbs_curve_b_spline_curve_with_knots ... ok
+test geometry::nurbs_curve_bezier_curve ... ok
+test geometry::nurbs_curve_quasi_uniform_curve ... ok
+test geometry::nurbs_curve_uniform_curve ... ok
+test geometry::nurbs_surface_b_spline_surface_with_knots ... ok
+test geometry::nurbs_surface_bezier_surface ... ok
+test geometry::nurbs_surface_quasi_uniform_surface ... ok
+test geometry::nurbs_surface_uniform_surface ... ok
+test geometry::parabola ... ok
+test geometry::placement ... ok
+test geometry::plane ... ok
+test geometry::polyline ... ok
+test geometry::quasi_uniform_curve ... ok
+test geometry::quasi_uniform_surface ... ok
+test geometry::spherical_surface ... ok
+test geometry::surface_of_linear_extrusion ... ok
+test geometry::surface_of_revolution ... ok
+test geometry::toroidal_surface ... ok
+test geometry::uniform_curve ... ok
+test geometry::uniform_surface ... ok
+test geometry::vector ... ok
+test table::read ... ok
+test tessellate_shape::tessellate_shape ... ok
+
+test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 43.24s
+
+     Running tests/io/main.rs (/target/debug/deps/io-f0dcfcc39a65a75b)
+
+running 2 tests
+test ioi::ioi ... ignored, abc-0000 roundtrip loses shell closure -- pre-existing red on record since #10 (gated 2026-07-13)
+test oi::oi ... ok
+
+test result: ok. 1 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/iso8859_step.rs (/target/debug/deps/iso8859_step-44be6d1802ab9e1e)
+
+running 2 tests
+test iso8859_step_file_loads_via_bytes ... ok
+test utf8_step_file_is_unaffected_by_the_fallback ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/output/main.rs (/target/debug/deps/output-52293116480cdb89)
+
+running 20 tests
+test advanced_face::advanced_face_reloads_to_the_same_face_set ... ok
+test advanced_face::shell_faces_serialize_as_advanced_face ... ok
+test cylinder::modeling_cylinder_saves_as_cylindrical_surface ... ok
+test derive::derive_out ... ok
+test geometry::geometry ... ok
+test measurement_context::step_design_custom_measurement_context_appears ... ok
+test measurement_context::step_model_custom_measurement_context_appears ... ok
+test measurement_context::step_model_default_measurement_context_is_unchanged ... ok
+test measurement_context::step_models_custom_measurement_context_appears ... ok
+test measurement_context::step_models_default_measurement_context_is_unchanged ... ok
+test planar_cap_roundtrip::cylinder_planar_caps_survive_step_roundtrip ... ok
+test surface_curve_dedup::deduped_surface_curve_still_reloads ... ok
+test surface_curve_dedup::surface_is_emitted_once_per_face_not_per_edge ... ok
+test templates::custom_header_template ... ok
+test templates::default_shell_template ... ok
+test templates::default_solid_template ... ok
+test topology::parse_shell ... ok
+test topology::parse_solid ... ok
+test topology::parse_solids ... ok
+test watertight::solid_fixtures_export_closed_manifolds ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.57s
+
+     Running tests/refuses_rather_than_returns_nothing.rs (/target/debug/deps/refuses_rather_than_returns_nothing-54884f2a52220e01)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/ruststep_alias_still_resolves.rs (/target/debug/deps/ruststep_alias_still_resolves-181cdeae779fcfaa)
+
+running 1 test
+test the_deprecated_ruststep_path_still_resolves ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/swept_surface_extent_oracle.rs (/target/debug/deps/swept_surface_extent_oracle-02622aec27bd56ab)
+
+running 4 tests
+test emitted_extrusion_net_matches_the_analytic_surface ... ok
+test extrusion_nets_are_indexed_profile_by_sweep ... ok
+test oracle_separates_a_truncating_boundary_from_a_covered_one ... ok
+test swept_surface_extent_oracle ... ignored, needs the ~1 GB corpus; run with --run-ignored all
+
+test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/tokenize_bisect.rs (/target/debug/deps/tokenize_bisect-71248957ea7107e5)
+
+running 4 tests
+test bisect_ai14r ... ignored, tokenizer bisection probe
+test bisect_umc500 ... ignored, tokenizer bisection probe
+test empty_aggregate_in_an_entity_parameter ... ok
+test escaped_apostrophe_in_a_string_literal ... ok
+
+test result: ok. 2 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck_meshing-107f97ac20c4c25e)
+
+running 33 tests
+test analyzers::collision::collide_triangles_test ... ok
+test analyzers::in_out_judge::inside100 ... ok
+test analyzers::point_cloud::hashed_point_cloud::distance_point_triangle_test ... ok
+test analyzers::point_cloud::hashed_point_cloud::space_division_distance ... ok
+test analyzers::splitting::into_components_test ... ok
+test filters::optimizing::tests::degenerate_polygon_test ... ok
+test tessellation::triangulation::boundary::tests::aligned_exact_projects_periodic_edge_samples_before_resampling ... ok
+test tessellation::triangulation::boundary::tests::cdt_insertion_splits_duplicate_seam_chords_through_existing_vertices ... ok
+test tessellation::triangulation::boundary::tests::closed_exact_trim_orientation_is_not_endpoint_aligned ... ok
+test tessellation::triangulation::boundary::tests::exact_trim_orientation_is_aligned_to_oriented_edge_endpoints ... ok
+test tessellation::triangulation::boundary::tests::face_local_trim_orientation_is_not_reversed_by_edge_orientation ... ok
+test tessellation::triangulation::boundary::tests::full_period_cone_loop_closes_to_singular_side ... ok
+test tessellation::triangulation::boundary::tests::full_period_ring_pair_uses_shared_periodic_seam ... ok
+test tessellation::triangulation::boundary::tests::normalize_axis_preserves_far_nonperiodic_values ... ok
+test tessellation::triangulation::par_bench ... ignored
+test tessellation::triangulation::tests::classify_face_drop_maps_each_silent_drop ... ok
+test tessellation::triangulation::tests::mismatched_seam_step_cylinder_ring_pair_compacts_to_one_period ... ok
+test tessellation::triangulation::tests::observe_face_drop_advances_the_loud_metric ... ok
+test tessellation::triangulation::tests::parameter_curve_trim_samples_curved_surface_lift ... ok
+test tessellation::triangulation::tests::partial_periodic_loop_crossing_seam_compacts_to_short_arc ... ok
+test tessellation::triangulation::tests::periodic_cylinder_loop_spanning_two_laps_collapses_to_one_lap ... ok
+test tessellation::triangulation::tests::periodic_full_rings_pair_into_cylinder_strip ... ok
+test tessellation::triangulation::tests::periodic_ring_closed_by_wrap_completes_to_full_period ... ok
+test tessellation::triangulation::tests::seam_crossing_step_cylinder_ring_pair_compacts_to_one_period ... ok
+test tessellation::triangulation::tests::shared_polyline_densifies_topological_edge_curve ... ok
+test tessellation::triangulation::tests::shared_polyline_preserves_exact_trim_samples ... ok
+test tessellation::triangulation::tests::shifted_step_cylinder_ring_pair_compacts_to_one_period ... ok
+test tessellation::triangulation::tests::step_cylinder_ring_pair_compacts_to_one_period ... ok
+test tessellation::triangulation::tests::trimmed_cshell_reuses_shared_edge_samples_for_exact_trims ... ok
+test tessellation::triangulation::tests::trimmed_cylinder_patch_inserts_surface_rows_for_ruled_axis ... ok
+test tessellation::triangulation::tests::trimmed_shell_isoparams_stay_inside_trim_domain ... ok
+test tessellation::triangulation::tests::trimming_tessellation_is_invariant_to_annulus_loop_winding ... ok
+test tessellation::triangulation::tests::trimming_tessellation_is_invariant_to_single_loop_winding ... ok
+
+test result: ok. 32 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.47s
+
+     Running tests/analyzers/main.rs (/target/debug/deps/analyzers-12c4f79bd7e6000d)
+
+running 12 tests
+test collision::collision_sphere ... ok
+test collision::in_plane ... ok
+test collision::sphere_interference ... ok
+test point_cloud::in_sphere ... ok
+test point_cloud::sphere_distance ... ok
+test point_cloud::tetrahedron_distance ... ok
+test splitting::extract_planes_test ... ok
+test splitting::into_component_test ... ok
+test topology::extract_boundaries0 ... ok
+test topology::extract_boundaries1 ... ok
+test topology::shell_condition ... ok
+test volume::triangle_prism ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.06s
+
+     Running tests/closed_trim_projection.rs (/target/debug/deps/closed_trim_projection-457969281ff6c748)
+
+running 2 tests
+test a_trim_running_down_the_seam_projects_its_start_to_its_start ... ok
+test a_trim_running_up_the_seam_projects_its_start_to_its_start ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/filters/main.rs (/target/debug/deps/filters-22ec1cdb816d6b76)
+
+running 9 tests
+test normal_filter::add_naive_normals_test ... ok
+test normal_filter::add_smooth_normals ... ok
+test normal_filter::normalize_normals_test ... ok
+test optimizing::put_together_same_attrs_test ... ok
+test optimizing::remove_degenerate_faces_test ... ok
+test optimizing::remove_unused_attrs_test ... ok
+test structuring::quadrangulate_test ... ok
+test structuring::triangulate_test ... ok
+test subdivision::loop_subdivision ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/tessellation/main.rs (/target/debug/deps/tessellation-a878233cad4a66bc)
+
+running 12 tests
+test face_drop::non_riding_boundary_drop_is_counted ... ok
+test face_drop::strict_meshing_matches_lenient_on_a_clean_shell ... ok
+test face_drop::strict_meshing_refuses_a_none_class_face_drop ... ok
+test triangulation::compare_occt_mesh ... ok
+test triangulation::compare_occt_mesh_csolid ... ok
+test triangulation::csolid_is_closed ... ok
+test triangulation::large_number_meshing ... ok
+test triangulation::per_face_winding_consistency ... ok
+test triangulation::robust_closed ... ok
+test triangulation::solid_is_closed ... ok
+test triangulation::special_cylinder ... ok
+test triangulation::special_cylinder_csolid ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.17s
+
+     Running tests/vtk.rs (/target/debug/deps/vtk-310f621d502e507f)
+
+running 7 tests
+test cshell ... ok
+test edge ... ok
+test face ... ok
+test polygon ... ok
+test shell ... ok
+test vertex ... ok
+test wire ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck_modeling-9ce0895134a90f21)
+
+running 45 tests
+test bounding::tests::a_cylinder_face_is_bounded_by_its_boundary_wires ... ok
+test bounding::tests::a_cylinder_without_wires_refuses ... ok
+test bounding::tests::a_non_positive_weight_refuses ... ok
+test bounding::tests::a_ring_torus_is_bounded_by_its_own_radii ... ok
+test bounding::tests::an_analytic_sphere_is_bounded_by_its_own_box_and_by_6_over_pi ... ok
+test bounding::tests::the_certified_box_contains_a_volume_the_vertex_box_does_not ... ok
+test bounding::tests::the_production_rational_sphere_net_bounds_the_same_ball ... ok
+test builder::partial_torus::partial_torus ... ok
+test errors::print_messages ... ****** test of the expressions of error messages ******
+
+Two same vertices cannot construct an edge.
+
+cannot attach a plane to a wire that is not on one plane.
+
+all wires must be closed for profile construction.
+
+ambiguous nesting between loops; loops may overlap or touch.
+
+no outer loop found; at least one wire must have positive signed area.
+
+*******************************************************
+ok
+test fillet_impl::tests::intersection_curve_with_exact_leader_converts_exactly ... ok
+test fillet_impl::tests::intersection_curve_with_non_exact_leader_refuses ... ok
+test fillet_impl::tests::parameter_curve_refuses_instead_of_sampling ... ok
+test geom_impls::test_geom_impl::test_attach_plane_with_multiple_boundary ... ok
+test geom_impls::test_geom_impl::test_attach_plane_with_single_boundary ... ok
+test geom_impls::test_geom_impl::test_circle_arc ... ok
+test geom_impls::test_geom_impl::test_circle_arc_by_start_tangent ... ok
+test geom_impls::test_geom_impl::test_circle_arc_three_point ... ok
+test geom_impls::test_geom_impl::test_circum_center ... ok
+test geom_impls::test_geom_impl::test_take_one_axis_by_normal ... ok
+test geometry::domain_projection::project_domain_tests::a_hinted_projection_that_would_leave_the_domain_falls_back_in_domain ... ok
+test geometry::domain_projection::project_domain_tests::a_knot_bounded_surface_keeps_its_domain_and_its_rejection ... ok
+test geometry::domain_projection::project_domain_tests::a_loaded_cylinders_axial_axis_is_not_a_bound_but_its_angular_axis_is ... ok
+test geometry::domain_projection::project_domain_tests::a_non_finite_solver_answer_is_never_returned ... ok
+test geometry::domain_projection::project_domain_tests::a_non_finite_value_is_outside_every_bounded_axis ... ok
+test geometry::domain_projection::project_domain_tests::a_periodic_axis_accepts_a_whole_period_offset ... ok
+test geometry::domain_projection::project_domain_tests::a_placeholder_domain_costs_one_solve_per_point_not_four ... ok
+test geometry::domain_projection::project_domain_tests::a_plane_whose_reported_square_is_not_a_real_bound_is_unaffected ... ok
+test geometry::domain_projection::project_domain_tests::a_surface_with_no_reported_range_is_unaffected ... ok
+test geometry::domain_projection::project_domain_tests::an_axis_with_no_reported_bound_imposes_nothing ... ok
+test geometry::domain_projection::project_domain_tests::an_in_domain_hinted_projection_is_the_first_attempt_bit_for_bit ... ok
+test geometry::domain_projection::project_domain_tests::axis_excess_is_zero_inside_and_the_gap_outside ... ok
+test geometry::domain_projection::project_domain_tests::the_attempt_plan_interleaves_the_solvers_and_is_not_the_step_twins ... ok
+test geometry::domain_projection::project_domain_tests::the_first_answer_survives_when_no_attempt_lands_in_domain ... ok
+test primitive::tests::cuboid_faces_carry_the_canonical_unit_square_frame ... ignored, RED witness: the canonical-frame repair regresses the 006 guard row SW-B3-PLANE-SPHERE-DIFFERENCE-Iab-T00-S1-D07-Ga to a silent-wrong 3/2 * pi/12; needs the loops_store seam-cut fix first
+test profile::tests::mixed_winding_multiple_holes ... ok
+test profile::tests::multiple_holes ... ok
+test profile::tests::near_degenerate_tiny_hole ... ok
+test profile::tests::open_wire_rejected ... ok
+test profile::tests::outer_with_hole ... ok
+test profile::tests::outer_with_hole_both_ccw_gets_normalized ... ok
+test profile::tests::outer_with_hole_reversed_order ... ok
+test profile::tests::single_wire_ccw ... ok
+test profile::tests::single_wire_cw_gets_normalized ... ok
+test profile::tests::solid_from_profile_simple ... ok
+test profile::tests::solid_from_profile_with_hole ... ok
+
+test result: ok. 44 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.55s
+
+     Running tests/fillet_test.rs (/target/debug/deps/fillet_test-1403a40464521513)
+
+running 2 tests
+test fillet_box_edge ... ok
+test fillet_refuses_non_exact_curve_typed ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/planar_cap_pcurves.rs (/target/debug/deps/planar_cap_pcurves-9fedebc19c103e0d)
+
+running 1 test
+test cylinder_planar_caps_carry_parameter_curves ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/profile_test.rs (/target/debug/deps/profile_test-4ab12f68e2d40f60)
+
+running 11 tests
+test all_ccw_auto_normalized ... ok
+test all_cw_auto_normalized ... ok
+test nested_holes_four_corners ... ok
+test nested_holes_two_level ... ok
+test open_wire_error ... ok
+test profile_on_yz_plane ... ok
+test solid_box_from_profile ... ok
+test solid_diagonal_extrusion ... ok
+test solid_tube_from_profile_with_hole ... ok
+test solid_with_triangle_profile ... ok
+test tiny_hole_survives ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/topo_traits.rs (/target/debug/deps/topo_traits-801054a386c5f187)
+
+running 15 tests
+test edge_closed_sweep ... ok
+test edge_multi_sweep ... ok
+test edge_sweep ... ok
+test face_closed_sweep ... ok
+test face_multi_sweep ... ok
+test face_sweep ... ok
+test shell_closed_sweep ... ok
+test shell_multi_sweep ... ok
+test shell_sweep ... ok
+test vertex_closed_sweep ... ok
+test vertex_multi_sweep ... ok
+test vertex_sweep ... ok
+test wire_closed_sweep ... ok
+test wire_multi_sweep ... ok
+test wire_sweep ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck_solid-20ef6b64428de65c)
+
+running 9 tests
+test transversal::integrate::tests::adjacent_cubes_or ... ok
+test transversal::integrate::tests::boolean_matrix_and_crossing_cubes ... ok
+test transversal::integrate::tests::cube_clip_high_z ... ok
+test transversal::integrate::tests::cube_clip_high_z_flip ... ok
+test transversal::integrate::tests::punched_cube ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive0 ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive1 ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive2 ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive3 ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.40s
+
+     Running tests/boolean_smoke.rs (/target/debug/deps/boolean_smoke-d106d08612e3add8)
+
+running 4 tests
+test cube_minus_column ... ok
+test difference_of_overlapping_cubes ... ok
+test intersection_of_overlapping_cubes ... ok
+test union_of_overlapping_cubes ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck_step-a5cae5300a042c41)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests monstertruck
+
+running 1 test
+test monstertruck/src/lib.rs - (line 94) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.18s; merged doctests compilation took 0.17s
+   Doc-tests monstertruck_assembly
+
+running 40 tests
+test monstertruck-assembly/src/assy.rs - assy::Assembly<Shape,NodeAttrs,Matrix,EdgeAttrs>::normalize (line 180) ... ok
+test monstertruck-assembly/src/assy.rs - assy::Path<'a,NodeEntity<Shape,NodeAttrs>,EdgeEntity<Matrix,EdgeAttrs>>::matrix (line 59) ... ok
+test monstertruck-assembly/src/assy.rs - assy::Takeable (line 136) ... ok
+test monstertruck-assembly/src/assy.rs - assy::Takeable::is_taken (line 154) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag (line 161) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::all_edges (line 551) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::all_nodes (line 264) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::all_nodes_mut (line 280) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::create_edge (line 499) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::create_node (line 450) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::create_nodes (line 464) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::has_path (line 666) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::len (line 218) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::map (line 797) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::map_owned (line 912) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::maximal_paths_iter (line 632) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::node_indices (line 229) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::par_all_edges (line 571) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::par_all_nodes (line 298) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::par_all_nodes_mut (line 320) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::par_map (line 855) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::par_map_owned (line 969) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::par_node_indices (line 245) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::par_top_nodes (line 367) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::par_top_nodes_mut (line 421) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::paths_iter (line 595) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::remove_edge (line 525) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::top_nodes (line 342) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::top_nodes_mut (line 396) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::try_from_adjacency (line 717) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Dag<NE,EE>::try_from_adjacency (line 741) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Edge<'a,EE>::entity (line 1182) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Edge<'a,EE>::nodes (line 1170) ... ok
+test monstertruck-assembly/src/dag.rs - dag::EdgeMut<'a,EE>::entity (line 1210) ... ok
+test monstertruck-assembly/src/dag.rs - dag::EdgeMut<'a,EE>::nodes (line 1197) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Node (line 72) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Node<'a,NE,EE>::is_terminal (line 1100) ... ok
+test monstertruck-assembly/src/dag.rs - dag::Node<'a,NE,EE>::is_top (line 1087) ... ok
+test monstertruck-assembly/src/dag.rs - dag::NodeMut (line 119) ... ok
+test monstertruck-assembly/src/lib.rs - (line 5) ... ok
+
+test result: ok. 40 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+all doctests ran in 1.61s; merged doctests compilation took 1.57s
+   Doc-tests monstertruck_fillet
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests monstertruck_healing
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests monstertruck_io
+
+running 9 tests
+test monstertruck-io/src/lib.rs - (line 14) ... ok
+test monstertruck-io/src/step/load/convert/mod.rs - step::load::convert::Table::solids_via_shape_relationship (line 1216) ... ok
+test monstertruck-io/src/step/load/convert/mod.rs - step::load::convert::Table::to_compressed_shell (line 621) ... ok
+test monstertruck-io/src/step/load/convert/mod.rs - step::load::convert::Table::to_compressed_shell_reported (line 664) ... ok
+test monstertruck-io/src/step/load/convert/mod.rs - step::load::convert::Table::to_compressed_solid (line 772) ... ok
+test monstertruck-io/src/step/mod.rs - step (line 5) ... ok
+test monstertruck-io/src/step/mod.rs - step::common (line 24) ... ok
+test monstertruck-io/src/step/save/mod.rs - step::save::IndexSliceDisplay (line 106) ... ok
+test monstertruck-io/src/step/save/mod.rs - step::save::SliceDisplay (line 42) ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+all doctests ran in 0.65s; merged doctests compilation took 0.51s
+   Doc-tests monstertruck_meshing
+
+running 22 tests
+test monstertruck-meshing/src/analyzers/in_out_judge.rs - analyzers::in_out_judge::IncludingPointInDomain::inside (line 66) ... ok
+test monstertruck-meshing/src/analyzers/in_out_judge.rs - analyzers::in_out_judge::IncludingPointInDomain::signed_crossing_faces (line 39) ... ok
+test monstertruck-meshing/src/analyzers/point_cloud/mod.rs - analyzers::point_cloud::WithPointCloud::is_clung_to_by (line 14) ... ok
+test monstertruck-meshing/src/analyzers/splitting.rs - analyzers::splitting::Splitting::components (line 91) ... ok
+test monstertruck-meshing/src/analyzers/splitting.rs - analyzers::splitting::Splitting::create_mesh_by_face_indices (line 8) ... ok
+test monstertruck-meshing/src/analyzers/splitting.rs - analyzers::splitting::Splitting::extract_planes (line 56) ... ok
+test monstertruck-meshing/src/analyzers/volume.rs - analyzers::volume::CalcVolume::center_of_gravity (line 99) ... ok
+test monstertruck-meshing/src/analyzers/volume.rs - analyzers::volume::CalcVolume::volume (line 14) ... ok
+test monstertruck-meshing/src/analyzers/volume.rs - analyzers::volume::CalcVolume::volume (line 37) ... ok
+test monstertruck-meshing/src/filters/normal_filters.rs - filters::normal_filters::NormalFilters::add_naive_normals (line 42) ... ok
+test monstertruck-meshing/src/filters/normal_filters.rs - filters::normal_filters::NormalFilters::add_smooth_normals (line 88) ... ok
+test monstertruck-meshing/src/filters/normal_filters.rs - filters::normal_filters::NormalFilters::make_face_compatible_to_normal (line 128) ... ok
+test monstertruck-meshing/src/filters/normal_filters.rs - filters::normal_filters::NormalFilters::make_normal_compatible_to_face (line 158) ... ok
+test monstertruck-meshing/src/filters/normal_filters.rs - filters::normal_filters::NormalFilters::normalize_normals (line 9) ... ok
+test monstertruck-meshing/src/filters/optimizing/mod.rs - filters::optimizing::OptimizingFilter::put_together_same_attrs (line 67) ... ok
+test monstertruck-meshing/src/filters/optimizing/mod.rs - filters::optimizing::OptimizingFilter::remove_degenerate_faces (line 34) ... ok
+test monstertruck-meshing/src/filters/optimizing/mod.rs - filters::optimizing::OptimizingFilter::remove_unused_attrs (line 10) ... ok
+test monstertruck-meshing/src/filters/structuring.rs - filters::structuring::StructuringFilter::quadrangulate (line 55) ... ok
+test monstertruck-meshing/src/filters/structuring.rs - filters::structuring::StructuringFilter::triangulate (line 7) ... ok
+test monstertruck-meshing/src/lib.rs - (line 5) ... ok
+test monstertruck-meshing/src/tessellation/mod.rs - tessellation::MeshableShape::triangulation (line 364) ... ok
+test monstertruck-meshing/src/tessellation/mod.rs - tessellation::RobustMeshableShape::robust_triangulation (line 405) ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+all doctests ran in 2.96s; merged doctests compilation took 2.90s
+   Doc-tests monstertruck_modeling
+
+running 27 tests
+test monstertruck-modeling/src/builder/mod.rs - builder::bezier (line 200) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::circle_arc (line 124) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::circle_arc (line 141) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::clone (line 536) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::extrude (line 575) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::homotopy (line 230) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::line (line 63) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::revolve (line 635) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::revolve (line 664) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::revolve_wire (line 813) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::try_attach_plane (line 457) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::try_attach_plane (line 474) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::try_skin_wires (line 400) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::try_wire_homotopy (line 271) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::try_wire_homotopy (line 299) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::try_wire_homotopy (line 332) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::vertex (line 28) ... ok
+test monstertruck-modeling/src/builder/mod.rs - builder::vertices (line 40) ... ok
+test monstertruck-modeling/src/lib.rs - (line 5) ... ok
+test monstertruck-modeling/src/primitive/mod.rs - primitive::circle (line 64) ... ok
+test monstertruck-modeling/src/primitive/mod.rs - primitive::cuboid (line 121) ... ok
+test monstertruck-modeling/src/primitive/mod.rs - primitive::rect (line 26) ... ok
+test monstertruck-modeling/src/primitive/mod.rs - primitive::rect (line 8) ... ok
+test monstertruck-modeling/src/sweep.rs - sweep::Edge<P,C>::sweep (line 45) ... ok
+test monstertruck-modeling/src/sweep.rs - sweep::Face<P,C,S>::sweep (line 183) ... ok
+test monstertruck-modeling/src/sweep.rs - sweep::Vertex<P>::sweep (line 14) ... ok
+test monstertruck-modeling/src/sweep.rs - sweep::Wire<P,C>::sweep (line 108) ... ok
+
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+
+
+running 2 tests
+test monstertruck-modeling/src/builder/mod.rs - builder::extrude (line 613) ... ignored
+test monstertruck-modeling/src/builder/mod.rs - builder::revolve (line 726) ... ignored
+
+test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 1.90s; merged doctests compilation took 1.63s
+   Doc-tests monstertruck_solid
+
+running 1 test
+test monstertruck-solid/src/lib.rs - (line 6) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+all doctests ran in 4.39s; merged doctests compilation took 4.37s
+   Doc-tests monstertruck_step
+
+running 1 test
+test monstertruck-step/src/lib.rs - (line 19) ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.15s; merged doctests compilation took 0.15s

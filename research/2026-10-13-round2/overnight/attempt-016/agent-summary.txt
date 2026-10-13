@@ -1,0 +1,9 @@
+Candidate written in `classic/coincident.rs`, `classic/mod.rs`, and `integrate/mod.rs`.
+
+Exact spline coefficients, oriented trim cycles, and face orientations establish boundary equality before applying `A ∪ A = A`, `A ∩ A = A`, and `A − A = ∅`.
+
+Expected scope: coincident cylinders and other identically represented solids. Noncoincident cylinder intersections and the remaining hole failure remain unresolved. The added `ShapeOpsCurve` conversion bound needs compatibility validation.
+
+No builds or tests run.
+
+[Candidate patch](/workspace/scratch/attempt-16.patch)

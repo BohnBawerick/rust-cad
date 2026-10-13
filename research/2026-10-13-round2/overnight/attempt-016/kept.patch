@@ -1,0 +1,170 @@
+--- /dev/null
++++ b/monstertruck-solid/src/transversal/classic/coincident.rs
+@@ -0,0 +1,109 @@
++//! Exact equality of oriented trimmed boundaries before transverse intersection.
++
++use monstertruck_geometry::prelude::*;
++use monstertruck_topology::{Face, Solid};
++use smallvec::SmallVec;
++
++use super::{ShapeOpsCurve, ShapeOpsSurface};
++
++#[derive(PartialEq)]
++struct EdgeGeometry {
++    front: Point3,
++    back: Point3,
++    curve: BsplineCurve<Vector4>,
++}
++
++struct FaceGeometry {
++    surface: BsplineSurface<Vector4>,
++    boundaries: Vec<Vec<EdgeGeometry>>,
++    orientation: bool,
++}
++
++impl FaceGeometry {
++    fn new<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(face: &Face<Point3, C, S>) -> Option<Self> {
++        let surface = face.surface().try_into_homogeneous_bspline_surface()?;
++        let boundaries = face
++            .absolute_boundaries()
++            .iter()
++            .map(|wire| {
++                wire.iter()
++                    .map(|edge| {
++                        Some(EdgeGeometry {
++                            front: edge.front().point(),
++                            back: edge.back().point(),
++                            curve: edge.oriented_curve().try_into_homogeneous_bspline_curve()?,
++                        })
++                    })
++                    .collect::<Option<Vec<_>>>()
++            })
++            .collect::<Option<Vec<_>>>()?;
++        Some(Self {
++            surface,
++            boundaries,
++            orientation: face.orientation(),
++        })
++    }
++
++    fn same(&self, other: &Self) -> bool {
++        self.orientation == other.orientation
++            && self.surface == other.surface
++            && same_members(&self.boundaries, &other.boundaries, |first, second| {
++                first.len() == second.len()
++                    && (0..second.len()).any(|offset| {
++                        first
++                            .iter()
++                            .zip(second.iter().cycle().skip(offset))
++                            .all(|(left, right)| left == right)
++                    })
++            })
++    }
++}
++
++/// Match every member once, preserving multiplicity but ignoring storage order.
++fn same_members<T>(first: &[T], second: &[T], same: impl Fn(&T, &T) -> bool) -> bool {
++    if first.len() != second.len() {
++        return false;
++    }
++    let mut unmatched: SmallVec<[usize; 16]> = (0..second.len()).collect();
++    first.iter().all(|item| {
++        unmatched
++            .iter()
++            .position(|&index| same(item, &second[index]))
++            .is_some_and(|index| {
++                unmatched.swap_remove(index);
++                true
++            })
++    })
++}
++
++/// Equal knot vectors and homogeneous coefficients establish equality over the
++/// entire curves and surfaces, including rational arcs between vertices.
++/// Both trim cycles and face orientations must agree. This deliberately declines
++/// equivalent geometry with different spline representations instead of using
++/// proximity or the Boolean tessellation tolerance as evidence of coincidence.
++pub(super) fn same_boundary<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
++    first: &Solid<Point3, C, S>,
++    second: &Solid<Point3, C, S>,
++) -> bool {
++    if first.face_iter().count() != second.face_iter().count() {
++        return false;
++    }
++    // A shared vertex is necessary for equal trim representations, but never
++    // sufficient to accept coincidence or to classify separated surfaces.
++    if !first.vertex_iter().next().is_some_and(|vertex| {
++        second
++            .vertex_iter()
++            .any(|other| vertex.point() == other.point())
++    }) {
++        return false;
++    }
++    let geometry = |solid: &Solid<Point3, C, S>| {
++        solid
++            .face_iter()
++            .map(FaceGeometry::new)
++            .collect::<Option<Vec<_>>>()
++    };
++    geometry(first)
++        .zip(geometry(second))
++        .is_some_and(|(first, second)| same_members(&first, &second, FaceGeometry::same))
++}
+--- a/monstertruck-solid/src/transversal/classic/mod.rs
++++ b/monstertruck-solid/src/transversal/classic/mod.rs
+@@ -18,6 +18,7 @@
+ //!   `None` pipeline result, `InvalidOutputShell` for a rejected solid), since
+ //!   the current error enum has no single `Internal` variant.
+ 
++mod coincident;
+ mod divide_face;
+ mod exact_section;
+ mod faces_classification;
+@@ -177,6 +178,9 @@
+     if solid0.boundaries().is_empty() || solid1.boundaries().is_empty() {
+         return finalize(operation, Shell::default());
+     }
++    if coincident::same_boundary(solid0, solid1) {
++        return Ok(solid0.clone());
++    }
+     let pair = |a: &Shell<Point3, C, S>, b: &Shell<Point3, C, S>| {
+         process_one_pair_of_shells(a, b, tol).ok_or(ShapeOpsError::EmptyOutputShell { operation })
+     };
+@@ -212,6 +216,9 @@
+     if solid1.boundaries().is_empty() {
+         return Ok(solid0.clone());
+     }
++    if coincident::same_boundary(solid0, solid1) {
++        return Ok(solid0.clone());
++    }
+     let pair = |a: &Shell<Point3, C, S>, b: &Shell<Point3, C, S>| {
+         process_one_pair_of_shells(a, b, tol).ok_or(ShapeOpsError::EmptyOutputShell { operation })
+     };
+@@ -242,6 +249,9 @@
+     if solid0.boundaries().is_empty() || solid1.boundaries().is_empty() {
+         return Ok(solid0.clone());
+     }
++    if coincident::same_boundary(solid0, solid1) {
++        return finalize("and", Shell::default());
++    }
+     let mut neg = solid1.clone();
+     neg.not();
+     and(solid0, &neg, tol)
+--- a/monstertruck-solid/src/transversal/integrate/mod.rs
++++ b/monstertruck-solid/src/transversal/integrate/mod.rs
+@@ -44,6 +44,7 @@
+     ParametricCurve3D
+     + ParameterDivision1D<Point = Point3>
+     + ParameterBoundary2D<S>
++    + TryIntoHomogeneousBsplineCurve
+     + Cut
+     + Clone
+     + TryFrom<ParameterCurve<Line<Point2>, S>>
+@@ -73,6 +74,7 @@
+ impl<C, S: ShapeOpsSurface> ShapeOpsCurve<S> for C where C: ParametricCurve3D
+         + ParameterDivision1D<Point = Point3>
+         + ParameterBoundary2D<S>
++        + TryIntoHomogeneousBsplineCurve
+         + Cut
+         + Clone
+         + TryFrom<ParameterCurve<Line<Point2>, S>>

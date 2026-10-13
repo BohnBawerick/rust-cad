@@ -1,0 +1,45 @@
+{
+  "original_id": "public-010",
+  "group": "boxes",
+  "op": "union",
+  "recipe": {
+    "a": {
+      "kind": "box",
+      "origin": [
+        -2.6824092538479682,
+        -3.038352820998791,
+        3.2083487427500863
+      ],
+      "size": [
+        2.6843636222944873,
+        3.115271215733987,
+        2.901072001477696
+      ]
+    },
+    "b": {
+      "kind": "box",
+      "origin": [
+        0.0019543684465190836,
+        0.07691839473519613,
+        6.109420744227782
+      ],
+      "size": [
+        2.6843636222944873,
+        3.115271215733987,
+        2.901072001477696
+      ]
+    },
+    "boolean_tol": 0.05,
+    "mesh_tol": 0.002,
+    "op": "union",
+    "relation": "touch_vertex",
+    "rotation": 0
+  },
+  "steps": [],
+  "result": {
+    "pass": false,
+    "reasons": [
+      "error:invalid output shell for `or`: This shell is not oriented and closed.."
+    ]
+  }
+}

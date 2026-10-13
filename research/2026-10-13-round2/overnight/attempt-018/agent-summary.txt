@@ -1,0 +1,9 @@
+Modified [circular_extrusion/mod.rs](/workspace/kernel/monstertruck-solid/src/transversal/classic/circular_extrusion/mod.rs).
+
+The candidate classifies external tangency as disjoint solid interiors: union preserves two shells, intersection is empty, and difference preserves the first boundary. It uses projected circular-section bounds and the existing coincident-crossing predicate; no tolerances changed.
+
+Expected scope: the three tangent-cylinder failures. The through-hole failure remains unresolved. Very shallow overlaps at the existing crossing-coincidence threshold need controller validation.
+
+Formatted only; no builds or tests run.
+
+[Candidate patch](/workspace/scratch/attempt-18.patch) · [Findings](/workspace/scratch/partial.txt)

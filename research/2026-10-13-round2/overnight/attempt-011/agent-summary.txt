@@ -1,0 +1,9 @@
+Modified [divide_face.rs](/workspace/kernel/monstertruck-solid/src/transversal/classic/divide_face.rs).
+
+UV area now determines orientation rather than deleting small boundaries. Cancellation checks opposing edge uses and exact polygonal retraces, including unequal subdivisions.
+
+Expected scope: small hole rims and thin trim regions. Cylinder-pair assembly remains unresolved; curved coincidence between samples remains a risk.
+
+Formatted only; no builds or tests run.
+
+[Candidate patch](/workspace/scratch/attempt-11.patch) · [Findings](/workspace/scratch/partial.txt)

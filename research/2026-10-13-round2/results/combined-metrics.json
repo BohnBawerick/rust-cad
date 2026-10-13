@@ -1,0 +1,88 @@
+{
+  "before": {
+    "score": 59.73643730996672,
+    "passed": 161,
+    "total": 420,
+    "groups": {
+      "boxes": {
+        "passed": 57,
+        "total": 208
+      },
+      "cylinders": {
+        "passed": 31,
+        "total": 102
+      },
+      "extrude": {
+        "passed": 17,
+        "total": 17
+      },
+      "revolve": {
+        "passed": 16,
+        "total": 17
+      },
+      "fillet": {
+        "passed": 0,
+        "total": 18
+      },
+      "chamfer": {
+        "passed": 17,
+        "total": 17
+      },
+      "holes": {
+        "passed": 0,
+        "total": 17
+      },
+      "patterns": {
+        "passed": 17,
+        "total": 17
+      },
+      "step": {
+        "passed": 6,
+        "total": 7
+      }
+    }
+  },
+  "after": {
+    "score": 100.0,
+    "passed": 420,
+    "total": 420,
+    "groups": {
+      "boxes": {
+        "passed": 208,
+        "total": 208
+      },
+      "cylinders": {
+        "passed": 102,
+        "total": 102
+      },
+      "extrude": {
+        "passed": 17,
+        "total": 17
+      },
+      "revolve": {
+        "passed": 17,
+        "total": 17
+      },
+      "fillet": {
+        "passed": 18,
+        "total": 18
+      },
+      "chamfer": {
+        "passed": 17,
+        "total": 17
+      },
+      "holes": {
+        "passed": 17,
+        "total": 17
+      },
+      "patterns": {
+        "passed": 17,
+        "total": 17
+      },
+      "step": {
+        "passed": 7,
+        "total": 7
+      }
+    }
+  }
+}

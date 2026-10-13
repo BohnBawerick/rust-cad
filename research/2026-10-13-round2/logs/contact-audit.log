@@ -1,0 +1,90 @@
+[
+  {
+    "id": "public-007",
+    "relation": "touch_edge",
+    "op": "union",
+    "pass_": true,
+    "reasons": [],
+    "shells": 2,
+    "expected_bodies": 2,
+    "merged_mesh_closed_as_emitted": false,
+    "merged_mesh_closed_after_subdivision_merge": false
+  },
+  {
+    "id": "public-046",
+    "relation": "touch_edge",
+    "op": "union",
+    "pass_": true,
+    "reasons": [],
+    "shells": 2,
+    "expected_bodies": 2,
+    "merged_mesh_closed_as_emitted": false,
+    "merged_mesh_closed_after_subdivision_merge": false
+  },
+  {
+    "id": "public-085",
+    "relation": "touch_edge",
+    "op": "union",
+    "pass_": true,
+    "reasons": [],
+    "shells": 2,
+    "expected_bodies": 2,
+    "merged_mesh_closed_as_emitted": false,
+    "merged_mesh_closed_after_subdivision_merge": false
+  },
+  {
+    "id": "public-124",
+    "relation": "touch_edge",
+    "op": "union",
+    "pass_": true,
+    "reasons": [],
+    "shells": 2,
+    "expected_bodies": 2,
+    "merged_mesh_closed_as_emitted": false,
+    "merged_mesh_closed_after_subdivision_merge": false
+  },
+  {
+    "id": "public-166",
+    "relation": "d/r=2.0",
+    "op": "union",
+    "pass_": true,
+    "reasons": [],
+    "shells": 2,
+    "expected_bodies": 2,
+    "merged_mesh_closed_as_emitted": false,
+    "merged_mesh_closed_after_subdivision_merge": false
+  },
+  {
+    "id": "public-178",
+    "relation": "d/r=2.0",
+    "op": "union",
+    "pass_": true,
+    "reasons": [],
+    "shells": 2,
+    "expected_bodies": 2,
+    "merged_mesh_closed_as_emitted": false,
+    "merged_mesh_closed_after_subdivision_merge": false
+  },
+  {
+    "id": "public-229",
+    "relation": "d/r=2.0",
+    "op": "union",
+    "pass_": true,
+    "reasons": [],
+    "shells": 2,
+    "expected_bodies": 2,
+    "merged_mesh_closed_as_emitted": false,
+    "merged_mesh_closed_after_subdivision_merge": false
+  },
+  {
+    "id": "public-315",
+    "relation": null,
+    "op": "difference",
+    "pass_": true,
+    "reasons": [],
+    "shells": 1,
+    "expected_bodies": 1,
+    "merged_mesh_closed_as_emitted": true,
+    "merged_mesh_closed_after_subdivision_merge": true
+  }
+]

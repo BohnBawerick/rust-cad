@@ -1,0 +1,12 @@
+   Compiling monstertruck-geometry v0.4.1 (/workspace/kernel/source/monstertruck-geometry)
+   Compiling monstertruck-meshing v0.4.1 (/workspace/kernel/source/monstertruck-meshing)
+   Compiling monstertruck-fillet v0.4.1 (/workspace/kernel/source/monstertruck-fillet)
+   Compiling monstertruck-solid v0.4.1 (/workspace/kernel/source/monstertruck-solid)
+   Compiling monstertruck-modeling v0.4.1 (/workspace/kernel/source/monstertruck-modeling)
+   Compiling monstertruck-io v0.4.1 (/workspace/kernel/source/monstertruck-io)
+   Compiling kernel-probe v0.1.0 (/workspace/probe)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 23.04s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`
+     Running `/target/debug/kernel-probe /missing-input.json`
+{"error":"No such file or directory (os error 2)","status":"error"}

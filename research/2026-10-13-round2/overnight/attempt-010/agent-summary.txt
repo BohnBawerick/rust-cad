@@ -1,0 +1,9 @@
+Modified [divide_face.rs](/workspace/kernel/monstertruck-solid/src/transversal/classic/divide_face.rs).
+
+Replaced UV-area-based boundary deletion with exact oriented-edge cancellation. UV area depends on parameterization scale, so comparing it with spatial tessellation tolerance can erase valid hole rims and leave open shells. Tolerance values remain unchanged.
+
+Expected scope: small trim regions and through-hole closure. Coincident-cylinder and general cylinder-pair assembly remain unresolved. Geometrically coincident boundaries with distinct edge identities remain a risk.
+
+Formatted only; no builds or tests run.
+
+[Candidate patch](/workspace/scratch/attempt-10.patch) · [Findings](/workspace/scratch/partial.txt)

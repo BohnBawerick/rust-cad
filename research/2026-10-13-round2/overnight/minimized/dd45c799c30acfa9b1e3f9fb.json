@@ -1,0 +1,40 @@
+{
+  "original_id": "public-262",
+  "group": "holes",
+  "op": "hole",
+  "recipe": {
+    "a": {
+      "kind": "box",
+      "origin": [
+        -2.6835639947114696,
+        -2.6931864800690075,
+        0.28159731019198464
+      ],
+      "size": [
+        2.9147649942251577,
+        2.7206916297016037,
+        3.902107275126074
+      ]
+    },
+    "b": {
+      "height": 4.302107275126074,
+      "kind": "cylinder",
+      "origin": [
+        -1.2261814975988907,
+        -1.3328406652182057,
+        0.08159731019198463
+      ],
+      "radius": 0.40810374445524056
+    },
+    "boolean_tol": 0.05,
+    "mesh_tol": 0.002,
+    "op": "hole"
+  },
+  "steps": [],
+  "result": {
+    "pass": false,
+    "reasons": [
+      "error:invalid output shell for `and`: This shell is not oriented and closed.."
+    ]
+  }
+}

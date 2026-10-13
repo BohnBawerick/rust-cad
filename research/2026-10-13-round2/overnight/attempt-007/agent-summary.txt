@@ -1,0 +1,7 @@
+Modified [fillet_impl/mod.rs](/workspace/kernel/monstertruck-modeling/src/fillet_impl/mod.rs).
+
+Constant-parameter fillet trims now retain exact rational sections extracted from the surface control net instead of straight chords. The conversion requires matching endpoints and acceptance by both existing surface-inclusion checks. Knot normalization is fallible.
+
+Expected scope: round fillets ending on planar caps. General non-isoparametric intersections retain the existing conversion.
+
+Formatted; no builds or tests run. Controller gates remain unverified. Findings saved to [partial.txt](/workspace/scratch/partial.txt).

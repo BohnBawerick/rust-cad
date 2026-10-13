@@ -1,0 +1,102 @@
+--- a/monstertruck-geometry/src/decorators/revolved_curve.rs
++++ b/monstertruck-geometry/src/decorators/revolved_curve.rs
+@@ -281,6 +281,38 @@
+ 
+ impl<C: ParametricCurve3D + BoundedCurve> BoundedCurve for ProjectedCurve<C> {}
+ 
++impl<C: ParametricCurve3D + BoundedCurve> ProjectedCurve<C> {
++    fn search_seed(&self, point: Point2, hint: SearchParameterHint1D) -> Option<f64> {
++        let range = match hint {
++            SearchParameterHint1D::Range(start, end) => (start, end),
++            _ => self.range_tuple(),
++        };
++        let seed = match hint {
++            SearchParameterHint1D::Parameter(parameter) => parameter,
++            _ => algo::curve::presearch(self, point, range, PRESEARCH_DIVISION),
++        };
++        if self.revolution.contains(self.curve.evaluate(seed)) {
++            // Radial distance has a cusp at the axis. Its derivative there is
++            // undefined, and roundoff can select the extension on the opposite
++            // side of a profile endpoint. Start Newton on a regular part of
++            // the requested profile instead of using that pole as a hint.
++            (0..=PRESEARCH_DIVISION)
++                .map(|index| {
++                    let ratio = index as f64 / PRESEARCH_DIVISION as f64;
++                    range.0 * (1.0 - ratio) + range.1 * ratio
++                })
++                .filter(|parameter| !self.revolution.contains(self.curve.evaluate(*parameter)))
++                .min_by(|lhs, rhs| {
++                    self.evaluate(*lhs)
++                        .distance2(point)
++                        .total_cmp(&self.evaluate(*rhs).distance2(point))
++                })
++        } else {
++            Some(seed)
++        }
++    }
++}
++
+ impl<C: ParametricCurve3D + BoundedCurve> SearchParameter<CurveParameter> for ProjectedCurve<C> {
+     type Point = Point2;
+     fn search_parameter<H: Into<SearchParameterHint1D>>(
+@@ -289,15 +321,7 @@
+         hint: H,
+         trials: usize,
+     ) -> Option<f64> {
+-        let hint = match hint.into() {
+-            SearchParameterHint1D::Parameter(t) => t,
+-            SearchParameterHint1D::Range(x, y) => {
+-                algo::curve::presearch(self, point, (x, y), PRESEARCH_DIVISION)
+-            }
+-            SearchParameterHint1D::None => {
+-                algo::curve::presearch(self, point, self.range_tuple(), PRESEARCH_DIVISION)
+-            }
+-        };
++        let hint = self.search_seed(point, hint.into())?;
+         algo::curve::search_parameter(self, point, hint, trials)
+     }
+ }
+@@ -312,15 +336,7 @@
+         hint: H,
+         trials: usize,
+     ) -> Option<f64> {
+-        let hint = match hint.into() {
+-            SearchParameterHint1D::Parameter(t) => t,
+-            SearchParameterHint1D::Range(x, y) => {
+-                algo::curve::presearch(self, point, (x, y), PRESEARCH_DIVISION)
+-            }
+-            SearchParameterHint1D::None => {
+-                algo::curve::presearch(self, point, self.range_tuple(), PRESEARCH_DIVISION)
+-            }
+-        };
++        let hint = self.search_seed(point, hint.into())?;
+         algo::curve::search_nearest_parameter(self, point, hint, trials)
+     }
+ }
+--- a/monstertruck-meshing/src/tessellation/triangulation/boundary/projection.rs
++++ b/monstertruck-meshing/src/tessellation/triangulation/boundary/projection.rs
+@@ -635,14 +635,22 @@
+                     .and_then(|uv| Self::normalize_uv(surface, uv, *previous))
+                     .map(|(u, v)| {
+                         let points = if let Some((u0, v0)) = *previous {
++                            // Crossing a collapsed parameter direction duplicates
++                            // the previous pole, not the next spatial vertex.
+                             if !u0.near(&u) && surface.derivative_u(u0, v0).so_small() {
+                                 vec![
+-                                    SurfacePoint::from((Point2::new(u, v0), pt)),
++                                    SurfacePoint::from((
++                                        Point2::new(u, v0),
++                                        boundary[(start + offset - 1) % total],
++                                    )),
+                                     SurfacePoint::from((Point2::new(u, v), pt)),
+                                 ]
+                             } else if !v0.near(&v) && surface.derivative_v(u0, v0).so_small() {
+                                 vec![
+-                                    SurfacePoint::from((Point2::new(u0, v), pt)),
++                                    SurfacePoint::from((
++                                        Point2::new(u0, v),
++                                        boundary[(start + offset - 1) % total],
++                                    )),
+                                     SurfacePoint::from((Point2::new(u, v), pt)),
+                                 ]
+                             } else {

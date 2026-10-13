@@ -1,0 +1,9 @@
+Candidate written in `classic/mod.rs` and new `classic/circular_extrusion/{mod,recognize}.rs`.
+
+The hypothesis addresses coplanar cap overlap through an exact circular-rim arrangement. It certifies rational circle coefficients, splits existing curves at analytic crossings, and assembles caps and side faces with shared edges.
+
+Expected scope: overlapping cylinders with matching cap planes. Tangency, containment, unequal heights, and the remaining through-hole failure remain unresolved.
+
+No builds or tests run. Compilation, topology, numerical behavior, and regression gates require controller validation.
+
+[Candidate patch](/workspace/scratch/attempt-17.patch) · [Findings](/workspace/scratch/partial.txt)

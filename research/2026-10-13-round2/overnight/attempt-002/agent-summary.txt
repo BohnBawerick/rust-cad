@@ -1,0 +1,11 @@
+Candidate written in `transversal/classic`:
+
+- `mod.rs`: classify complete boundary sets and handle empty-solid identities.
+- `faces_classification.rs`: guard closed components without boundary edges.
+- `shell_classification.rs`: classify uncut closed components using oriented winding counts and face-interior samples.
+
+The correction accounts for complemented cutters and cavity orientation. It targets disjoint subtraction, containment, cavities, and uncut point contacts. Cut-face classification remains unchanged to avoid repeating the previous through-hole regression.
+
+Face/edge contact assembly and thin overlaps remain unresolved. No builds or tests were run.
+
+[Candidate patch](/workspace/scratch/candidate.patch) · [Findings and risks](/workspace/scratch/partial.txt)

@@ -1,0 +1,9 @@
+Modified `classic/divide_face.rs` and added `classic/divide_face/interior.rs`.
+
+The patch preserves small, paired interior trim loops when their projected boundaries are simple and strictly contained. UV area alone cannot justify deleting a disk–annulus partition. Existing filtering remains elsewhere.
+
+Expected scope: restoring missing through-hole rims. Cylinder-pair marching and coincidence failures remain unresolved. Containment checks use projected polylines, so controller validation is still required.
+
+Formatted only; no builds or tests run.
+
+[Candidate patch](/workspace/scratch/attempt-14.patch) · [Findings](/workspace/scratch/partial.txt)

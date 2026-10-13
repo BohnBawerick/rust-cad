@@ -1,0 +1,9 @@
+Candidate written in `classic/mod.rs`, plus new `classic/planar.rs` and `classic/planar/assemble.rs`.
+
+The repair partitions certified planar faces and selects boundaries using oriented winding on both sides. Angular half-edge pairing separates edge-touching bodies while joining face contacts.
+
+Expected scope includes nonconvex and multi-shell solids composed of convex planar polygon faces. Curved, concave-face, and multiply trimmed inputs retain the existing pipeline. Numerical degeneracies and large arrangements remain risks.
+
+No builds or tests were run.
+
+[Candidate patch](/workspace/scratch/candidate.patch) · [Findings and limitations](/workspace/scratch/partial.txt)

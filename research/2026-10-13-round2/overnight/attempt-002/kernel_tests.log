@@ -1,0 +1,92 @@
+   Compiling libc v0.2.190
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling syn v1.0.109
+   Compiling num-complex v0.4.6
+   Compiling proc-macro-error v1.0.4
+   Compiling memchr v2.8.3
+   Compiling monstertruck-derive v0.4.1 (/workspace/kernel/source/monstertruck-derive)
+   Compiling getrandom v0.4.3
+   Compiling rand v0.10.3
+   Compiling parking_lot_core v0.9.12
+   Compiling parking_lot v0.12.5
+   Compiling zerocopy v0.8.62
+   Compiling bytemuck v1.25.2
+   Compiling getrandom v0.3.4
+   Compiling aho-corasick v1.1.5
+   Compiling nom v8.0.0
+   Compiling cgmath v0.18.0
+   Compiling matext4cgmath v0.1.0
+   Compiling monstertruck-core v0.4.1 (/workspace/kernel/source/monstertruck-core)
+   Compiling regex-automata v0.4.18
+   Compiling monstertruck-traits v0.4.1 (/workspace/kernel/source/monstertruck-traits)
+   Compiling nom-language v0.1.0
+   Compiling monstertruck-assembly v0.4.1 (/workspace/kernel/source/monstertruck-assembly)
+   Compiling monstertruck-mesh v0.4.1 (/workspace/kernel/source/monstertruck-mesh)
+   Compiling monstertruck-geometry v0.4.1 (/workspace/kernel/source/monstertruck-geometry)
+   Compiling monstertruck-topology v0.4.1 (/workspace/kernel/source/monstertruck-topology)
+   Compiling ahash v0.8.12
+   Compiling regex v1.13.1
+   Compiling Inflector v0.11.4
+   Compiling serde_json v1.0.154
+   Compiling step-p21 v0.1.1
+   Compiling tempfile v3.27.0
+   Compiling wait-timeout v0.2.1
+   Compiling rusty-fork v0.3.1
+   Compiling monstertruck-meshing v0.4.1 (/workspace/kernel/source/monstertruck-meshing)
+   Compiling proptest v1.12.0
+   Compiling monstertruck-fillet v0.4.1 (/workspace/kernel/source/monstertruck-fillet)
+   Compiling monstertruck-solid v0.4.1 (/workspace/kernel/source/monstertruck-solid)
+   Compiling monstertruck-modeling v0.4.1 (/workspace/kernel/source/monstertruck-modeling)
+   Compiling monstertruck-io v0.4.1 (/workspace/kernel/source/monstertruck-io)
+   Compiling monstertruck v0.4.1 (/workspace/kernel/source/monstertruck)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 47.30s
+warning: the following packages contain code that will be rejected by a future version of Rust: proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck-278f4496ef07694c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (/target/debug/deps/monstertruck_solid-0a7d23ba4b34b2bc)
+
+running 9 tests
+test transversal::integrate::tests::adjacent_cubes_or ... ok
+test transversal::integrate::tests::boolean_matrix_and_crossing_cubes ... ok
+test transversal::integrate::tests::cube_clip_high_z ... ok
+test transversal::integrate::tests::cube_clip_high_z_flip ... ok
+test transversal::integrate::tests::punched_cube ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive0 ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive1 ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive2 ... ok
+test transversal::polyline_construction::tests::construct_polylines_positive3 ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.47s
+
+     Running tests/boolean_smoke.rs (/target/debug/deps/boolean_smoke-f8d470717b806e58)
+
+running 4 tests
+test cube_minus_column ... ok
+test difference_of_overlapping_cubes ... ok
+test intersection_of_overlapping_cubes ... ok
+test union_of_overlapping_cubes ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+   Doc-tests monstertruck
+
+running 1 test
+test monstertruck/src/lib.rs - (line 94) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.19s; merged doctests compilation took 0.19s
+   Doc-tests monstertruck_solid
+
+running 1 test
+test monstertruck-solid/src/lib.rs - (line 6) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+all doctests ran in 3.38s; merged doctests compilation took 3.36s

@@ -1,0 +1,43 @@
+{
+  "original_id": "public-298",
+  "group": "holes",
+  "op": "hole",
+  "recipe": {
+    "a": {
+      "kind": "box",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "size": [
+        1.2,
+        3.1,
+        2.4
+      ]
+    },
+    "b": {
+      "height": 2.8,
+      "kind": "cylinder",
+      "origin": [
+        0.6,
+        1.55,
+        -0.2
+      ],
+      "radius": 0.18
+    },
+    "boolean_tol": 0.05,
+    "mesh_tol": 0.002,
+    "op": "hole"
+  },
+  "steps": [
+    "move_to_origin",
+    "round_dimensions"
+  ],
+  "result": {
+    "pass": false,
+    "reasons": [
+      "error:invalid output shell for `and`: This shell is not oriented and closed.."
+    ]
+  }
+}
